@@ -1,0 +1,39 @@
+﻿# Python compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# DFX and Internet Computer files
+.dfx/
+.vessel/
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
