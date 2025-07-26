@@ -1,39 +1,28 @@
-﻿# Python compiled files
-__pycache__/
-*.py[cod]
-*$py.class
-*.pyc
-*.pyo
-*.pyd
+﻿# AVAI Canister Agent Repository
+# Ignore everything, then explicitly include only what we need
 
-# Virtual environments
-.env
-.venv
-env/
-venv/
+# Ignore everything by default
+*
 
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
+# Include this gitignore file
+!.gitignore
 
-# OS files
-.DS_Store
-Thumbs.db
+# Include essential project files
+!README.md
+!requirements.txt
+!setup.py
 
-# DFX and Internet Computer files
-.dfx/
-.vessel/
+# Include canister agent directory and all its contents
+!app/
+app/*
+!app/agent/
+app/agent/*
+!app/agent/canister/
+!app/agent/canister/**
 
-# Log files
-*.log
-
-# Temporary files
-*.tmp
-*.temp
-
-# Build artifacts
-dist/
-build/
-*.egg-info/
+# Always exclude compiled Python files even if in included directories
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*$py.class
