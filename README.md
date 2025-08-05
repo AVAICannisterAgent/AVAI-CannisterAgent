@@ -25,7 +25,7 @@ The AVAI Canister Agent is a sophisticated tool designed to perform comprehensiv
 
 ### Installation
 
-`bash
+`
 pip install -r requirements.txt
 `
 
@@ -82,13 +82,13 @@ result = await uploader.upload_to_devnet(report_data)
 
 ### Running Tests
 
-`ash
+`
 python -m pytest tests/
 `
 
 ### Building Canisters
 
-`ash
+`
 dfx build
 dfx deploy --network local
 `
