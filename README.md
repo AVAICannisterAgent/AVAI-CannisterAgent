@@ -25,7 +25,7 @@ The AVAI Canister Agent is a sophisticated tool designed to perform comprehensiv
 
 ### Installation
 
-`ash
+`bash
 pip install -r requirements.txt
 `
 
