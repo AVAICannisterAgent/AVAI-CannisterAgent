@@ -1,0 +1,28 @@
+﻿# AVAI Canister Agent Repository
+# Ignore everything, then explicitly include only what we need
+
+# Ignore everything by default
+*
+
+# Include this gitignore file
+!.gitignore
+
+# Include essential project files
+!README.md
+!requirements.txt
+!setup.py
+
+# Include canister agent directory and all its contents
+!app/
+app/*
+!app/agent/
+app/agent/*
+!app/agent/canister/
+!app/agent/canister/**
+
+# Always exclude compiled Python files even if in included directories
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*$py.class
