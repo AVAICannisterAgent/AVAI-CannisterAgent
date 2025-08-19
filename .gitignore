@@ -20,9 +20,23 @@ app/agent/*
 !app/agent/canister/
 !app/agent/canister/**
 
+
+
 # Always exclude compiled Python files even if in included directories
 **/__pycache__/
 **/*.pyc
 **/*.pyo
 **/*.pyd
 **/*$py.class
+
+# Include the frontend files
+!src/
+!src/**
+!eslint.config.mjs
+!next-env.d.ts
+!next.config.ts
+!postcss.config.mjs
+!tailwind.config.ts
+!package.json
+!package-lock.json
+!tsconfig.json

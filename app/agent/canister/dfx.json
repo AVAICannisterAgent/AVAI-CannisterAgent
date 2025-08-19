@@ -1,0 +1,42 @@
+{
+  "canisters": {
+    "avai_canister_agent": {
+      "main": "src/main.mo",
+      "type": "motoko"
+    },
+    "avai_frontend": {
+      "dependencies": [
+        "avai_canister_agent"
+      ],
+      "frontend": {
+        "entrypoint": "frontend/index.html"
+      },
+      "source": [
+        "frontend/",
+        "dist/"
+      ],
+      "type": "assets"
+    }
+  },
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:4943",
+      "type": "ephemeral"
+    },
+    "ic": {
+      "providers": ["https://ic0.app"],
+      "type": "persistent"
+    },
+    "playground": {
+      "providers": ["https://playground.dfinity.network"],
+      "type": "playground"
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": ""
+    }
+  },
+  "dfx": "0.15.0",
+  "version": 1
+}
