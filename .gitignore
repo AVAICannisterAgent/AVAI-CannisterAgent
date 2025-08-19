@@ -12,15 +12,13 @@
 !requirements.txt
 !setup.py
 
-# Include canister agent directory and all its contents
-!app/
-app/*
+# Include src directory and all its contents
+!src/
+!src/**
 !app/agent/
 app/agent/*
 !app/agent/canister/
 !app/agent/canister/**
-
-
 
 # Always exclude compiled Python files even if in included directories
 **/__pycache__/
@@ -29,14 +27,10 @@ app/agent/*
 **/*.pyd
 **/*$py.class
 
-# Include the frontend files
-!src/
-!src/**
-!eslint.config.mjs
-!next-env.d.ts
-!next.config.ts
-!postcss.config.mjs
-!tailwind.config.ts
-!package.json
-!package-lock.json
-!tsconfig.json
+# Include the frontend directory and all its contents
+!frontend/
+!frontend/**
+
+# Exclude frontend node_modules
+frontend/node_modules/
+frontend/.next
