@@ -20,6 +20,8 @@ app/agent/*
 !app/agent/canister/
 !app/agent/canister/**
 
+
+
 # Always exclude compiled Python files even if in included directories
 **/__pycache__/
 **/*.pyc
@@ -27,43 +29,14 @@ app/agent/*
 **/*.pyd
 **/*$py.class
 
-# Frontend gitignore stuff
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Include the frontend files
+!src/
+!src/**
+!eslint.config.mjs
+!next-env.d.ts
+!next.config.ts
+!postcss.config.mjs
+!tailwind.config.ts
+!package.json
+!package-lock.json
+!tsconfig.json
