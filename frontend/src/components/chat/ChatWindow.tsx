@@ -1,60 +1,55 @@
-import { useEffect, useRef } from 'react';
-import { MessageBubble } from './MessageBubble';
-import { TypingIndicator } from './TypingIndicator';
-import { Message } from '@/types/chat';
+"use client"
+
+import { useEffect, useRef } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { MessageBubble } from "./MessageBubble";
+import { TypingIndicator } from "./TypingIndicator";
+import type { Conversation, FileAttachment } from "./ChatLayout";
 
 interface ChatWindowProps {
-    messages: Message[];
-    isTyping: boolean;
-    hasMessages: boolean;
+  conversation: Conversation | null;
+  isTyping: boolean;
+  onFileClick: (files: FileAttachment[]) => void;
 }
 
-export function ChatWindow({ messages, isTyping, hasMessages }: ChatWindowProps) {
-    const scrollRef = useRef<HTMLDivElement>(null);
+export const ChatWindow = ({ conversation, isTyping, onFileClick }: ChatWindowProps) => {
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-    }, [messages, isTyping]);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-    if (!hasMessages) {
-        return (
-            <div className="flex-1 flex items-center justify-center">
-                <div className="text-center max-w-2xl mx-auto px-4">
-                    <div className="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <span className="text-black font-bold text-2xl">AI</span>
-                    </div>
-                    <h1 className="text-4xl font-bold text-foreground mb-4">
-                        How can I help you today?
-                    </h1>
-                    <p className="text-muted-foreground text-lg">
-                        I'm your AI assistant, AVAI.
-                    </p>
-                </div>
+  useEffect(() => {
+    scrollToBottom();
+  }, [conversation?.messages, isTyping]);
+
+  if (!conversation) {
+    return null;
+  }
+
+  return (
+    <div className="flex-1 relative">
+      <ScrollArea ref={scrollAreaRef} className="h-full p-4 scrollbar-custom">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {conversation.messages.map((message, index) => (
+            <MessageBubble
+              key={message.id}
+              message={message}
+              isLast={index === conversation.messages.length - 1}
+              onFileClick={onFileClick}
+            />
+          ))}
+          
+          {isTyping && (
+            <div className="animate-fade-in">
+              <TypingIndicator />
             </div>
-        );
-    }
-
-    return (
-        <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto">
-                <div ref={scrollRef} className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-                    {messages.map((message, index) => (
-                        <MessageBubble
-                            key={message.id}
-                            message={message}
-                            isFirst={index === 0}
-                        />
-                    ))}
-
-                    {isTyping && (
-                        <div>
-                            <TypingIndicator />
-                        </div>
-                    )}
-                </div>
-            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
         </div>
-    );
-}
+      </ScrollArea>
+    </div>
+  );
+};

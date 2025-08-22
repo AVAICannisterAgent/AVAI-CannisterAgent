@@ -1,108 +1,157 @@
-import { Copy, ThumbsUp, ThumbsDown, RotateCcw } from 'lucide-react';
-import { Message } from '@/types/chat';
-import { useState } from 'react';
-import { useToast } from "@/hooks/use-toast"
+"use client"
+
+import { Copy, ThumbsUp, ThumbsDown, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import type { Message, FileAttachment } from "./ChatLayout";
+import { FileCard } from "./FileCard";
 
 interface MessageBubbleProps {
-    message: Message;
-    isFirst: boolean;
+  message: Message;
+  isLast: boolean;
+  onFileClick: (files: FileAttachment[]) => void;
 }
 
-export function MessageBubble({ message, isFirst }: MessageBubbleProps) {
-    const [isHovered, setIsHovered] = useState(false);
-    const { toast } = useToast();
+export const MessageBubble = ({ message, isLast, onFileClick }: MessageBubbleProps) => {
+  const { toast } = useToast();
 
-    const handleCopy = async () => {
-        await navigator.clipboard.writeText(message.content);
-        toast({
-            title: "Copied to clipboard",
-            description: "Message copied successfully",
-        });
-    };
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Copied to clipboard",
+        duration: 2000,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to copy",
+        variant: "destructive",
+        duration: 2000,
+      });
+    }
+  };
 
-    const handleFeedback = (type: 'up' | 'down') => {
-        toast({
-            title: `Feedback received`,
-            description: `Thank you for your ${type === 'up' ? 'positive' : 'negative'} feedback`,
-        });
-    };
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
-    const handleRegenerate = () => {
-        toast({
-            title: "Regenerating response",
-            description: "This feature will be available soon",
-        });
-    };
+  const isUser = message.role === "user";
 
-    return (
-        <div
-            className={`animate-message-in ${isFirst ? 'mt-8' : ''}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4`}>
-                <div className={`
-          max-w-3xl rounded-2xl px-6 py-4 shadow-soft transition-smooth
-          ${message.role === 'user'
-                        ? 'chat-user ml-12'
-                        : 'chat-ai mr-12'
-                    }
-        `}>
-                    {message.role === 'assistant' && (
-                        <div className="flex items-center mb-3">
-                            <div className="w-6 h-6 gradient-primary rounded-lg flex items-center justify-center mr-3">
-                                <span className="text-black font-bold text-xs">AVAI</span>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="prose prose-sm max-w-none">
-                        <p className={`whitespace-pre-wrap leading-relaxed ${message.role === 'user' ? 'text-chat-user-foreground' : 'text-chat-ai-foreground'
-                            }`}>
-                            {message.content}
-                        </p>
-                    </div>
-
-                    <div className="flex items-center justify-between mt-3">
-                        <span className={`text-xs ${message.role === 'user' ? 'text-chat-user-foreground/70' : 'text-muted-foreground'
-                            }`}>
-                            {message.timestamp.toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            })}
-                        </span>
-
-                        {message.role === 'assistant' && isHovered && (
-                            <div className="flex items-center space-x-1 opacity-0 animate-fade-in">
-                                <button
-                                    onClick={handleCopy}
-                                    className="h-7 w-7 p-0 hover:bg-chat-hover"
-                                >
-                                    <Copy className="h-3 w-3 color" />
-                                </button>
-                                <button
-                                    onClick={() => handleFeedback('up')}
-                                    className="h-7 w-7 p-0 hover:bg-chat-hover"
-                                >
-                                    <ThumbsUp className="h-3 w-3" />
-                                </button>
-                                <button
-                                    onClick={() => handleFeedback('down')}
-                                    className="h-7 w-7 p-0 hover:bg-chat-hover"
-                                >
-                                    <ThumbsDown className="h-3 w-3" />
-                                </button>
-                                <button
-                                    onClick={handleRegenerate}
-                                    className="h-7 w-7 p-0 hover:bg-chat-hover"
-                                >
-                                    <RotateCcw className="h-3 w-3" />
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className={cn(
+      "flex gap-4 group animate-fade-in",
+      isUser ? "justify-end" : "justify-start"
+    )}>
+      {!isUser && (
+        <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0 mt-1">
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
         </div>
-    );
-}
+      )}
+
+      <div className={cn(
+        "flex flex-col max-w-[80%] lg:max-w-[70%]",
+        isUser ? "items-end" : "items-start"
+      )}>
+        <div className={cn(
+          "relative px-4 py-3 rounded-2xl shadow-sm",
+          isUser 
+            ? "message-user rounded-br-md" 
+            : "message-ai rounded-bl-md border border-border"
+        )}>
+          <p className="text-sm whitespace-pre-wrap leading-relaxed">
+            {message.content}
+          </p>
+          
+          {/* File attachments */}
+          {message.files && message.files.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {message.files.map((file) => (
+                <FileCard
+                  key={file.id}
+                  file={file}
+                  onClick={() => onFileClick([file])}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className={cn(
+          "flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity",
+          isUser ? "flex-row-reverse" : "flex-row"
+        )}>
+          <span className="text-xs text-muted-foreground px-2">
+            {formatTime(message.timestamp)}
+          </span>
+
+          {!isUser && isLast && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => copyToClipboard(message.content)}
+                className="h-6 w-6 p-0 hover:bg-surface-hover"
+              >
+                <Copy className="w-3 h-3" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 hover:bg-surface-hover"
+                onClick={() => {
+                  toast({
+                    title: "Regenerating response...",
+                    description: "This feature will be implemented soon",
+                    duration: 2000,
+                  });
+                }}
+              >
+                <RotateCcw className="w-3 h-3" />
+              </Button>
+
+              <div className="w-px h-4 bg-border mx-1" />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 hover:bg-success/20 hover:text-success"
+                onClick={() => {
+                  toast({
+                    title: "Thanks for your feedback!",
+                    duration: 2000,
+                  });
+                }}
+              >
+                <ThumbsUp className="w-3 h-3" />
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
+                onClick={() => {
+                  toast({
+                    title: "Thanks for your feedback!",
+                    duration: 2000,
+                  });
+                }}
+              >
+                <ThumbsDown className="w-3 h-3" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {isUser && (
+        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-1">
+          <span className="text-sm font-medium text-primary-foreground">U</span>
+        </div>
+      )}
+    </div>
+  );
+};
