@@ -5,18 +5,25 @@
   "framework": "nextjs",
   "routes": [
     {
-      "src": "^/_next/static/(.*)$",
+      "src": "/_next/static/(.*)",
       "headers": { "cache-control": "public,max-age=31536000,immutable" },
-      "continue": true
+      "dest": "/_next/static/$1"
     },
     {
-      "src": "^/static/(.*)$",
-      "headers": { "cache-control": "public,max-age=31536000,immutable" },
-      "continue": true
+      "src": "/_next/(.*)",
+      "dest": "/_next/$1"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*\\.[a-z0-9]+$)",
+      "dest": "/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/"
+      "dest": "/$1"
     }
   ],
   "env": {
