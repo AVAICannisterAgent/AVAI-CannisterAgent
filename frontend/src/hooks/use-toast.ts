@@ -12,24 +12,24 @@ interface ToasterToast {
     action?: ToastActionElement
     open?: boolean
     onOpenChange?: (open: boolean) => void
-    // Any other props you need for display
-    [key: string]: any
+    // Additional props with unknown but type-safe values
+    [key: string]: unknown | string | React.ReactNode | ToastActionElement | boolean | ((open: boolean) => void) | undefined
 }
 
-const actionTypes = {
+const ACTION_TYPES = {
     ADD_TOAST: "ADD_TOAST",
     UPDATE_TOAST: "UPDATE_TOAST",
     DISMISS_TOAST: "DISMISS_TOAST",
     REMOVE_TOAST: "REMOVE_TOAST",
 } as const
 
-type ActionType = typeof actionTypes
+type ActionType = typeof ACTION_TYPES
 
 type Action =
-    | { type: ActionType["ADD_TOAST"]; toast: ToasterToast }
-    | { type: ActionType["UPDATE_TOAST"]; toast: Partial<ToasterToast> }
-    | { type: ActionType["DISMISS_TOAST"]; toastId?: string }
-    | { type: ActionType["REMOVE_TOAST"]; toastId?: string }
+    | { type: typeof ACTION_TYPES["ADD_TOAST"]; toast: ToasterToast }
+    | { type: typeof ACTION_TYPES["UPDATE_TOAST"]; toast: Partial<ToasterToast> }
+    | { type: typeof ACTION_TYPES["DISMISS_TOAST"]; toastId?: string }
+    | { type: typeof ACTION_TYPES["REMOVE_TOAST"]; toastId?: string }
 
 interface State {
     toasts: ToasterToast[]
