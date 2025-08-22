@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TopNavigation } from "./TopNavigation";
 import { Sidebar } from "./Sidebar";
 import { ChatWindow } from "./ChatWindow";
 import { MessageInput } from "./MessageInput";
 import { FileViewer } from "./FileViewer";
+import { useWebSocket } from "@/hooks/useWebSocket";
+import { useToast } from "@/hooks/use-toast";
 
 export interface FileAttachment {
   id: string;
@@ -28,13 +30,84 @@ export interface Conversation {
   createdAt: Date;
 }
 
+// Dummy WebSocket URL - replace with your actual WebSocket server URL
+const WEBSOCKET_URL = 'wss://echo.websocket.org';
+
 export const ChatLayout = () => {
+  const { toast } = useToast();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<FileAttachment[]>([]);
+
+  const { isConnected, isReconnecting, sendMessage: wssSendMessage, subscribe } = useWebSocket(WEBSOCKET_URL);
+
+  // Subscribe to WebSocket messages
+  useEffect(() => {
+    subscribe((data) => {
+      switch (data.type) {
+        case 'typing':
+          setIsTyping(data.payload.isTyping);
+          break;
+        
+        case 'message':
+          const { content, files, timestamp } = data.payload;
+          
+          if (!currentConversation) return;
+
+          const aiMessage: Message = {
+            id: Date.now().toString(),
+            content,
+            role: "assistant",
+            timestamp: new Date(timestamp),
+            files: files?.map((file: any) => ({
+              id: file.id,
+              name: file.name,
+              type: file.type,
+              url: file.url,
+              size: file.size
+            }))
+          };
+
+          const updatedConversation = {
+            ...currentConversation,
+            messages: [...currentConversation.messages, aiMessage]
+          };
+
+          setCurrentConversation(updatedConversation);
+          setIsTyping(false);
+
+          // Update conversations list
+          setConversations(prev => {
+            const exists = prev.find(conv => conv.id === updatedConversation.id);
+            if (!exists) {
+              return [updatedConversation, ...prev];
+            }
+            return prev.map(conv => 
+              conv.id === updatedConversation.id ? updatedConversation : conv
+            );
+          });
+          break;
+      }
+    });
+  }, [currentConversation, subscribe]);
+
+  // Show connection status
+  useEffect(() => {
+    if (isReconnecting) {
+      toast({
+        title: "Reconnecting to server...",
+        duration: 2000,
+      });
+    } else if (isConnected) {
+      toast({
+        title: "Connected to server",
+        duration: 2000,
+      });
+    }
+  }, [isConnected, isReconnecting, toast]);
 
   const createNewConversation = () => {
     const newConversation: Conversation = {
@@ -49,6 +122,15 @@ export const ChatLayout = () => {
   };
 
   const sendMessage = async (content: string) => {
+    if (!isConnected) {
+      toast({
+        title: "Not connected to server",
+        description: "Please wait while we reconnect...",
+        variant: "destructive",
+      });
+      return;
+    }
+
     let conversationToUpdate = currentConversation;
 
     // If no current conversation, create one but don't add to sidebar yet
@@ -76,57 +158,20 @@ export const ChatLayout = () => {
     };
 
     setCurrentConversation(updatedConversation);
-
-    // Show typing indicator and simulate AI response
-    setIsTyping(true);
     
-    setTimeout(() => {
-      // Mock file attachments for demo
-      const mockFiles: FileAttachment[] = Math.random() > 0.5 ? [
-        {
-          id: "file-1",
-          name: "analysis_report.pdf",
-          type: "pdf",
-          url: "/demo-pdf.pdf",
-          size: "2.4 MB"
-        },
-        {
-          id: "file-2", 
-          name: "chart_visualization.png",
-          type: "image",
-          url: "https://via.placeholder.com/800x600/6366f1/ffffff?text=Demo+Chart",
-          size: "156 KB"
-        }
-      ] : [];
-
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "I'm an AI assistant. This is a demo response to your message: \"" + content + "\". In a real implementation, this would connect to an AI service.",
-        role: "assistant",
-        timestamp: new Date(),
-        files: mockFiles
-      };
-
-      const finalConversation = {
-        ...updatedConversation,
-        messages: [...updatedConversation.messages, aiMessage]
-      };
-
-      setCurrentConversation(finalConversation);
-      
-      // Add to sidebar only after AI responds (completing the conversation)
-      setConversations(prev => {
-        const exists = prev.find(conv => conv.id === finalConversation.id);
-        if (!exists) {
-          return [finalConversation, ...prev];
-        }
-        return prev.map(conv => 
-          conv.id === finalConversation.id ? finalConversation : conv
-        );
+    // Send message through WebSocket
+    const sent = wssSendMessage(content);
+    if (!sent) {
+      toast({
+        title: "Failed to send message",
+        description: "Please try again",
+        variant: "destructive",
       });
-      
-      setIsTyping(false);
-    }, 2000);
+      return;
+    }
+
+    // Show typing indicator
+    setIsTyping(true);
   };
 
   const hasMessages = currentConversation && currentConversation.messages.length > 0;
