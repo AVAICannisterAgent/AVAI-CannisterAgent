@@ -33,7 +33,7 @@ export const TopNavigation = ({ onToggleSidebar, onNewChat, sidebarOpen }: TopNa
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <span className="font-semibold text-foreground hidden sm:block">AVAI Chat</span>
+          <span className="font-semibold text-foreground hidden sm:block">AI Chat</span>
         </div>
       </div>
 
@@ -63,7 +63,7 @@ export const TopNavigation = ({ onToggleSidebar, onNewChat, sidebarOpen }: TopNa
               <Settings className="w-5 h-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-gray-900 border-border">
+          <DropdownMenuContent align="end" className="w-48 bg-surface border-border">
             <DropdownMenuItem className="hover:bg-surface-hover transition-fast">
               <User className="w-4 h-4 mr-2" />
               Profile

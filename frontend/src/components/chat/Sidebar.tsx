@@ -1,5 +1,3 @@
-"use client"
-
 import { X, Plus, MessageSquare, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -50,7 +48,7 @@ export const Sidebar = ({
       <aside 
         className={cn(
           "fixed lg:relative w-80 h-full bg-sidebar-background border-r border-border flex flex-col z-50 transition-transform duration-300",
-          isOpen ? "translate-x-0 opacity-100" : "-translate-x-full lg:translate-x-0 opacity-0",
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           !isOpen && "lg:w-0 lg:overflow-hidden"
         )}
       >
@@ -132,7 +130,7 @@ export const Sidebar = ({
 
         <div className="p-4 border-t border-border">
           <div className="text-xs text-muted-foreground text-center">
-            <p>AVAI Chat Interface</p>
+            <p>AI Chat Interface</p>
             <p className="mt-1">Built with React & Tailwind</p>
           </div>
         </div>

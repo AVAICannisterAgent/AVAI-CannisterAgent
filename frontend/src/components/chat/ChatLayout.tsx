@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react";
 import { TopNavigation } from "./TopNavigation";
 import { Sidebar } from "./Sidebar";
@@ -81,7 +79,7 @@ export const ChatLayout = () => {
 
     // Show typing indicator and simulate AI response
     setIsTyping(true);
-
+    
     setTimeout(() => {
       // Mock file attachments for demo
       const mockFiles: FileAttachment[] = Math.random() > 0.5 ? [
@@ -93,7 +91,7 @@ export const ChatLayout = () => {
           size: "2.4 MB"
         },
         {
-          id: "file-2",
+          id: "file-2", 
           name: "chart_visualization.png",
           type: "image",
           url: "https://via.placeholder.com/800x600/6366f1/ffffff?text=Demo+Chart",
@@ -103,7 +101,7 @@ export const ChatLayout = () => {
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I'm an AI assistant. This is a demo response to your message: \"" + content + "\". In a real implementation, this would connect to an AVAI service.",
+        content: "I'm an AI assistant. This is a demo response to your message: \"" + content + "\". In a real implementation, this would connect to an AI service.",
         role: "assistant",
         timestamp: new Date(),
         files: mockFiles
@@ -115,18 +113,18 @@ export const ChatLayout = () => {
       };
 
       setCurrentConversation(finalConversation);
-
+      
       // Add to sidebar only after AI responds (completing the conversation)
       setConversations(prev => {
         const exists = prev.find(conv => conv.id === finalConversation.id);
         if (!exists) {
           return [finalConversation, ...prev];
         }
-        return prev.map(conv =>
+        return prev.map(conv => 
           conv.id === finalConversation.id ? finalConversation : conv
         );
       });
-
+      
       setIsTyping(false);
     }, 2000);
   };
@@ -140,14 +138,14 @@ export const ChatLayout = () => {
 
   return (
     <div className="h-screen bg-gradient-chat flex flex-col overflow-hidden">
-      <TopNavigation
+      <TopNavigation 
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         onNewChat={createNewConversation}
         sidebarOpen={sidebarOpen}
       />
-
+      
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar
+        <Sidebar 
           conversations={conversations}
           currentConversation={currentConversation}
           onSelectConversation={setCurrentConversation}
@@ -155,10 +153,10 @@ export const ChatLayout = () => {
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
-
+        
         <div className="flex-1 flex flex-col relative">
           {hasMessages || isTyping ? (
-            <ChatWindow
+            <ChatWindow 
               conversation={currentConversation}
               isTyping={isTyping}
               onFileClick={handleFileClick}
@@ -172,7 +170,7 @@ export const ChatLayout = () => {
                   </svg>
                 </div>
                 <h1 className="text-3xl font-bold text-foreground mb-3">
-                  Welcome to AVAI Chat
+                  Welcome to AI Chat
                 </h1>
                 <p className="text-text-secondary text-lg">
                   Start a conversation with AI. Ask questions, get help, or just chat.
@@ -180,13 +178,13 @@ export const ChatLayout = () => {
               </div>
             </div>
           )}
-
-          <MessageInput
+          
+          <MessageInput 
             onSendMessage={sendMessage}
             disabled={isTyping}
           />
         </div>
-
+        
         <FileViewer
           files={selectedFiles}
           isOpen={fileViewerOpen}

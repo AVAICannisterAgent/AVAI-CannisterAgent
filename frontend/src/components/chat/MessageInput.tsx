@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useRef, KeyboardEvent } from "react";
 import { Send, Paperclip, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -81,15 +79,15 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
           />
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Voice input button. Mic Button commented for now. */}
-            {/* <Button
+            {/* Voice input button */}
+            <Button
               variant="ghost"
               size="sm"
               className="p-2 hover:bg-surface-hover transition-fast"
               disabled={disabled}
             >
               <Mic className="w-4 h-4" />
-            </Button> */}
+            </Button>
 
             {/* Send button */}
             <Button
