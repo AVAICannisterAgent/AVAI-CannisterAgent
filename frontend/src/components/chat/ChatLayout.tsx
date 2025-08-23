@@ -31,7 +31,7 @@ export interface Conversation {
 }
 
 // Dummy WebSocket URL - replace with your actual WebSocket server URL
-const WEBSOCKET_URL = 'wss://echo.websocket.org';
+const WEBSOCKET_URL = 'wss://avai-websocket.mrarejimmyz.workers.dev.avai.life/ws';
 
 export const ChatLayout = () => {
   const { toast } = useToast();
