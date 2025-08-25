@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* AI Chat Interface Design System - Modern, Professional, and Accessible */
+
+@layer base {
+  :root {
+    /* Main Background & Surface Colors */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --surface: 240 10% 6%;
+    --surface-hover: 240 9% 8%;
+
+    /* AI Chat Specific Colors */
+    --chat-background: linear-gradient(135deg, 240 10% 3.9%, 260 8% 4.5%);
+    --chat-surface: 240 8% 7%;
+    --chat-surface-glass: 240 8% 7% / 0.8;
+    
+    /* Message Bubbles */
+    --user-message: linear-gradient(135deg, 217 91% 60%, 224 76% 48%);
+    --user-message-foreground: 0 0% 100%;
+    --ai-message: 240 6% 10%;
+    --ai-message-foreground: 0 0% 95%;
+    
+    /* Navigation & Sidebar */
+    --nav-background: 240 10% 5% / 0.95;
+    --nav-border: 240 6% 12%;
+    --sidebar-background: 240 8% 6%;
+    --sidebar-item-hover: 240 6% 10%;
+    --sidebar-item-active: linear-gradient(135deg, 217 91% 60% / 0.1, 224 76% 48% / 0.1);
+
+    /* Interactive Elements */
+    --primary: linear-gradient(135deg, 217 91% 60%, 224 76% 48%);
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: linear-gradient(135deg, 217 91% 65%, 224 76% 53%);
+    
+    --secondary: 240 5% 15%;
+    --secondary-foreground: 0 0% 90%;
+    --secondary-hover: 240 5% 18%;
+
+    /* Accents & Highlights */
+    --accent: 284 100% 80%;
+    --accent-foreground: 240 10% 3.9%;
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+    --destructive: 0 84% 60%;
+
+    /* Borders & Inputs */
+    --border: 240 6% 12%;
+    --border-hover: 240 6% 18%;
+    --input: 240 6% 10%;
+    --input-focus: 240 6% 12%;
+    
+    /* Text & Content */
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 64%;
+    --text-secondary: 240 4% 75%;
+
+    /* Shadows & Effects */
+    --shadow-sm: 0 1px 2px hsl(240 10% 3.9% / 0.1);
+    --shadow-md: 0 4px 12px hsl(240 10% 3.9% / 0.15);
+    --shadow-lg: 0 10px 25px hsl(240 10% 3.9% / 0.25);
+    --shadow-glow: 0 0 20px hsl(217 91% 60% / 0.3);
+
+    /* Animation & Transitions */
+    --transition-fast: 150ms ease-out;
+    --transition-smooth: 250ms ease-out;
+    --transition-slow: 400ms ease-out;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 240 8% 6%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 6% 10%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 240 6% 12%;
+    --sidebar-ring: 217 91% 60%;
+  }
+}
+
+@layer components {
+  /* Glassmorphism effects */
+  .glass {
+    @apply backdrop-blur-md bg-white/5 border border-white/10;
+  }
+  
+  .glass-strong {
+    @apply backdrop-blur-xl bg-white/10 border border-white/20;
+  }
+
+  /* Gradient backgrounds */
+  .bg-gradient-primary {
+    background: var(--primary);
+  }
+  
+  .bg-gradient-chat {
+    background: var(--chat-background);
+  }
+
+  /* Message bubble styles */
+  .message-user {
+    background: var(--user-message);
+    color: var(--user-message-foreground);
+  }
+  
+  .message-ai {
+    background: hsl(var(--ai-message));
+    color: hsl(var(--ai-message-foreground));
+  }
+
+  /* Smooth transitions */
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  .transition-fast {
+    transition: var(--transition-fast);
+  }
+
+  /* Custom scrollbar */
+  .scrollbar-custom {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-custom::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+  
+  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--border-hover));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
