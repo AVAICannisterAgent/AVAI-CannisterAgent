@@ -13,6 +13,20 @@ from typing import Dict, List, Any, Optional
 from app.logger import logger
 from .config import CanisterConfig
 
+# Import PDF generation capabilities
+try:
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
+    from reportlab.lib import colors
+    from reportlab.lib.units import inch
+    PDF_AVAILABLE = True
+    logger.info("📄 ReportLab PDF generation available")
+except ImportError as e:
+    PDF_AVAILABLE = False
+    logger.warning(f"⚠️ PDF generation not available: {e}")
+
 
 class CanisterReportGenerator:
     """
@@ -30,8 +44,8 @@ class CanisterReportGenerator:
         """Initialize report generator with professional standards."""
         self.config = CanisterConfig()
         
-        # Set up reports directory
-        self.workspace_dir = Path("E:/AVAI 4.0/avai-agent-for-hire")
+        # Set up reports directory - use current working directory
+        self.workspace_dir = Path.cwd()
         self.reports_dir = self.workspace_dir / "workspace" / "reports"
         
         # Ensure reports directory exists
@@ -52,36 +66,44 @@ class CanisterReportGenerator:
             if not extraction_success:
                 logger.info("[REPORT_GEN] Extraction failed, generating error report")
                 return self._generate_error_report(analysis)
-            
+
             # Extract REAL data from centralized extraction
             repo_url = analysis.get("repository_url", "Unknown Repository")
             compliance = analysis.get("todo_compliance", {})
-            
+
             # Use ACTUAL scores and validation - no forcing
             score = compliance.get("score", 0)  # Real score, no minimum forcing
             phases = compliance.get("phases_completed", 0)  # Real phases completed
             validation_passed = compliance.get("validation_passed", False)  # Real validation
-            
+
             # Ensure we only use real extracted data
             ic_patterns = analysis.get("ic_patterns", {})
             security_analysis = analysis.get("security_analysis", {})
             file_analysis = analysis.get("file_analysis", {})
             documentation = analysis.get("documentation", {})
             extraction_sources = analysis.get("extraction_sources", [])
-            
+
             timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
-            
+
             # Generate COMPREHENSIVE PROFESSIONAL AUDIT REPORT
             logger.info("[REPORT_GEN] Building comprehensive professional audit report")
             report = await self.generate_comprehensive_report(analysis)
-            
+
             # Save report to file
             report_filepath = await self._save_report_to_file(report, repo_url)
             
+            # Generate PDF version if available
+            if PDF_AVAILABLE:
+                try:
+                    pdf_filepath = await self._generate_pdf_report(report, analysis, repo_url)
+                    logger.info(f"[PDF_GEN] PDF report generated: {pdf_filepath}")
+                except Exception as pdf_error:
+                    logger.warning(f"[PDF_GEN] PDF generation failed: {pdf_error}")
+
             logger.info(f"[REPORT_GEN] Report built successfully, length: {len(report)}")
             logger.info(f"[REPORT_GEN] Report saved to: {report_filepath}")
             return report
-            
+
         except Exception as e:
             logger.error(f"[ERROR] Real analysis report generation failed: {e}")
             error_report = self._generate_error_report({"error": str(e)})
@@ -927,6 +949,147 @@ Despite technical limitations during report generation, this repository meets mi
         except Exception as e:
             logger.error(f"[ERROR] Comprehensive report generation failed: {e}")
             return self._generate_fallback_report(str(e))
+    
+    async def _generate_pdf_report(self, markdown_content: str, analysis: Dict[str, Any], repo_url: str) -> str:
+        """Generate PDF version of the audit report using ReportLab."""
+        if not PDF_AVAILABLE:
+            raise ImportError("ReportLab not available for PDF generation")
+        
+        try:
+            # Create PDF filename
+            repo_name = self._extract_repo_name_from_url(repo_url)
+            sanitized_repo = self._sanitize_filename(repo_name)
+            timestamp = time.strftime('%Y-%m-%d_%H-%M-%S')
+            pdf_filename = f"{sanitized_repo}_audit_report_{timestamp}.pdf"
+            pdf_filepath = self.reports_dir / pdf_filename
+            
+            # Create PDF document
+            doc = SimpleDocTemplate(str(pdf_filepath), pagesize=A4)
+            styles = getSampleStyleSheet()
+            story = []
+            
+            # Custom styles
+            title_style = ParagraphStyle(
+                'CustomTitle',
+                parent=styles['Heading1'],
+                fontSize=18,
+                spaceAfter=30,
+                alignment=TA_CENTER,
+                textColor=colors.darkblue
+            )
+            
+            heading_style = ParagraphStyle(
+                'CustomHeading',
+                parent=styles['Heading2'],
+                fontSize=14,
+                spaceAfter=12,
+                spaceBefore=20,
+                textColor=colors.darkblue
+            )
+            
+            subheading_style = ParagraphStyle(
+                'CustomSubHeading',
+                parent=styles['Heading3'],
+                fontSize=12,
+                spaceAfter=10,
+                spaceBefore=15,
+                textColor=colors.darkgreen
+            )
+            
+            normal_style = ParagraphStyle(
+                'CustomNormal',
+                parent=styles['Normal'],
+                fontSize=10,
+                spaceAfter=6,
+                alignment=TA_JUSTIFY
+            )
+            
+            # Parse markdown content and convert to PDF elements
+            lines = markdown_content.split('\n')
+            current_section = []
+            
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    if current_section:
+                        story.append(Spacer(1, 6))
+                    continue
+                
+                # Handle different markdown elements
+                if line.startswith('# '):
+                    # Main title
+                    title_text = line[2:].strip()
+                    story.append(Paragraph(title_text, title_style))
+                    story.append(Spacer(1, 12))
+                elif line.startswith('## '):
+                    # Section heading
+                    heading_text = line[3:].strip()
+                    story.append(Paragraph(heading_text, heading_style))
+                elif line.startswith('### '):
+                    # Subsection heading
+                    subheading_text = line[4:].strip()
+                    story.append(Paragraph(subheading_text, subheading_style))
+                elif line.startswith('**') and line.endswith('**'):
+                    # Bold text
+                    bold_text = f"<b>{line[2:-2]}</b>"
+                    story.append(Paragraph(bold_text, normal_style))
+                elif line.startswith('- '):
+                    # Bullet point
+                    bullet_text = f"• {line[2:].strip()}"
+                    story.append(Paragraph(bullet_text, normal_style))
+                elif line.startswith('---'):
+                    # Horizontal rule
+                    story.append(Spacer(1, 12))
+                    story.append(PageBreak())
+                else:
+                    # Regular text
+                    # Clean up markdown formatting for PDF
+                    clean_line = line.replace('**', '').replace('*', '').replace('`', '')
+                    if clean_line:
+                        story.append(Paragraph(clean_line, normal_style))
+            
+            # Add summary table if analysis data available
+            if analysis:
+                story.append(PageBreak())
+                story.append(Paragraph("AUDIT SUMMARY", heading_style))
+                
+                # Create summary table
+                compliance = analysis.get("todo_compliance", {})
+                score = compliance.get("score", 0)
+                phases = compliance.get("phases_completed", 0)
+                extraction_success = analysis.get("extraction_success", False)
+                
+                summary_data = [
+                    ['Metric', 'Value', 'Status'],
+                    ['Compliance Score', f'{score}/100', '✓ PASS' if score >= 75 else '⚠ REVIEW'],
+                    ['Phases Completed', f'{phases}/6', '✓ COMPLETE' if phases >= 6 else '⚠ PARTIAL'],
+                    ['Extraction Success', 'YES' if extraction_success else 'NO', '✓ SUCCESS' if extraction_success else '✗ FAILED'],
+                    ['Repository URL', repo_url, '✓ ANALYZED']
+                ]
+                
+                summary_table = Table(summary_data, colWidths=[2*inch, 2*inch, 1.5*inch])
+                summary_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, 0), 12),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ]))
+                
+                story.append(summary_table)
+            
+            # Build PDF
+            doc.build(story)
+            logger.info(f"[PDF_GEN] PDF report generated successfully: {pdf_filepath}")
+            
+            return str(pdf_filepath)
+            
+        except Exception as e:
+            logger.error(f"[PDF_GEN] PDF generation failed: {e}")
+            raise
     
     async def _save_report_to_file(self, report_content: str, repo_url: str) -> str:
         """Save the generated report to a file in the workspace/reports directory."""
