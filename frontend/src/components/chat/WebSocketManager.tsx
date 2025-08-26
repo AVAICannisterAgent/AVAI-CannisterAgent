@@ -46,8 +46,54 @@ export const useWebSocketManager = ({
           });
           break;
         
+        case 'orchestration':
+          // Handle orchestration events from backend
+          console.log('🎭 Orchestration event received:', data.event_type);
+          
+          if (data.event_type === 'ai_response') {
+            console.log('🤖 AI Response via orchestration!');
+            
+            // Check if this response is for this client
+            const responseData = data.data;
+            if (responseData.client_id && responseData.client_id !== clientId) {
+              console.log('⏭️ Response not for this client, ignoring');
+              return;
+            }
+            
+            onTypingChange(false);
+            
+            if (currentConversation) {
+              const aiMessage: Message = {
+                id: Date.now().toString(),
+                content: responseData.response || 'No response received',
+                role: "assistant",
+                timestamp: new Date(data.timestamp || new Date()),
+              };
+
+              const updatedConversation = {
+                ...currentConversation,
+                messages: [...currentConversation.messages, aiMessage]
+              };
+
+              onConversationUpdate(updatedConversation);
+              
+              // Update conversations list
+              onConversationsUpdate((prev: Conversation[]) => {
+                const exists = prev.find(conv => conv.id === updatedConversation.id);
+                if (!exists) {
+                  return [updatedConversation, ...prev];
+                }
+                return prev.map(conv => 
+                  conv.id === updatedConversation.id ? updatedConversation : conv
+                );
+              });
+            }
+          }
+          break;
+        
         case 'ai_response':
-          console.log('🤖 AVAI Response received!');
+          // Handle direct ai_response messages (fallback)
+          console.log('🤖 Direct AVAI Response received!');
           
           // Check if this response is for this client
           if (data.client_id && data.client_id !== clientId) {
@@ -60,7 +106,7 @@ export const useWebSocketManager = ({
           if (currentConversation) {
             const aiMessage: Message = {
               id: Date.now().toString(),
-              content: data.payload?.response || 'No response received',
+              content: data.payload?.response || data.response || 'No response received',
               role: "assistant",
               timestamp: new Date(data.timestamp || new Date()),
             };
