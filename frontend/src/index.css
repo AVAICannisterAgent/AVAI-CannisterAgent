@@ -153,3 +153,30 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  /* Heartbeat Monitor Animations */
+  .drop-shadow-glow {
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+  
+  .animate-heartbeat {
+    animation: heartbeat 1.2s ease-in-out infinite;
+  }
+  
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.1); }
+    50% { transform: scale(1.15); }
+    75% { transform: scale(1.1); }
+  }
+  
+  .animate-ekg {
+    animation: ekg 2s linear infinite;
+  }
+  
+  @keyframes ekg {
+    0% { stroke-dashoffset: 100; }
+    100% { stroke-dashoffset: 0; }
+  }
+}

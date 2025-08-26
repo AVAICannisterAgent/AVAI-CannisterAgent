@@ -68,7 +68,7 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
             onKeyDown={handleKeyDown}
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
-            placeholder={disabled ? "AI is responding..." : "Type your message... (Enter to send, Shift+Enter for new line)"}
+            placeholder={disabled ? "AVAI is diagnosing... 🩺" : "Ask AVAI anything about blockchain, audits, or Web3... 💬"}
             disabled={disabled}
             className={cn(
               "flex-1 min-h-[40px] max-h-[120px] resize-none border-0 bg-transparent",

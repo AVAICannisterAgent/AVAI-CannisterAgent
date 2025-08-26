@@ -1,4 +1,4 @@
-import { X, Plus, MessageSquare, Trash2 } from "lucide-react";
+import { X, Plus, MessageSquare, Trash2, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -56,10 +56,10 @@ export const Sidebar = ({
           <div className="flex items-center justify-between">
             <Button
               onClick={onNewChat}
-              className="flex-1 justify-start gap-2 bg-gradient-primary hover:bg-primary-hover text-primary-foreground border-0"
+              className="flex-1 justify-start gap-2 bg-gradient-primary hover:bg-primary-hover text-primary-foreground border-0 text-sm"
             >
-              <Plus className="w-4 h-4" />
-              New Chat
+              <Stethoscope className="w-4 h-4" />
+              Chat with AVAI
             </Button>
             
             <Button
