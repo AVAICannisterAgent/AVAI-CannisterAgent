@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Playful Doctor Favicon</title>
+</head>
+<body>
+    <canvas id="favicon" width="32" height="32" style="border: 1px solid #ccc;"></canvas>
+    <br>
+    <button onclick="downloadFavicon()">Download Favicon</button>
+    
+    <script>
+        const canvas = document.getElementById('favicon');
+        const ctx = canvas.getContext('2d');
+        
+        // Draw playful doctor favicon
+        // Head
+        ctx.fillStyle = '#FFE4B5';
+        ctx.beginPath();
+        ctx.arc(16, 16, 14, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Border
+        ctx.strokeStyle = '#FF6B6B';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Stethoscope
+        ctx.strokeStyle = '#FF6B6B';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(8, 20);
+        ctx.quadraticCurveTo(8, 18, 10, 18);
+        ctx.lineTo(22, 18);
+        ctx.quadraticCurveTo(24, 18, 24, 20);
+        ctx.stroke();
+        
+        // Stethoscope earpiece
+        ctx.fillStyle = '#FF6B6B';
+        ctx.beginPath();
+        ctx.arc(24, 20, 2, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Inner earpiece
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(24, 20, 1, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Eyes
+        ctx.fillStyle = '#333';
+        ctx.beginPath();
+        ctx.arc(12, 13, 1.5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(20, 13, 1.5, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Eye sparkles
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(12.5, 12.5, 0.5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(20.5, 12.5, 0.5, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Smile
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(11, 19);
+        ctx.quadraticCurveTo(16, 23, 21, 19);
+        ctx.stroke();
+        
+        // Medical cross
+        ctx.fillStyle = '#FF6B6B';
+        const crossX = 15, crossY = 8;
+        ctx.beginPath();
+        ctx.roundRect(crossX, crossY, 2, 6, 1);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.roundRect(crossX - 2, crossY + 2, 6, 2, 1);
+        ctx.fill();
+        
+        // Rosy cheeks
+        ctx.fillStyle = 'rgba(255, 182, 193, 0.6)';
+        ctx.beginPath();
+        ctx.arc(9, 16, 2, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(23, 16, 2, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        function downloadFavicon() {
+            const link = document.createElement('a');
+            link.download = 'favicon.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Convert to ICO format (simplified)
+        console.log('Favicon data URL:', canvas.toDataURL());
+    </script>
+</body>
+</html>
