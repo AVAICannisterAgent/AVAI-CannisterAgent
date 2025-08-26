@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVAI Real-Time Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .status-card {
+            grid-column: 1 / -1;
+        }
+        
+        .card h3 {
+            margin-top: 0;
+            color: #f0f0f0;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-connected { background-color: #4ade80; }
+        .status-disconnected { background-color: #ef4444; }
+        .status-warning { background-color: #f59e0b; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ade80, #22c55e);
+            transition: width 0.3s ease;
+        }
+        
+        .log-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #4ade80;
+            padding-left: 10px;
+        }
+        
+        .log-entry.ERROR { border-left-color: #ef4444; }
+        .log-entry.WARNING { border-left-color: #f59e0b; }
+        .log-entry.INFO { border-left-color: #3b82f6; }
+        
+        .timestamp {
+            color: #a1a1aa;
+            font-size: 0.8em;
+        }
+        
+        .channels-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .channels-list li {
+            background: rgba(255,255,255,0.1);
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        
+        .session-info {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .phase-indicator {
+            font-weight: bold;
+            color: #4ade80;
+        }
+        
+        .refresh-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 0.9em;
+        }
+        
+        .refresh-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AVAI Real-Time Dashboard</h1>
+            <p>Monitor orchestration sessions and log streams from Redis</p>
+        </div>
+
+        <div class="dashboard">
+            <div class="card status-card">
+                <h3>📊 System Status</h3>
+                <div id="system-status">
+                    <p><span id="redis-status" class="status-indicator status-warning"></span>Redis Connection: <span id="redis-text">Checking...</span></p>
+                    <p><span id="websocket-status" class="status-indicator status-warning"></span>WebSocket: <span id="websocket-text">Checking...</span></p>
+                    <p><span id="sessions-status" class="status-indicator status-warning"></span>Active Sessions: <span id="sessions-count">0</span></p>
+                </div>
+                <button class="refresh-btn" onclick="updateSystemStatus()">🔄 Refresh Status</button>
+            </div>
+
+            <div class="card">
+                <h3>🔄 Current Session</h3>
+                <div id="current-session">
+                    <p>No active session</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📢 Redis Channels</h3>
+                <div id="redis-channels">
+                    <p>Loading channels...</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📝 Recent Logs</h3>
+                <div class="log-container" id="recent-logs">
+                    <p class="log-entry">Loading recent logs...</p>
+                </div>
+                <button class="refresh-btn" onclick="loadRecentLogs()">🔄 Refresh Logs</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>📈 Session History</h3>
+            <div id="session-history">
+                <p>Loading session history...</p>
+            </div>
+            <button class="refresh-btn" onclick="loadSessionHistory()">🔄 Refresh History</button>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentSessionId = null;
+        let redisChannels = {};
+        
+        // Mock data for demonstration (since Redis API might not be running)
+        const mockData = {
+            status: {
+                redis_enabled: true,
+                redis_connected: false, // Redis not running in demo
+                active_sessions_count: 1,
+                active_sessions: ['demo-session-123'],
+                current_session: {
+                    session_id: 'demo-session-123',
+                    prompt: 'Analyze the current AVAI system architecture and provide a brief overview of its capabilities',
+                    status: 'running',
+                    current_phase: 'agent_execution',
+                    progress: 65.0,
+                    start_time: new Date().toISOString(),
+                    agent_name: 'avai',
+                    estimated_time: 120
+                },
+                channels: {
+                    logs: 'avai:logs:stream',
+                    orchestration: 'avai:orchestration:events',
+                    sessions: 'avai:sessions:active',
+                    progress: 'avai:progress:updates'
+                }
+            },
+            logs: [
+                {
+                    timestamp: new Date().toISOString(),
+                    level: 'INFO',
+                    component: 'centralized_orchestrator',
+                    message: '🧠 Smart analysis complete: analysis/general/moderate -> avai (priority: 9)',
+                    session_id: 'demo-session-123'
+                },
+                {
+                    timestamp: new Date().toISOString(),
+                    level: 'INFO',
+                    component: 'agent_execution',
+                    message: '🚀 Agent execution started',
+                    session_id: 'demo-session-123'
+                },
+                {
+                    timestamp: new Date().toISOString(),
+                    level: 'INFO',
+                    component: 'search_phase',
+                    message: '🔍 Web search initiated for architecture analysis',
+                    session_id: 'demo-session-123'
+                }
+            ]
+        };
+
+        // Update system status
+        async function updateSystemStatus() {
+            try {
+                // Try to fetch real data, fall back to mock data
+                let status;
+                try {
+                    const response = await fetch('/api/orchestration/status');
+                    if (response.ok) {
+                        status = await response.json();
+                    } else {
+                        throw new Error('API not available');
+                    }
+                } catch (e) {
+                    console.log('Using mock data (Redis API not running)');
+                    status = mockData.status;
+                }
+
+                // Update Redis status
+                const redisStatus = document.getElementById('redis-status');
+                const redisText = document.getElementById('redis-text');
+                if (status.redis_connected) {
+                    redisStatus.className = 'status-indicator status-connected';
+                    redisText.textContent = 'Connected';
+                } else {
+                    redisStatus.className = 'status-indicator status-warning';
+                    redisText.textContent = status.redis_enabled ? 'Enabled (Not Connected)' : 'Disabled';
+                }
+
+                // Update sessions count
+                document.getElementById('sessions-count').textContent = status.active_sessions_count;
+
+                // Update current session
+                updateCurrentSession(status.current_session);
+
+                // Update Redis channels
+                redisChannels = status.channels;
+                updateRedisChannels();
+
+            } catch (error) {
+                console.error('Failed to update system status:', error);
+            }
+        }
+
+        // Update current session display
+        function updateCurrentSession(session) {
+            const container = document.getElementById('current-session');
+            
+            if (!session) {
+                container.innerHTML = '<p>No active session</p>';
+                return;
+            }
+
+            const startTime = new Date(session.start_time);
+            const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000);
+            
+            container.innerHTML = `
+                <div class="session-info">
+                    <p><strong>Session ID:</strong> ${session.session_id.substring(0, 8)}...</p>
+                    <p><strong>Prompt:</strong> ${session.prompt.substring(0, 80)}...</p>
+                    <p><strong>Agent:</strong> ${session.agent_name}</p>
+                    <p><strong>Phase:</strong> <span class="phase-indicator">${session.current_phase}</span></p>
+                    <p><strong>Elapsed:</strong> ${elapsed}s / ${session.estimated_time}s</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${session.progress}%"></div>
+                    </div>
+                    <p style="text-align: center; margin: 5px 0;">${session.progress.toFixed(1)}% Complete</p>
+                </div>
+            `;
+            
+            currentSessionId = session.session_id;
+        }
+
+        // Update Redis channels display
+        function updateRedisChannels() {
+            const container = document.getElementById('redis-channels');
+            
+            if (Object.keys(redisChannels).length === 0) {
+                container.innerHTML = '<p>No channels available</p>';
+                return;
+            }
+
+            const channelsList = Object.entries(redisChannels)
+                .map(([name, channel]) => `<li><strong>${name}:</strong> ${channel}</li>`)
+                .join('');
+
+            container.innerHTML = `<ul class="channels-list">${channelsList}</ul>`;
+        }
+
+        // Load recent logs
+        async function loadRecentLogs() {
+            const container = document.getElementById('recent-logs');
+            
+            try {
+                // Try to fetch real logs, fall back to mock data
+                let logs;
+                if (currentSessionId) {
+                    try {
+                        const response = await fetch(`/api/logs/recent/${currentSessionId}`);
+                        if (response.ok) {
+                            logs = await response.json();
+                        } else {
+                            throw new Error('API not available');
+                        }
+                    } catch (e) {
+                        console.log('Using mock logs (Redis API not running)');
+                        logs = mockData.logs;
+                    }
+                } else {
+                    logs = mockData.logs;
+                }
+
+                if (logs.length === 0) {
+                    container.innerHTML = '<p class="log-entry">No logs available</p>';
+                    return;
+                }
+
+                const logsHtml = logs
+                    .slice(-10) // Show last 10 logs
+                    .map(log => {
+                        const time = new Date(log.timestamp).toLocaleTimeString();
+                        return `
+                            <div class="log-entry ${log.level}">
+                                <span class="timestamp">[${time}]</span>
+                                <strong>${log.component}:</strong> ${log.message}
+                            </div>
+                        `;
+                    })
+                    .join('');
+
+                container.innerHTML = logsHtml;
+
+            } catch (error) {
+                console.error('Failed to load recent logs:', error);
+                container.innerHTML = '<p class="log-entry ERROR">Failed to load logs</p>';
+            }
+        }
+
+        // Load session history
+        async function loadSessionHistory() {
+            const container = document.getElementById('session-history');
+            
+            try {
+                // Try to fetch real data, fall back to mock data
+                let sessions;
+                try {
+                    const response = await fetch('/api/sessions/active');
+                    if (response.ok) {
+                        sessions = await response.json();
+                    } else {
+                        throw new Error('API not available');
+                    }
+                } catch (e) {
+                    console.log('Using mock session data (Redis API not running)');
+                    sessions = mockData.status.active_sessions;
+                }
+
+                if (sessions.length === 0) {
+                    container.innerHTML = '<p>No recent sessions</p>';
+                    return;
+                }
+
+                const sessionsHtml = sessions
+                    .map(sessionId => `
+                        <div class="session-info">
+                            <p><strong>Session:</strong> ${sessionId}</p>
+                            <button class="refresh-btn" onclick="loadSessionDetails('${sessionId}')">📋 View Details</button>
+                        </div>
+                    `)
+                    .join('');
+
+                container.innerHTML = sessionsHtml;
+
+            } catch (error) {
+                console.error('Failed to load session history:', error);
+                container.innerHTML = '<p>Failed to load session history</p>';
+            }
+        }
+
+        // Load session details
+        async function loadSessionDetails(sessionId) {
+            try {
+                const response = await fetch(`/api/sessions/${sessionId}`);
+                if (response.ok) {
+                    const sessionData = await response.json();
+                    alert(`Session Details:\n\nID: ${sessionData.session_id}\nPrompt: ${sessionData.prompt}\nStatus: ${sessionData.status}\nLogs: ${sessionData.logs.length} entries`);
+                } else {
+                    alert(`Session details not available for ${sessionId} (Redis API not running)`);
+                }
+            } catch (error) {
+                alert(`Failed to load session details: ${error.message}`);
+            }
+        }
+
+        // Auto-refresh functionality
+        function startAutoRefresh() {
+            setInterval(() => {
+                updateSystemStatus();
+                loadRecentLogs();
+            }, 5000); // Refresh every 5 seconds
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 AVAI Real-Time Dashboard initialized');
+            updateSystemStatus();
+            loadRecentLogs();
+            loadSessionHistory();
+            startAutoRefresh();
+        });
+    </script>
+</body>
+</html>
