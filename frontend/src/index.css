@@ -6,28 +6,28 @@
 
 @layer base {
   :root {
-    /* Main Background & Surface Colors */
+    /* Main Background & Surface Colors - Enhanced for better contrast */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
-    --surface: 240 10% 6%;
-    --surface-hover: 240 9% 8%;
+    --surface: 240 10% 8%;
+    --surface-hover: 240 9% 11%;
 
     /* AI Chat Specific Colors */
     --chat-background: linear-gradient(135deg, 240 10% 3.9%, 260 8% 4.5%);
-    --chat-surface: 240 8% 7%;
-    --chat-surface-glass: 240 8% 7% / 0.8;
+    --chat-surface: 240 8% 9%;
+    --chat-surface-glass: 240 8% 9% / 0.8;
     
-    /* Message Bubbles */
+    /* Message Bubbles - Improved contrast */
     --user-message: linear-gradient(135deg, 217 91% 60%, 224 76% 48%);
     --user-message-foreground: 0 0% 100%;
-    --ai-message: 240 6% 10%;
-    --ai-message-foreground: 0 0% 95%;
+    --ai-message: 240 6% 12%;
+    --ai-message-foreground: 0 0% 96%;
     
     /* Navigation & Sidebar */
     --nav-background: 240 10% 5% / 0.95;
-    --nav-border: 240 6% 12%;
-    --sidebar-background: 240 8% 6%;
-    --sidebar-item-hover: 240 6% 10%;
+    --nav-border: 240 6% 15%;
+    --sidebar-background: 240 8% 7%;
+    --sidebar-item-hover: 240 6% 12%;
     --sidebar-item-active: linear-gradient(135deg, 217 91% 60% / 0.1, 224 76% 48% / 0.1);
 
     /* Interactive Elements */
@@ -35,9 +35,9 @@
     --primary-foreground: 0 0% 100%;
     --primary-hover: linear-gradient(135deg, 217 91% 65%, 224 76% 53%);
     
-    --secondary: 240 5% 15%;
-    --secondary-foreground: 0 0% 90%;
-    --secondary-hover: 240 5% 18%;
+    --secondary: 240 5% 18%;
+    --secondary-foreground: 0 0% 92%;
+    --secondary-hover: 240 5% 21%;
 
     /* Accents & Highlights */
     --accent: 284 100% 80%;
@@ -46,16 +46,16 @@
     --warning: 38 92% 50%;
     --destructive: 0 84% 60%;
 
-    /* Borders & Inputs */
-    --border: 240 6% 12%;
-    --border-hover: 240 6% 18%;
-    --input: 240 6% 10%;
-    --input-focus: 240 6% 12%;
+    /* Borders & Inputs - Enhanced visibility */
+    --border: 240 6% 15%;
+    --border-hover: 240 6% 22%;
+    --input: 240 6% 12%;
+    --input-focus: 240 6% 15%;
     
-    /* Text & Content */
-    --muted: 240 5% 15%;
-    --muted-foreground: 240 5% 64%;
-    --text-secondary: 240 4% 75%;
+    /* Text & Content - Better contrast */
+    --muted: 240 5% 18%;
+    --muted-foreground: 240 5% 68%;
+    --text-secondary: 240 4% 80%;
 
     /* Shadows & Effects */
     --shadow-sm: 0 1px 2px hsl(240 10% 3.9% / 0.1);
@@ -70,13 +70,13 @@
 
     --radius: 0.75rem;
 
-    --sidebar-background: 240 8% 6%;
-    --sidebar-foreground: 0 0% 95%;
+    --sidebar-background: 240 8% 7%;
+    --sidebar-foreground: 0 0% 96%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 6% 10%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 240 6% 12%;
+    --sidebar-accent: 240 6% 12%;
+    --sidebar-accent-foreground: 0 0% 96%;
+    --sidebar-border: 240 6% 15%;
     --sidebar-ring: 217 91% 60%;
   }
 }
@@ -157,7 +157,16 @@
 @layer utilities {
   /* Heartbeat Monitor Animations */
   .drop-shadow-glow {
-    filter: drop-shadow(0 0 6px currentColor);
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+  
+  /* Text glow effects for better dark theme visibility */
+  .text-glow-blue {
+    text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+  }
+  
+  .text-glow-soft {
+    text-shadow: 0 0 6px rgba(255, 255, 255, 0.3);
   }
   
   .animate-heartbeat {
@@ -178,5 +187,31 @@
   @keyframes ekg {
     0% { stroke-dashoffset: 100; }
     100% { stroke-dashoffset: 0; }
+  }
+  
+  /* Welcome screen animations */
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out;
+  }
+  
+  @keyframes fade-in-up {
+    0% { 
+      opacity: 0; 
+      transform: translateY(20px); 
+    }
+    100% { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+  
+  /* Improved pill hover effects */
+  .pill-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .pill-hover:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 }
