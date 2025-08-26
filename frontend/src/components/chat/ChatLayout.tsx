@@ -30,8 +30,8 @@ export interface Conversation {
   createdAt: Date;
 }
 
-// Dummy WebSocket URL - replace with your actual WebSocket server URL
-const WEBSOCKET_URL = 'wss://avai-websocket.mrarejimmyz.workers.dev.avai.life/ws';
+// WebSocket URL for the AVAI tunnel
+const WEBSOCKET_URL = 'wss://websocket.avai.life/ws';
 
 export const ChatLayout = () => {
   const { toast } = useToast();
@@ -42,57 +42,115 @@ export const ChatLayout = () => {
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<FileAttachment[]>([]);
 
-  const { isConnected, isReconnecting, sendMessage: wssSendMessage, subscribe } = useWebSocket(WEBSOCKET_URL);
+  const { isConnected, isReconnecting, sendMessage: wssSendMessage, subscribe, clientId } = useWebSocket(WEBSOCKET_URL);
 
   // Subscribe to WebSocket messages
   useEffect(() => {
+    console.log('🔄 Setting up WebSocket subscription...');
+    console.log('🆔 Client ID for this connection:', clientId);
+    
     subscribe((data) => {
+      console.log('📨 ChatLayout received WebSocket message:', data);
+      console.log('🏷️ Message type:', data.type);
+      console.log('🔍 Message keys:', Object.keys(data));
+      console.log('⏰ Message timestamp:', data.timestamp);
+      console.log('🆔 Client ID from message:', data.client_id);
+      console.log('🔀 Our Client ID:', clientId);
+      
       switch (data.type) {
-        case 'typing':
-          setIsTyping(data.payload.isTyping);
-          break;
-        
-        case 'message':
-          const { content, files, timestamp } = data.payload;
-          
-          if (!currentConversation) return;
-
-          const aiMessage: Message = {
-            id: Date.now().toString(),
-            content,
-            role: "assistant",
-            timestamp: new Date(timestamp),
-            files: files?.map((file: any) => ({
-              id: file.id,
-              name: file.name,
-              type: file.type,
-              url: file.url,
-              size: file.size
-            }))
-          };
-
-          const updatedConversation = {
-            ...currentConversation,
-            messages: [...currentConversation.messages, aiMessage]
-          };
-
-          setCurrentConversation(updatedConversation);
-          setIsTyping(false);
-
-          // Update conversations list
-          setConversations(prev => {
-            const exists = prev.find(conv => conv.id === updatedConversation.id);
-            if (!exists) {
-              return [updatedConversation, ...prev];
-            }
-            return prev.map(conv => 
-              conv.id === updatedConversation.id ? updatedConversation : conv
-            );
+        case 'chat_queued':
+          console.log('📤 Message queued for processing');
+          // Show message was queued
+          setIsTyping(true);
+          toast({
+            title: "Message Sent",
+            description: "Your message has been queued for processing...",
           });
           break;
+        
+        case 'ai_response':
+          console.log('🤖 AI Response received!');
+          console.log('📄 Response payload:', data.payload);
+          console.log('💬 Response text:', data.payload?.response);
+          console.log('🔍 FULL AI RESPONSE DATA STRUCTURE:');
+          console.log(JSON.stringify(data, null, 2));
+          console.log('📊 Data properties:', Object.keys(data));
+          console.log('🆔 AI Response client_id:', data.client_id);
+          console.log('🔀 Our client_id:', clientId);
+          
+          // Check if this AI response is for this client
+          if (data.client_id && data.client_id !== clientId) {
+            console.log('⏭️ AI response not for this client, ignoring');
+            return;
+          }
+          
+          console.log('✅ AI response is for this client, processing...');
+          setIsTyping(false);
+          
+          // Use functional update to get current conversation state
+          setCurrentConversation(current => {
+            console.log('🔍 Current conversation state:', current);
+            if (!current) {
+              console.log('❌ No current conversation to add response to - current is:', current);
+              return current;
+            }
+
+            console.log('✅ Current conversation exists - ID:', current.id);
+            console.log('📝 Current message count:', current.messages.length);
+
+            const aiMessage: Message = {
+              id: Date.now().toString(),
+              content: data.payload?.response || 'No response received',
+              role: "assistant",
+              timestamp: new Date(data.timestamp || new Date()),
+            };
+
+            console.log('✅ Creating AI message:');
+            console.log('   - ID:', aiMessage.id);
+            console.log('   - Content:', aiMessage.content);
+            console.log('   - Content length:', aiMessage.content.length);
+            console.log('   - Role:', aiMessage.role);
+            console.log('   - Timestamp:', aiMessage.timestamp);
+
+            const updatedConversation = {
+              ...current,
+              messages: [...current.messages, aiMessage]
+            };
+
+            console.log('🔄 Updating conversation with AI response');
+            console.log('📊 Old message count:', current.messages.length);
+            console.log('📊 New message count:', updatedConversation.messages.length);
+
+            // Update conversations list
+            setConversations(prev => {
+              const exists = prev.find(conv => conv.id === updatedConversation.id);
+              if (!exists) {
+                return [updatedConversation, ...prev];
+              }
+              return prev.map(conv => 
+                conv.id === updatedConversation.id ? updatedConversation : conv
+              );
+            });
+
+            return updatedConversation;
+          });
+          break;
+          
+        case 'error':
+          console.log('❌ WebSocket error received:', data.message);
+          setIsTyping(false);
+          toast({
+            title: "Error",
+            description: data.message || "An error occurred",
+            variant: "destructive"
+          });
+          break;
+          
+        default:
+          console.log('📋 Unknown message type:', data.type);
       }
     });
-  }, [currentConversation, subscribe]);
+  }, [subscribe, toast]); // Removed currentConversation dependency!
 
   // Show connection status
   useEffect(() => {

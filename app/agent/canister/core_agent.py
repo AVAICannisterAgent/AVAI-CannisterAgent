@@ -436,3 +436,33 @@ Focus on providing comprehensive, professional-grade IC canister analysis."""
     async def generate_comprehensive_report(self, analysis: Dict[str, Any]) -> str:
         """Generate comprehensive report using report generator."""
         return await self.report_generator.generate_comprehensive_report(analysis)
+    
+    async def generate_response(self, prompt: str) -> str:
+        """Generate a conversational response using the LLM."""
+        try:
+            if hasattr(self, 'llm') and self.llm:
+                # Use the LLM to generate a helpful response
+                system_prompt = """You are AVAI, a professional Internet Computer (IC) canister analysis assistant.
+You are knowledgeable about:
+- Internet Computer Protocol and canister development
+- Smart contract security and best practices
+- IC ecosystem tools and frameworks
+- Canister analysis and auditing
+
+Provide helpful, accurate, and friendly responses. Keep responses conversational but professional."""
+
+                # Create messages for the LLM
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt}
+                ]
+                
+                # Use the LLM's ask method
+                response = await self.llm.ask(messages)
+                return response if response else f"Hello! I'm AVAI, your Internet Computer canister analysis assistant. How can I help you with IC development today?"
+            else:
+                # Fallback response when LLM is not available
+                return f"Hello! I'm AVAI, your Internet Computer canister analysis assistant. You said: '{prompt}'. How can I help you with IC project analysis today?"
+        except Exception as e:
+            logger.error(f"Error generating response: {e}")
+            return f"Hello! I'm AVAI, your Internet Computer canister analysis assistant. How can I help you with IC development today?"

@@ -2,8 +2,13 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Message, FileAttachment } from '@/components/chat/ChatLayout';
 
 interface WebSocketMessage {
-  type: 'message' | 'file' | 'typing';
-  payload: any;
+  type: 'chat_message' | 'ai_response' | 'chat_queued' | 'chat_ack' | 'ai_response_ack' | 'heartbeat' | 'error' | 'connected' | 'welcome' | 'log_summary' | 'stored_logs' | 'log_update' | 'message' | 'file' | 'typing';
+  payload?: any;
+  message?: string;
+  timestamp?: string;
+  source?: string;
+  clientId?: string;
+  client_id?: string;
 }
 
 export const useWebSocket = (url: string) => {
@@ -11,23 +16,42 @@ export const useWebSocket = (url: string) => {
   const [isReconnecting, setIsReconnecting] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  
+  // Generate client ID once and persist it across reconnections
+  const clientIdRef = useRef<string>(`react_client_${Date.now()}`);
 
   const connect = useCallback(() => {
     try {
-      const ws = new WebSocket(url);
+      // Use the persistent client ID
+      const clientId = clientIdRef.current;
+      const dashboardUrl = `${url}?type=dashboard&client_id=${clientId}`;
+      
+      console.log('🔗 WebSocket connecting to:', dashboardUrl);
+      console.log('🆔 PERSISTENT Client ID:', clientId);
+      console.log('🔄 This ID will stay the same across reconnections');
+      
+      const ws = new WebSocket(dashboardUrl);
       
       ws.onopen = () => {
+        console.log('✅ WebSocket connected successfully!');
+        console.log('🆔 Connected with client ID:', clientId);
         setIsConnected(true);
         setIsReconnecting(false);
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
+        console.log('🔌 WebSocket disconnected:', event.code, event.reason);
         setIsConnected(false);
         // Attempt to reconnect after 3 seconds
         reconnectTimeoutRef.current = setTimeout(() => {
+          console.log('🔄 Attempting to reconnect...');
           setIsReconnecting(true);
           connect();
         }, 3000);
+      };
+
+      ws.onerror = (error) => {
+        console.error('❌ WebSocket error:', error);
       };
 
       wsRef.current = ws;
@@ -58,12 +82,9 @@ export const useWebSocket = (url: string) => {
     }
 
     const payload: WebSocketMessage = {
-      type: 'message',
-      payload: {
-        content: message,
-        files,
-        timestamp: new Date().toISOString(),
-      },
+      type: 'chat_message',
+      message: message,
+      timestamp: new Date().toISOString(),
     };
 
     try {
@@ -93,5 +114,6 @@ export const useWebSocket = (url: string) => {
     isReconnecting,
     sendMessage,
     subscribe,
+    clientId: clientIdRef.current, // Expose the client ID for debugging/testing
   };
 };
