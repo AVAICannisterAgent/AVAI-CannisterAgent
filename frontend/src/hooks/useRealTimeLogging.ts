@@ -196,9 +196,9 @@ export const useRealTimeLogging = () => {
           else if (data.type === 'heartbeat') {
             setState(prev => ({ ...prev, lastHeartbeat: new Date() }));
             
-            // Send heartbeat response
+            // Send heartbeat acknowledgment (matches server expectation)
             ws.send(JSON.stringify({
-              type: 'heartbeat_response',
+              type: 'heartbeat',
               timestamp: new Date().toISOString(),
               client_id: 'frontend_logger'
             }));
