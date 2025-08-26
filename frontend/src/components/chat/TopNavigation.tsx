@@ -1,4 +1,4 @@
-import { Menu, Plus, Settings, User, Stethoscope } from "lucide-react";
+import { Menu, Plus, Settings, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { HeartbeatStatus } from "./HeartbeatStatus";
+import { AvaiLogo } from "@/components/ui/AvaiLogo";
 
 interface TopNavigationProps {
   onToggleSidebar: () => void;
@@ -47,8 +48,8 @@ export const TopNavigation = ({
         </Button>
         
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-gradient-primary rounded-lg flex items-center justify-center">
-            <Stethoscope className="w-4 h-4 text-white" />
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center">
+            <AvaiLogo size={28} />
           </div>
           <div className="hidden sm:block">
             <span className="font-semibold text-foreground text-sm">

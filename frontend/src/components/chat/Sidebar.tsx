@@ -1,4 +1,5 @@
-import { X, Plus, MessageSquare, Trash2, Stethoscope } from "lucide-react";
+import { X, Plus, MessageSquare, Trash2 } from "lucide-react";
+import { AvaiLogo } from "@/components/ui/AvaiLogo";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
@@ -58,7 +59,7 @@ export const Sidebar = ({
               onClick={onNewChat}
               className="flex-1 justify-start gap-2 bg-gradient-primary hover:bg-primary-hover text-primary-foreground border-0 text-sm"
             >
-              <Stethoscope className="w-4 h-4" />
+              <AvaiLogo size={16} />
               Chat with AVAI
             </Button>
             

@@ -1,4 +1,5 @@
-import { Stethoscope, Activity, Shield } from "lucide-react";
+import { Activity, Shield } from "lucide-react";
+import { AvaiLogo } from "@/components/ui/AvaiLogo";
 
 export const WelcomeScreen = () => {
   return (
@@ -6,8 +7,8 @@ export const WelcomeScreen = () => {
       <div className="text-center max-w-md animate-fade-in-up">
         {/* AVAI Logo with medical/blockchain theme */}
         <div className="relative w-20 h-20 mx-auto mb-6">
-          <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <Stethoscope className="w-10 h-10 text-white drop-shadow-md" />
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <AvaiLogo size={80} />
           </div>
           {/* Blockchain pulse indicator */}
           <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-pulse shadow-lg">
@@ -39,7 +40,7 @@ export const WelcomeScreen = () => {
             <span className="font-medium">Pipeline Monitor</span>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 border border-purple-500/30 rounded-full text-xs text-purple-300 hover:bg-purple-500/30 transition-colors pill-hover">
-            <Stethoscope className="w-3 h-3" />
+            <AvaiLogo size={12} />
             <span className="font-medium">System Diagnose</span>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 border border-orange-500/30 rounded-full text-xs text-orange-300 hover:bg-orange-500/30 transition-colors pill-hover">
