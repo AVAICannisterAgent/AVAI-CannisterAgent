@@ -5,10 +5,13 @@ interface WebSocketMessage {
   type: 'chat_message' | 'ai_response' | 'chat_queued' | 'chat_ack' | 'ai_response_ack' | 'heartbeat' | 'error' | 'connected' | 'welcome' | 'log_summary' | 'stored_logs' | 'log_update' | 'message' | 'file' | 'typing';
   payload?: any;
   message?: string;
+  response?: string; // ✅ Added for ai_response messages
   timestamp?: string;
   source?: string;
   clientId?: string;
   client_id?: string;
+  original_prompt_id?: string; // ✅ Added for ai_response messages
+  metadata?: any; // ✅ Added for ai_response messages
 }
 
 export const useWebSocket = (url: string) => {
@@ -83,11 +86,18 @@ export const useWebSocket = (url: string) => {
 
     const payload: WebSocketMessage = {
       type: 'chat_message',
-      message: message,
+      payload: {
+        prompt: message,  // ✅ Changed from 'message' to 'payload.prompt' 
+        files: files,
+        client_id: clientIdRef.current,
+        source: 'frontend_chat',
+        timestamp: new Date().toISOString()
+      },
       timestamp: new Date().toISOString(),
     };
 
     try {
+      console.log('📤 Sending WebSocket message:', payload);
       wsRef.current.send(JSON.stringify(payload));
       return true;
     } catch (error) {

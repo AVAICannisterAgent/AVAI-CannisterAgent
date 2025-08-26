@@ -143,7 +143,7 @@ export const ChatLayout = () => {
           
           // Add AI message to conversation
           addMessage({
-            content: data.payload?.response || 'No response received',
+            content: data.response || data.payload?.response || 'No response received', // ✅ Fixed: Check both response locations
             role: "assistant",
             timestamp: new Date(data.timestamp || new Date()),
           });

@@ -6,9 +6,12 @@ interface WebSocketData {
   event_type?: string; // For orchestration events
   payload?: any;
   message?: string;
+  response?: string; // ✅ Added for ai_response messages
   timestamp?: string;
   client_id?: string;
   id?: string;
+  original_prompt_id?: string; // ✅ Added for ai_response messages
+  metadata?: any; // ✅ Added for ai_response messages
   data?: {
     session_id?: string;
     prompt?: string;
