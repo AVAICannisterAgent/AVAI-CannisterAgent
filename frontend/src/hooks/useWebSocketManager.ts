@@ -3,10 +3,54 @@ import { useWebSocket } from '@/hooks/useWebSocket';
 
 interface WebSocketData {
   type: string;
+  event_type?: string; // For orchestration events
   payload?: any;
   message?: string;
   timestamp?: string;
   client_id?: string;
+  id?: string;
+  data?: {
+    session_id?: string;
+    prompt?: string;
+    status?: string;
+    progress?: number;
+    current_step?: string;
+    analysis?: {
+      intent?: string;
+      domain?: string;
+      complexity?: string;
+      priority?: number;
+      estimated_time?: number;
+    };
+    response?: string | {
+      summary?: string;
+      recommendations?: string[];
+      code_quality_score?: number;
+      performance_metrics?: any;
+      files_analyzed?: string[];
+      issues_found?: any[];
+    };
+    start_time?: string;
+    end_time?: string;
+    execution_time?: number;
+    logs_count?: number;
+    client_id?: string;
+    user_agent?: string;
+    processing_details?: {
+      step_description?: string;
+      estimated_remaining?: number;
+      substeps_completed?: number;
+      total_substeps?: number;
+      current_file?: string;
+      files_processed?: number;
+    };
+    agent_metadata?: {
+      agent_used?: string;
+      confidence_score?: number;
+      sources_analyzed?: string[];
+      processing_time?: number;
+    };
+  };
 }
 
 interface UseWebSocketManagerProps {

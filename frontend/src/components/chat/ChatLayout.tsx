@@ -84,6 +84,50 @@ export const ChatLayout = () => {
             description: "AVAI is diagnosing your request... 🩺",
           });
           break;
+
+        // ✅ NEW: Enhanced orchestration events for typing indicator
+        case 'orchestration':
+          console.log('🎯 Orchestration event received:', data.event_type);
+          switch (data.event_type) {
+            case 'orchestration_start':
+              console.log('🚀 Analysis starting...');
+              setIsTyping(true);
+              waitingStartRef.current = new Date();
+              setWaitingTime(0);
+              toast({
+                title: "AVAI Analysis Started",
+                description: `🔍 ${data.data?.analysis?.intent || 'Analyzing your request'}...`,
+              });
+              break;
+              
+            case 'orchestration_progress':
+              console.log(`⚡ Progress: ${data.data?.progress}% - ${data.data?.current_step}`);
+              // Keep typing indicator active during progress
+              if (!isTyping) {
+                setIsTyping(true);
+                waitingStartRef.current = new Date();
+              }
+              break;
+              
+            case 'orchestration_complete':
+              console.log('✅ Analysis complete!');
+              setIsTyping(false);
+              waitingStartRef.current = null;
+              setWaitingTime(0);
+              
+              // Add AI response to conversation
+              if (data.data?.response) {
+                addMessage({
+                  content: typeof data.data.response === 'string' 
+                    ? data.data.response 
+                    : data.data.response.summary || 'Analysis completed',
+                  role: "assistant",
+                  timestamp: new Date(data.timestamp || new Date()),
+                });
+              }
+              break;
+          }
+          break;
         
         case 'ai_response':
           console.log('🤖 AI Response received!');
