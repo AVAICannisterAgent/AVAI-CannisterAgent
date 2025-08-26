@@ -14,40 +14,125 @@ import {
   MessageSquare,
   Users,
   Zap,
-  Send
+  Send,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface QueueStatusPanelProps {
   isConnected: boolean;
   websocketClientId?: string;
   onSendWebSocketMessage?: (message: any) => void;
+  onWebSocketMessage?: (message: any) => void;
 }
 
 export const QueueStatusPanel = ({ 
   isConnected, 
   websocketClientId,
-  onSendWebSocketMessage 
+  onSendWebSocketMessage,
+  onWebSocketMessage 
 }: QueueStatusPanelProps) => {
   const [queueStats, setQueueStats] = useState({
     pending: 0,
     processing: 0,
     completed: 0,
     failed: 0,
-    total: 0
+    total: 0,
+    realSize: 0 // Actual Redis queue size
   });
   
   const [recentMessages, setRecentMessages] = useState<any[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [isClearing, setIsClearing] = useState(false);
 
-  // Simulate realistic queue data (this would come from WebSocket messages in real implementation)
+  // Handle incoming WebSocket messages
+  useEffect(() => {
+    if (!onWebSocketMessage) return;
+    
+    // This would be called from parent component when WebSocket messages arrive
+    const handleMessage = (message: any) => {
+      switch (message.type) {
+        case 'queue_status':
+          if (message.payload) {
+            setQueueStats(prev => ({
+              ...prev,
+              realSize: message.payload.size || 0
+            }));
+          }
+          break;
+        case 'queue_cleared':
+          setQueueStats(prev => ({
+            ...prev,
+            pending: 0,
+            realSize: 0
+          }));
+          addRecentMessage({
+            type: 'queue_cleared',
+            message: `Queue cleared successfully (${message.deletedCount || 0} items removed)`
+          });
+          setIsClearing(false);
+          break;
+        case 'queue_clear_error':
+          addRecentMessage({
+            type: 'error',
+            message: `Failed to clear queue: ${message.error}`
+          });
+          setIsClearing(false);
+          break;
+      }
+    };
+    
+    onWebSocketMessage(handleMessage);
+  }, [onWebSocketMessage]);
+
+  // Request queue status on mount and periodically
+  useEffect(() => {
+    if (isConnected && onSendWebSocketMessage) {
+      // Request initial queue status
+      onSendWebSocketMessage({
+        type: 'get_queue_status'
+      });
+      
+      // Request status every 5 seconds
+      const interval = setInterval(() => {
+        onSendWebSocketMessage({
+          type: 'get_queue_status'
+        });
+      }, 5000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [isConnected, onSendWebSocketMessage]);
+
+  // Handle clearing queue
+  const handleClearQueue = () => {
+    if (!onSendWebSocketMessage || !isConnected) return;
+    
+    setIsClearing(true);
+    onSendWebSocketMessage({
+      type: 'clear_queue'
+    });
+  };
   const updateQueueStats = () => {
-    setQueueStats({
+    setQueueStats(prev => ({
       pending: Math.floor(Math.random() * 5) + 1,
       processing: Math.floor(Math.random() * 3) + 1,
       completed: 147 + Math.floor(Math.random() * 10),
       failed: Math.floor(Math.random() * 2),
-      total: 153 + Math.floor(Math.random() * 15)
-    });
+      total: 153 + Math.floor(Math.random() * 15),
+      realSize: prev.realSize // Keep the real Redis size
+    }));
     setLastUpdate(new Date());
   };
 
@@ -252,6 +337,84 @@ export const QueueStatusPanel = ({
               {queueStats.completed} of {queueStats.total} tasks completed
               {lastUpdate && ` • Last updated: ${lastUpdate.toLocaleTimeString()}`}
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Queue Management Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Queue Management
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <h4 className="font-medium">Clear Queue</h4>
+                <p className="text-sm text-muted-foreground">
+                  Remove all pending items from the Redis queue
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Current queue size: <span className="font-mono">{queueStats.realSize}</span> items
+                </p>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={!isConnected || isClearing || queueStats.realSize === 0}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Clear Queue
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-destructive" />
+                      Clear Queue
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete all <strong>{queueStats.realSize}</strong> items 
+                      currently in the Redis queue. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleClearQueue}
+                      className="bg-destructive hover:bg-destructive/90"
+                    >
+                      {isClearing ? 'Clearing...' : 'Clear Queue'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 border rounded-lg">
+              <div>
+                <h4 className="font-medium">Refresh Status</h4>
+                <p className="text-sm text-muted-foreground">
+                  Get current queue status from Redis
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!isConnected}
+                onClick={() => onSendWebSocketMessage?.({type: 'get_queue_status'})}
+                className="flex items-center gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Refresh
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
