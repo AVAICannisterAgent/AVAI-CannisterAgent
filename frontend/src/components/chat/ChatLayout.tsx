@@ -220,6 +220,7 @@ export const ChatLayout = () => {
               conversation={currentConversation}
               isTyping={isTyping}
               onFileClick={handleFileClick}
+              lastHeartbeat={lastHeartbeat}
             />
           ) : (
             <WelcomeScreen />

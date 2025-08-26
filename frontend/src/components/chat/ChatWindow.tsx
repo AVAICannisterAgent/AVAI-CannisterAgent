@@ -8,9 +8,10 @@ interface ChatWindowProps {
   conversation: Conversation | null;
   isTyping: boolean;
   onFileClick: (files: FileAttachment[]) => void;
+  lastHeartbeat?: Date;
 }
 
-export const ChatWindow = ({ conversation, isTyping, onFileClick }: ChatWindowProps) => {
+export const ChatWindow = ({ conversation, isTyping, onFileClick, lastHeartbeat }: ChatWindowProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -41,7 +42,7 @@ export const ChatWindow = ({ conversation, isTyping, onFileClick }: ChatWindowPr
           
           {isTyping && (
             <div className="animate-fade-in">
-              <TypingIndicator />
+              <TypingIndicator isTyping={isTyping} lastHeartbeat={lastHeartbeat} />
             </div>
           )}
           
