@@ -32,7 +32,7 @@ export interface Conversation {
   createdAt: Date;
 }
 
-// WebSocket URL for the AVAI tunnel
+// WebSocket URL for the AVAI tunnel - Enhanced WebSocket with queue integration
 const WEBSOCKET_URL = 'wss://websocket.avai.life/ws';
 
 export const ChatLayout = () => {

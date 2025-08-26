@@ -1,5 +1,6 @@
-import { Menu, Plus, Settings, User } from "lucide-react";
+import { Menu, Plus, Settings, User, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,6 +84,18 @@ export const TopNavigation = ({
           <span>New</span>
         </Button>
 
+        <Link to="/queue">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hidden sm:flex items-center gap-1.5 hover:bg-surface-hover transition-fast px-2 py-1.5 h-8 text-xs"
+            title="Queue Monitor"
+          >
+            <Activity className="w-3.5 h-3.5" />
+            <span>Queue</span>
+          </Button>
+        </Link>
+
         <Button
           variant="ghost"
           size="sm"
@@ -107,6 +120,13 @@ export const TopNavigation = ({
             <DropdownMenuItem className="hover:bg-surface-hover transition-fast text-sm">
               <Settings className="w-4 h-4 mr-2" />
               Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="hover:bg-surface-hover transition-fast text-sm">
+              <Link to="/queue" className="flex items-center w-full">
+                <Activity className="w-4 h-4 mr-2" />
+                Queue Monitor
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="hover:bg-surface-hover transition-fast text-destructive text-sm">
