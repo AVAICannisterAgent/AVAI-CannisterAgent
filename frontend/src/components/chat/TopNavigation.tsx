@@ -1,6 +1,5 @@
-import { Menu, Plus, Settings, User, Activity } from "lucide-react";
+import { Menu, Plus, Settings, User, Stethoscope } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +8,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { HeartbeatStatus } from "./HeartbeatStatus";
-import { AvaiLogo } from "@/components/ui/AvaiLogo";
 
 interface TopNavigationProps {
   onToggleSidebar: () => void;
@@ -30,36 +28,25 @@ export const TopNavigation = ({
   lastHeartbeat, 
   waitingTime = 0 
 }: TopNavigationProps) => {
-  
-  const handleNewChat = () => {
-    console.log('🔄 New Chat button clicked');
-    onNewChat();
-  };
-
   return (
-    <header className="h-12 border-b border-nav-border bg-nav-background backdrop-blur-md flex items-center justify-between px-3 relative z-50">
-      <div className="flex items-center gap-2">
+    <header className="h-14 border-b border-nav-border bg-nav-background backdrop-blur-md flex items-center justify-between px-4 relative z-50">
+      <div className="flex items-center gap-3">
         <Button 
           variant="ghost" 
           size="sm"
           onClick={onToggleSidebar}
-          className="p-1.5 hover:bg-surface-hover transition-fast"
+          className="p-2 hover:bg-surface-hover transition-fast"
         >
-          <Menu className="w-4 h-4" />
+          <Menu className="w-5 h-5" />
         </Button>
         
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center">
-            <AvaiLogo size={28} />
+          <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+            <Stethoscope className="w-5 h-5 text-white" />
           </div>
-          <div className="hidden sm:block">
-            <span className="font-semibold text-foreground text-sm">
-              AVAI
-            </span>
-            <span className="text-xs text-foreground/60 block -mt-0.5">
-              ICP Doctor
-            </span>
-          </div>
+          <span className="font-semibold text-foreground hidden sm:block">
+            AVAI <span className="text-xs opacity-60">🩺</span>
+          </span>
         </div>
       </div>
 
@@ -73,63 +60,43 @@ export const TopNavigation = ({
         />
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleNewChat}
-          className="hidden sm:flex items-center gap-1.5 hover:bg-surface-hover transition-fast px-2 py-1.5 h-8 text-xs"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>New</span>
-        </Button>
-
-        <Link to="/queue">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden sm:flex items-center gap-1.5 hover:bg-surface-hover transition-fast px-2 py-1.5 h-8 text-xs"
-            title="Queue Monitor"
-          >
-            <Activity className="w-3.5 h-3.5" />
-            <span>Queue</span>
-          </Button>
-        </Link>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleNewChat}
-          className="sm:hidden p-1.5 hover:bg-surface-hover transition-fast"
-          title="New Chat"
+          onClick={onNewChat}
+          className="hidden sm:flex items-center gap-2 hover:bg-surface-hover transition-fast"
         >
           <Plus className="w-4 h-4" />
+          <span>New Chat</span>
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onNewChat}
+          className="sm:hidden p-2 hover:bg-surface-hover transition-fast"
+        >
+          <Plus className="w-5 h-5" />
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="p-1.5 hover:bg-surface-hover transition-fast">
-              <Settings className="w-4 h-4" />
+            <Button variant="ghost" size="sm" className="p-2 hover:bg-surface-hover transition-fast">
+              <Settings className="w-5 h-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-surface border-border">
-            <DropdownMenuItem className="hover:bg-surface-hover transition-fast text-sm">
+            <DropdownMenuItem className="hover:bg-surface-hover transition-fast">
               <User className="w-4 h-4 mr-2" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-surface-hover transition-fast text-sm">
+            <DropdownMenuItem className="hover:bg-surface-hover transition-fast">
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="hover:bg-surface-hover transition-fast text-sm">
-              <Link to="/queue" className="flex items-center w-full">
-                <Activity className="w-4 h-4 mr-2" />
-                Queue Monitor
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="hover:bg-surface-hover transition-fast text-destructive text-sm">
+            <DropdownMenuItem className="hover:bg-surface-hover transition-fast text-destructive">
               Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>

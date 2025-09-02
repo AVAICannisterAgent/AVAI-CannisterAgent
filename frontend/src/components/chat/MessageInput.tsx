@@ -40,10 +40,10 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
   };
 
   return (
-    <div className="p-3 border-t border-border bg-background/50 backdrop-blur-sm">
+    <div className="p-4 border-t border-border bg-background/50 backdrop-blur-sm">
       <div className="max-w-4xl mx-auto">
         <div className={cn(
-          "relative flex items-end gap-2 p-2.5 rounded-xl border transition-all duration-200",
+          "relative flex items-end gap-3 p-3 rounded-2xl border transition-all duration-200",
           "bg-surface border-border hover:border-border-hover focus-within:border-primary/50",
           "shadow-sm hover:shadow-md focus-within:shadow-lg"
         )}>
@@ -51,10 +51,10 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
           <Button
             variant="ghost"
             size="sm"
-            className="p-1.5 hover:bg-surface-hover transition-fast flex-shrink-0"
+            className="p-2 hover:bg-surface-hover transition-fast flex-shrink-0"
             disabled={disabled}
           >
-            <Paperclip className="w-3.5 h-3.5" />
+            <Paperclip className="w-4 h-4" />
           </Button>
 
           {/* Message textarea */}
@@ -68,25 +68,25 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
             onKeyDown={handleKeyDown}
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
-            placeholder={disabled ? "AVAI is diagnosing... 🩺" : "Ask about blockchain, ICP canisters, audits, or Web3... 💬"}
+            placeholder={disabled ? "AVAI is diagnosing... 🩺" : "Ask AVAI anything about blockchain, audits, or Web3... 💬"}
             disabled={disabled}
             className={cn(
-              "flex-1 min-h-[36px] max-h-[120px] resize-none border-0 bg-transparent",
+              "flex-1 min-h-[40px] max-h-[120px] resize-none border-0 bg-transparent",
               "focus-visible:ring-0 focus-visible:ring-offset-0 scrollbar-custom",
               "placeholder:text-muted-foreground text-sm leading-relaxed p-0"
             )}
             rows={1}
           />
 
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {/* Voice input button */}
             <Button
               variant="ghost"
               size="sm"
-              className="p-1.5 hover:bg-surface-hover transition-fast"
+              className="p-2 hover:bg-surface-hover transition-fast"
               disabled={disabled}
             >
-              <Mic className="w-3.5 h-3.5" />
+              <Mic className="w-4 h-4" />
             </Button>
 
             {/* Send button */}
@@ -94,20 +94,20 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
               onClick={handleSend}
               disabled={!message.trim() || disabled}
               className={cn(
-                "p-1.5 h-auto transition-all duration-200 min-w-[32px]",
+                "p-2 h-auto transition-all duration-200",
                 message.trim() && !disabled
                   ? "bg-gradient-primary hover:bg-primary-hover text-primary-foreground shadow-md hover:shadow-lg"
                   : "bg-muted hover:bg-muted text-muted-foreground"
               )}
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
         {/* Tips */}
-        <div className="mt-1.5 text-xs text-muted-foreground text-center">
-          <span>Press Enter to send • Shift+Enter for new line • Specialized in ICP & Web3</span>
+        <div className="mt-2 text-xs text-muted-foreground text-center">
+          <span>Press Enter to send, Shift+Enter for new line</span>
         </div>
       </div>
     </div>

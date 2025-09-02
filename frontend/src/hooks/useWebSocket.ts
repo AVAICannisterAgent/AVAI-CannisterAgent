@@ -2,20 +2,13 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Message, FileAttachment } from '@/components/chat/ChatLayout';
 
 interface WebSocketMessage {
-  type: 'orchestration' | 'chat' | 'chat_message' | 'ai_response' | 'chat_queued' | 'chat_ack' | 'ai_response_ack' | 'heartbeat' | 'error' | 'connected' | 'welcome' | 'log_summary' | 'stored_logs' | 'log_update' | 'message' | 'file' | 'typing';
+  type: 'chat_message' | 'ai_response' | 'chat_queued' | 'chat_ack' | 'ai_response_ack' | 'heartbeat' | 'error' | 'connected' | 'welcome' | 'log_summary' | 'stored_logs' | 'log_update' | 'message' | 'file' | 'typing';
   payload?: any;
   message?: string;
-  files?: FileAttachment[];
-  response?: string; // ✅ Added for ai_response messages
   timestamp?: string;
   source?: string;
   clientId?: string;
   client_id?: string;
-  original_prompt_id?: string; // ✅ Added for ai_response messages
-  metadata?: any; // ✅ Added for ai_response messages
-  // Orchestration event fields
-  event_type?: string;
-  data?: any;
 }
 
 export const useWebSocket = (url: string) => {
@@ -89,16 +82,12 @@ export const useWebSocket = (url: string) => {
     }
 
     const payload: WebSocketMessage = {
-      type: 'chat',  // ✅ Fixed: Changed from 'chat_message' to 'chat' to match server expectation
-      message: message,  // ✅ Fixed: Server expects 'message' field, not 'payload.prompt'
-      files: files,
-      client_id: clientIdRef.current,
-      source: 'frontend_chat',
+      type: 'chat_message',
+      message: message,
       timestamp: new Date().toISOString(),
     };
 
     try {
-      console.log('📤 Sending WebSocket message:', payload);
       wsRef.current.send(JSON.stringify(payload));
       return true;
     } catch (error) {
