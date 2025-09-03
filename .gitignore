@@ -12,13 +12,30 @@
 !requirements.txt
 !setup.py
 
-# Include src directory and all its contents
+# Include ICP/DFX configuration files
+!dfx.json
+!canister_ids.json
+!.vessel/
+!.vessel/**
+
+# Include Motoko source files
 !src/
 !src/**
+
+# Include app directory structure
 !app/agent/
 app/agent/*
 !app/agent/canister/
 !app/agent/canister/**
+
+# Include canister integration files
+!app/integration/
+!app/integration/**
+
+# Include canister test files
+!test_canister_integration.py
+!tests/canister/
+!tests/canister/**
 
 # Always exclude compiled Python files even if in included directories
 **/__pycache__/
@@ -34,3 +51,21 @@ app/agent/*
 # Exclude frontend node_modules
 frontend/node_modules/
 frontend/.next
+
+# Include build scripts for canisters
+!scripts/
+!scripts/**
+!build/
+!build/**
+
+# Exclude sensitive or generated files
+**/.dfx/
+**/node_modules/
+**/.env
+**/.env.*
+
+# Include deployment and configuration files
+!deploy/
+!deploy/**
+!config/
+!config/**

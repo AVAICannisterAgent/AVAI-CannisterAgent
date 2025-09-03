@@ -1,11 +1,13 @@
 """
-Core Canister Agent - Orchestrates modular IC canister analysis.
+Core Canister Agent - Orchestrates modular IC canister analysis with Redis/WebSocket integration.
 
 Main agent class that coordinates browser navigation, file analysis,
-TODO framework compliance, security assessment, and report generation.
+TODO framework compliance, security assessment, report generation,
+and real-time WebSocket/Redis communication.
 """
 
 import asyncio
+import json
 import time
 from typing import Dict, List, Optional, Any
 
@@ -22,6 +24,7 @@ from .todo_framework import CanisterTodoFramework
 from .security_analyzer import CanisterSecurityAnalyzer
 from .report_generator import CanisterReportGenerator
 from .config import CanisterConfig
+from .websocket_bridge import CanisterWebSocketBridge
 
 # Import centralized content extraction
 from app.core.extraction import CentralizedContentExtractor
@@ -38,7 +41,7 @@ except ImportError as e:
 
 class CanisterAgent(ToolCallAgent):
     """
-    Modular Internet Computer canister analysis agent.
+    Modular Internet Computer canister analysis agent with Redis/WebSocket integration.
     
     Orchestrates specialized components for comprehensive IC project analysis:
     - Browser navigation for repository exploration
@@ -46,10 +49,11 @@ class CanisterAgent(ToolCallAgent):
     - TODO framework for systematic analysis phases
     - Security assessment for vulnerability detection
     - Professional report generation
+    - Real-time WebSocket/Redis communication
     """
 
     name: str = "CanisterAgent"
-    description: str = "Modular agent for Internet Computer canister analysis and security auditing"
+    description: str = "Modular agent for Internet Computer canister analysis with real-time integration"
 
     def __init__(self, **kwargs):
         """Initialize the modular CanisterAgent with specialized components."""
@@ -71,6 +75,9 @@ class CanisterAgent(ToolCallAgent):
         self.security_analyzer = CanisterSecurityAnalyzer(getattr(self, 'llm_client', None))
         self.report_generator = CanisterReportGenerator()
         
+        # Initialize WebSocket/Redis bridge
+        self.websocket_bridge = CanisterWebSocketBridge()
+        
         # Initialize centralized content extractor (replaces fallback mechanisms)
         browser_tool = self.available_tools.get_tool("enhanced_browser")
         self.centralized_extractor = CentralizedContentExtractor(
@@ -85,7 +92,21 @@ class CanisterAgent(ToolCallAgent):
         else:
             self.web_analyzer = None
         
-        logger.info("🕯️ Modular CanisterAgent initialized with specialized components")
+        logger.info("🕯️ Modular CanisterAgent initialized with Redis/WebSocket integration")
+
+    async def initialize_websocket_integration(self):
+        """Initialize WebSocket and Redis integration."""
+        try:
+            success = await self.websocket_bridge.initialize()
+            if success:
+                logger.info("✅ Canister WebSocket/Redis integration active")
+                return True
+            else:
+                logger.warning("⚠️ Canister integration failed - using fallback mode")
+                return False
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize canister integration: {e}")
+            return False
 
     def _initialize_canister_tools(self) -> List:
         """Initialize tools needed for canister analysis."""
@@ -438,16 +459,32 @@ Focus on providing comprehensive, professional-grade IC canister analysis."""
         return await self.report_generator.generate_comprehensive_report(analysis)
     
     async def generate_response(self, prompt: str) -> str:
-        """Generate a conversational response using the LLM."""
+        """Generate a conversational response using the LLM with WebSocket integration."""
         try:
+            # Notify that canister agent is processing
+            if hasattr(self, 'websocket_bridge') and self.websocket_bridge.websocket_connection:
+                await self.websocket_bridge.websocket_connection.send(json.dumps({
+                    "type": "canister_processing",
+                    "message": "AVAI Canister Agent is analyzing your request...",
+                    "timestamp": time.time()
+                }))
+            
             if hasattr(self, 'llm') and self.llm:
                 # Use the LLM to generate a helpful response
-                system_prompt = """You are AVAI, a professional Internet Computer (IC) canister analysis assistant.
+                system_prompt = """You are AVAI, a professional Internet Computer (IC) canister analysis assistant with real-time capabilities.
 You are knowledgeable about:
 - Internet Computer Protocol and canister development
 - Smart contract security and best practices
 - IC ecosystem tools and frameworks
 - Canister analysis and auditing
+- Real-time WebSocket and Redis integration
+- Docker containerization and deployment
+
+You have access to advanced canister analysis tools and can provide:
+- Comprehensive security audits
+- Code quality assessments
+- Performance optimization recommendations
+- Real-time analysis updates via WebSocket
 
 Provide helpful, accurate, and friendly responses. Keep responses conversational but professional."""
 
@@ -459,10 +496,148 @@ Provide helpful, accurate, and friendly responses. Keep responses conversational
                 
                 # Use the LLM's ask method
                 response = await self.llm.ask(messages)
-                return response if response else f"Hello! I'm AVAI, your Internet Computer canister analysis assistant. How can I help you with IC development today?"
+                
+                # Notify completion via WebSocket
+                if hasattr(self, 'websocket_bridge') and self.websocket_bridge.websocket_connection:
+                    await self.websocket_bridge.websocket_connection.send(json.dumps({
+                        "type": "canister_response",
+                        "message": response,
+                        "timestamp": time.time()
+                    }))
+                
+                return response if response else f"Hello! I'm AVAI, your Internet Computer canister analysis assistant with real-time capabilities. How can I help you with IC development today?"
             else:
                 # Fallback response when LLM is not available
-                return f"Hello! I'm AVAI, your Internet Computer canister analysis assistant. You said: '{prompt}'. How can I help you with IC project analysis today?"
+                return f"Hello! I'm AVAI, your Internet Computer canister analysis assistant with Redis/WebSocket integration. You said: '{prompt}'. How can I help you with IC project analysis today?"
         except Exception as e:
             logger.error(f"Error generating response: {e}")
             return f"Hello! I'm AVAI, your Internet Computer canister analysis assistant. How can I help you with IC development today?"
+
+    async def process_redis_queue_request(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Process analysis request from Redis queue with real-time updates."""
+        try:
+            request_type = request_data.get("type", "analysis")
+            repository_url = request_data.get("repository_url", "")
+            client_id = request_data.get("client_id", "unknown")
+            
+            logger.info(f"🔄 Processing canister request: {request_type} for {repository_url}")
+            
+            # Send processing notification
+            if hasattr(self, 'websocket_bridge'):
+                await self.websocket_bridge.notify_analysis_started(
+                    f"req_{int(time.time())}", repository_url
+                )
+            
+            if request_type == "security_audit":
+                # Process security audit
+                audit_scope = request_data.get("audit_scope", ["smart_contracts", "access_control"])
+                audit_id = await self.websocket_bridge.process_security_audit(repository_url, audit_scope)
+                
+                # Get real-time status
+                audit_status = await self.websocket_bridge.get_audit_status(audit_id) if audit_id else None
+                
+                return {
+                    "type": "security_audit_result",
+                    "audit_id": audit_id,
+                    "status": audit_status,
+                    "client_id": client_id,
+                    "timestamp": time.time()
+                }
+                
+            elif request_type == "code_analysis":
+                # Process code analysis
+                analysis_type = request_data.get("analysis_type", "comprehensive")
+                request_id = await self.websocket_bridge.process_analysis_request(repository_url, analysis_type)
+                
+                # Get analysis status
+                analysis_status = await self.websocket_bridge.get_analysis_status(request_id) if request_id else None
+                
+                return {
+                    "type": "code_analysis_result", 
+                    "request_id": request_id,
+                    "status": analysis_status,
+                    "client_id": client_id,
+                    "timestamp": time.time()
+                }
+                
+            elif request_type == "generate_report":
+                # Generate comprehensive report
+                source_ids = request_data.get("source_data_ids", [])
+                report_format = request_data.get("format", "markdown")
+                template = request_data.get("template", "executive")
+                
+                report_id = await self.websocket_bridge.generate_report(
+                    "comprehensive", source_ids, report_format, template
+                )
+                
+                report_status = await self.websocket_bridge.get_report_status(report_id) if report_id else None
+                
+                return {
+                    "type": "report_generation_result",
+                    "report_id": report_id,
+                    "status": report_status,
+                    "client_id": client_id,
+                    "timestamp": time.time()
+                }
+                
+            else:
+                # Default comprehensive analysis
+                analysis_result = await self.run(repository_url)
+                
+                return {
+                    "type": "comprehensive_analysis_result",
+                    "result": analysis_result,
+                    "client_id": client_id,
+                    "timestamp": time.time()
+                }
+                
+        except Exception as e:
+            logger.error(f"❌ Failed to process canister request: {e}")
+            return {
+                "type": "error",
+                "error": str(e),
+                "client_id": request_data.get("client_id", "unknown"),
+                "timestamp": time.time()
+            }
+
+    async def start_realtime_monitoring(self):
+        """Start real-time monitoring and WebSocket streaming."""
+        try:
+            if hasattr(self, 'websocket_bridge'):
+                # Start background task for real-time updates
+                asyncio.create_task(self.websocket_bridge.stream_realtime_updates())
+                logger.info("📡 Started real-time canister monitoring")
+            else:
+                logger.warning("⚠️ WebSocket bridge not available for real-time monitoring")
+        except Exception as e:
+            logger.error(f"❌ Failed to start real-time monitoring: {e}")
+
+    async def health_check_integration(self) -> Dict[str, Any]:
+        """Comprehensive health check including WebSocket/Redis integration."""
+        try:
+            base_health = {
+                "canister_agent": "active",
+                "components": {
+                    "browser_navigator": "initialized",
+                    "file_analyzer": "initialized", 
+                    "security_analyzer": "initialized",
+                    "report_generator": "initialized",
+                    "todo_framework": "initialized"
+                },
+                "timestamp": time.time()
+            }
+            
+            # Add WebSocket/Redis health status
+            if hasattr(self, 'websocket_bridge'):
+                integration_health = await self.websocket_bridge.health_check()
+                base_health["integration"] = integration_health
+            
+            return base_health
+            
+        except Exception as e:
+            logger.error(f"❌ Health check failed: {e}")
+            return {
+                "canister_agent": "error",
+                "error": str(e),
+                "timestamp": time.time()
+            }

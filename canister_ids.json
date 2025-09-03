@@ -1,0 +1,18 @@
+{
+  "local": {
+    "bind": "127.0.0.1:8000",
+    "type": "ephemeral"
+  },
+  "ic": {
+    "providers": [
+      "https://ic0.app"
+    ],
+    "type": "persistent"
+  },
+  "testnet": {
+    "providers": [
+      "https://testnet.dfinity.network"
+    ],
+    "type": "persistent"
+  }
+}
