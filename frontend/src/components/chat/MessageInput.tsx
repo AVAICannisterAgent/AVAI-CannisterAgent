@@ -15,9 +15,17 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSend = () => {
-    if (message.trim() && !disabled) {
-      onSendMessage(message.trim());
+    const trimmedMessage = message.trim();
+    if (trimmedMessage && !disabled) {
+      console.log('📝 Sending message from MessageInput:', {
+        length: trimmedMessage.length,
+        disabled: disabled
+      });
+      
+      onSendMessage(trimmedMessage);
       setMessage("");
+      
+      // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
@@ -68,7 +76,7 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
             onKeyDown={handleKeyDown}
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
-            placeholder={disabled ? "AVAI is diagnosing... 🩺" : "Ask AVAI anything about blockchain, audits, or Web3... 💬"}
+            placeholder={disabled ? "AVAI is analyzing your request... 🩺 (Priority queue active)" : "Ask AVAI anything about blockchain, audits, or Web3... 💬"}
             disabled={disabled}
             className={cn(
               "flex-1 min-h-[40px] max-h-[120px] resize-none border-0 bg-transparent",

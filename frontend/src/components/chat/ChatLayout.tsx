@@ -75,18 +75,37 @@ export const ChatLayout = () => {
           break;
           
         case 'chat_queued':
-          console.log('📤 Message queued for processing');
+          console.log('📤 Message queued for processing', {
+            promptId: data.promptId,
+            queuePosition: data.queuePosition,
+            queueCleared: data.queueCleared
+          });
           setIsTyping(true);
           waitingStartRef.current = new Date();
           setWaitingTime(0);
-          toast({
-            title: "Message Sent",
-            description: "AVAI is diagnosing your request... 🩺",
-          });
+          
+          // Enhanced feedback based on queue clearing
+          if (data.queueCleared) {
+            toast({
+              title: "Priority Request",
+              description: `🧹 Previous requests cleared. AVAI is focusing on your latest prompt... 🎯`,
+              duration: 3000,
+            });
+          } else {
+            toast({
+              title: "Message Sent",
+              description: "AVAI is diagnosing your request... 🩺",
+              duration: 3000,
+            });
+          }
           break;
         
         case 'ai_response':
-          console.log('🤖 AI Response received!');
+          console.log('🤖 AI Response received!', {
+            clientId: data.client_id,
+            currentClientId: clientId,
+            hasPayload: !!data.payload
+          });
           setIsTyping(false);
           waitingStartRef.current = null;
           setWaitingTime(0);
@@ -98,11 +117,28 @@ export const ChatLayout = () => {
           }
           
           // Add AI message to conversation
+          const responseContent = data.payload?.response || data.message || 'No response received';
           addMessage({
-            content: data.payload?.response || 'No response received',
+            content: responseContent,
             role: "assistant",
             timestamp: new Date(data.timestamp || new Date()),
           });
+          
+          // Show success feedback
+          toast({
+            title: "AVAI Response",
+            description: "🤖 Analysis complete!",
+            duration: 2000,
+          });
+          break;
+          
+        case 'queue_cleared':
+          console.log('🗑️ Queue cleared notification:', {
+            clearedCount: data.cleared_count,
+            reason: (data as any).reason
+          });
+          // Optional: Show notification for queue clearing
+          // (Currently handled in chat_queued for better UX)
           break;
           
         case 'error':
@@ -156,6 +192,7 @@ export const ChatLayout = () => {
   }, [isConnected, isReconnecting, toast]);
 
   const sendMessage = async (content: string) => {
+    // Validate connection
     if (!isConnected) {
       toast({
         title: "Not connected to AVAI",
@@ -165,26 +202,43 @@ export const ChatLayout = () => {
       return;
     }
 
-    // Add user message to conversation
-    addMessage({
-      content,
-      role: "user",
-      timestamp: new Date()
-    });
-
-    // Send message through WebSocket
-    const sent = wssSendMessage(content);
-    if (!sent) {
+    // Validate message content
+    const trimmedContent = content.trim();
+    if (!trimmedContent) {
       toast({
-        title: "Failed to send message",
-        description: "Please try again",
+        title: "Empty message",
+        description: "Please enter a message to send to AVAI",
         variant: "destructive",
       });
       return;
     }
 
-    // Show typing indicator
-    setIsTyping(true);
+    // Add user message to conversation immediately for better UX
+    addMessage({
+      content: trimmedContent,
+      role: "user",
+      timestamp: new Date()
+    });
+
+    // Send message through WebSocket with enhanced format
+    console.log('🚀 Sending message to AVAI:', {
+      length: trimmedContent.length,
+      clientId: clientId,
+      connected: isConnected
+    });
+    
+    const sent = wssSendMessage(trimmedContent);
+    if (!sent) {
+      toast({
+        title: "Failed to send message",
+        description: "Please check your connection and try again",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Show immediate feedback
+    console.log('✅ Message sent successfully, waiting for queue response...');
   };
 
   const handleFileClick = (files: FileAttachment[]) => {

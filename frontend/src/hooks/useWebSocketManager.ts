@@ -7,6 +7,12 @@ interface WebSocketData {
   message?: string;
   timestamp?: string;
   client_id?: string;
+  clientId?: string;
+  promptId?: string;
+  queuePosition?: number;
+  queueCleared?: boolean;
+  cleared_count?: number;
+  error?: string;
 }
 
 interface UseWebSocketManagerProps {
@@ -45,19 +51,40 @@ export const useWebSocketManager = ({
   // Subscribe to WebSocket messages
   useEffect(() => {
     subscribe((data: WebSocketData) => {
-      console.log('📨 WebSocket message:', data.type);
+      console.log('📨 WebSocket message received:', data.type, data);
       
       // Handle heartbeat
       if (data.type === 'heartbeat') {
         setLastHeartbeat(new Date());
+        return;
       }
       
-      // Handle typing state
+      // Handle queue operations
       if (data.type === 'chat_queued') {
+        console.log('📤 Message queued for processing', {
+          promptId: data.promptId,
+          queuePosition: data.queuePosition,
+          queueCleared: data.queueCleared
+        });
+        
         waitingStartRef.current = new Date();
         setWaitingTime(0);
+        
+        // Log queue clearing if it happened
+        if (data.queueCleared) {
+          console.log('🧹 Previous queue was cleared for this new prompt');
+        }
       }
       
+      // Handle queue clearing notifications
+      if (data.type === 'queue_cleared') {
+        console.log('🗑️ Queue cleared notification:', {
+          clearedCount: data.cleared_count,
+          reason: data.payload?.reason
+        });
+      }
+      
+      // Handle responses and errors
       if (data.type === 'ai_response' || data.type === 'error') {
         waitingStartRef.current = null;
         setWaitingTime(0);

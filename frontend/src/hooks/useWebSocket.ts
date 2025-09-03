@@ -24,30 +24,43 @@ export const useWebSocket = (url: string) => {
     try {
       // Use the persistent client ID
       const clientId = clientIdRef.current;
-      const dashboardUrl = `${url}?type=dashboard&client_id=${clientId}`;
+      // Connect as 'general' type for chat functionality, not 'dashboard'
+      const clientUrl = `${url}?type=general&client_id=${clientId}`;
       
-      console.log('🔗 WebSocket connecting to:', dashboardUrl);
+      console.log('🔗 WebSocket connecting to:', clientUrl);
       console.log('🆔 PERSISTENT Client ID:', clientId);
+      console.log('👤 Client Type: general (chat client)');
       console.log('🔄 This ID will stay the same across reconnections');
       
-      const ws = new WebSocket(dashboardUrl);
+      const ws = new WebSocket(clientUrl);
       
       ws.onopen = () => {
         console.log('✅ WebSocket connected successfully!');
         console.log('🆔 Connected with client ID:', clientId);
+        console.log('🌐 Connection URL:', clientUrl);
         setIsConnected(true);
         setIsReconnecting(false);
+        
+        // Clear any pending reconnection timeouts
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = undefined;
+        }
       };
 
       ws.onclose = (event) => {
         console.log('🔌 WebSocket disconnected:', event.code, event.reason);
         setIsConnected(false);
-        // Attempt to reconnect after 3 seconds
-        reconnectTimeoutRef.current = setTimeout(() => {
-          console.log('🔄 Attempting to reconnect...');
-          setIsReconnecting(true);
-          connect();
-        }, 3000);
+        
+        // Only attempt to reconnect if it wasn't a deliberate close
+        if (event.code !== 1000) {
+          console.log('🔄 Connection lost unexpectedly, attempting to reconnect...');
+          reconnectTimeoutRef.current = setTimeout(() => {
+            console.log('🔄 Reconnecting to WebSocket...');
+            setIsReconnecting(true);
+            connect();
+          }, 3000);
+        }
       };
 
       ws.onerror = (error) => {
@@ -81,17 +94,40 @@ export const useWebSocket = (url: string) => {
       return false;
     }
 
+    // Enhanced message format that matches what the WebSocket server expects
     const payload: WebSocketMessage = {
       type: 'chat_message',
-      message: message,
+      message: message.trim(),
       timestamp: new Date().toISOString(),
+      clientId: clientIdRef.current,
+      source: 'react_frontend'
     };
 
+    // Add file attachments if provided
+    if (files && files.length > 0) {
+      payload.payload = {
+        files: files.map(file => ({
+          id: file.id,
+          name: file.name,
+          type: file.type,
+          url: file.url,
+          size: file.size
+        }))
+      };
+    }
+
     try {
+      console.log('📤 Sending message to WebSocket:', {
+        type: payload.type,
+        messageLength: message.length,
+        hasFiles: !!(files && files.length > 0),
+        clientId: clientIdRef.current
+      });
+      
       wsRef.current.send(JSON.stringify(payload));
       return true;
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Error sending message:', error);
       return false;
     }
   }, []);
