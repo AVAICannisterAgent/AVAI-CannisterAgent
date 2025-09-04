@@ -39,7 +39,9 @@ export const PdfViewer = ({ pdfUrl, isOpen, onClose }: PdfViewerProps) => {
     };
 
     if (isOpen) {
-      console.log(`PDF Viewer opened - Production mode: ${isProduction}, URL: ${pdfUrl}`);
+      if (!isProduction) {
+        console.log(`PDF Viewer opened - Production mode: ${isProduction}, URL: ${pdfUrl}`);
+      }
       setIsLoading(true);
       setShowFallback(false);
       setIframeError(false);
@@ -47,16 +49,12 @@ export const PdfViewer = ({ pdfUrl, isOpen, onClose }: PdfViewerProps) => {
       
       // Test PDF accessibility in production
       if (isProduction) {
-        console.log('Production environment detected, testing PDF accessibility...');
         testPdfAccess(pdfUrl).then(isAccessible => {
-          console.log(`PDF accessible: ${isAccessible}`);
           setIsLoading(false);
           if (!isAccessible) {
-            console.log('PDF not accessible in production, using fallback');
             setShowFallback(true);
           } else {
             // Even if accessible, show fallback in production due to iframe restrictions
-            console.log('Using fallback UI for production security compliance');
             setTimeout(() => setShowFallback(true), 500);
           }
         });
