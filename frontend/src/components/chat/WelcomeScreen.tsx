@@ -1,6 +1,16 @@
-import { Stethoscope, Activity, Shield } from "lucide-react";
+import { Stethoscope, Activity, Shield, GitBranch, Search, FileCode } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const WelcomeScreen = () => {
+  const handleRepositoryAnalysis = () => {
+    // This will send a message to analyze the MockRepoForDemo
+    const message = "Please analyze the repository https://github.com/mrarejimmyz/MockRepoForDemo for security vulnerabilities, code quality, and architectural issues. Provide a comprehensive audit report.";
+    
+    // Trigger the chat input (we'll implement this shortly)
+    const event = new CustomEvent('avai-send-message', { detail: { message } });
+    window.dispatchEvent(event);
+  };
+
   return (
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="text-center max-w-md animate-fade-in-up">
@@ -15,33 +25,44 @@ export const WelcomeScreen = () => {
           </div>
         </div>
 
-        {/* Playful welcome message */}
+        {/* Professional welcome message */}
         <h1 className="text-3xl font-bold text-foreground mb-3">
-          Hey! I'm <span className="text-blue-400 font-extrabold drop-shadow-glow">AVAI</span> 🩺
+          Welcome to <span className="text-blue-400 font-extrabold drop-shadow-glow">AVAI</span>
         </h1>
         
         <p className="text-foreground/90 text-lg mb-6 leading-relaxed">
-          Your friendly blockchain doctor! Ready to diagnose, audit, and heal your Web3 needs.
+          Advanced AI-powered blockchain security auditing and code analysis platform.
         </p>
 
-        {/* Compact feature pills */}
+        {/* Feature capabilities */}
         <div className="flex flex-wrap gap-3 justify-center mb-6">
           <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-full text-sm text-blue-300 hover:bg-blue-500/30 transition-colors pill-hover">
             <Shield className="w-4 h-4" />
-            <span className="font-medium">Audit</span>
+            <span className="font-medium">Security Audit</span>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 bg-green-500/20 border border-green-500/30 rounded-full text-sm text-green-300 hover:bg-green-500/30 transition-colors pill-hover">
             <Activity className="w-4 h-4" />
-            <span className="font-medium">Monitor</span>
+            <span className="font-medium">Real-time Analysis</span>
           </div>
           <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full text-sm text-purple-300 hover:bg-purple-500/30 transition-colors pill-hover">
-            <Stethoscope className="w-4 h-4" />
-            <span className="font-medium">Diagnose</span>
+            <FileCode className="w-4 h-4" />
+            <span className="font-medium">Code Quality</span>
           </div>
         </div>
 
+        {/* Quick Analysis Button */}
+        <div className="mb-6">
+          <Button
+            onClick={handleRepositoryAnalysis}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+          >
+            <GitBranch className="w-4 h-4 mr-2" />
+            Analyze Repository
+          </Button>
+        </div>
+
         <p className="text-foreground/70 text-base font-medium">
-          What can I help you with today?
+          Start a comprehensive security audit and code analysis
         </p>
       </div>
     </div>

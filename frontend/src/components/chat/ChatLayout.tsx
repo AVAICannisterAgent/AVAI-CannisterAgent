@@ -174,6 +174,22 @@ export const ChatLayout = () => {
     };
   }, [isTyping]);
 
+  // Listen for custom events from WelcomeScreen
+  useEffect(() => {
+    const handleSendMessage = (event: CustomEvent) => {
+      const { message } = event.detail;
+      if (message) {
+        sendMessage(message);
+      }
+    };
+
+    window.addEventListener('avai-send-message', handleSendMessage as EventListener);
+    
+    return () => {
+      window.removeEventListener('avai-send-message', handleSendMessage as EventListener);
+    };
+  }, [isConnected, clientId]); // Re-attach when connection changes
+
   // Show connection status
   useEffect(() => {
     if (isReconnecting) {
