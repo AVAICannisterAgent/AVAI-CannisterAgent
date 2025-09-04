@@ -8,9 +8,11 @@ interface ChatWindowProps {
   conversation: Conversation | null;
   isTyping: boolean;
   onFileClick: (files: FileAttachment[]) => void;
+  isAnalyzing?: boolean;
+  analysisDisplay?: React.ReactNode;
 }
 
-export const ChatWindow = ({ conversation, isTyping, onFileClick }: ChatWindowProps) => {
+export const ChatWindow = ({ conversation, isTyping, onFileClick, isAnalyzing, analysisDisplay }: ChatWindowProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -20,32 +22,40 @@ export const ChatWindow = ({ conversation, isTyping, onFileClick }: ChatWindowPr
 
   useEffect(() => {
     scrollToBottom();
-  }, [conversation?.messages, isTyping]);
+  }, [conversation?.messages, isTyping, isAnalyzing]);
 
   if (!conversation) {
     return null;
   }
 
   return (
-    <div className="flex-1 relative">
-      <ScrollArea ref={scrollAreaRef} className="h-full p-4 scrollbar-custom">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {conversation.messages.map((message, index) => (
-            <MessageBubble
-              key={message.id}
-              message={message}
-              isLast={index === conversation.messages.length - 1}
-              onFileClick={onFileClick}
-            />
-          ))}
-          
-          {isTyping && (
-            <div className="animate-fade-in">
-              <TypingIndicator />
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <ScrollArea ref={scrollAreaRef} className="flex-1 scrollbar-custom">
+        <div className="p-4">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {conversation.messages.map((message, index) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                isLast={index === conversation.messages.length - 1}
+                onFileClick={onFileClick}
+              />
+            ))}
+            
+            {isTyping && (
+              <div className="animate-fade-in">
+                <TypingIndicator />
+              </div>
+            )}
+
+            {isAnalyzing && analysisDisplay && (
+              <div className="animate-fade-in">
+                {analysisDisplay}
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
         </div>
       </ScrollArea>
     </div>

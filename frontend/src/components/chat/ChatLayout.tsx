@@ -4,6 +4,7 @@ import { Sidebar } from "./Sidebar";
 import { ChatWindow } from "./ChatWindow";
 import { MessageInput } from "./MessageInput";
 import { FileViewer } from "./FileViewer";
+import { PdfViewer } from "./PdfViewer";
 import { WelcomeScreen } from "./WelcomeScreen";
 import { StreamingAnalysisDisplay } from "./StreamingAnalysisDisplay";
 import { useConversationManager } from "@/hooks/useConversationManager";
@@ -43,6 +44,9 @@ export const ChatLayout = () => {
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<FileAttachment[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showAnalysisDisplay, setShowAnalysisDisplay] = useState(false);
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [selectedPdfUrl, setSelectedPdfUrl] = useState<string>("");
   
   // Heartbeat monitoring
   const [lastHeartbeat, setLastHeartbeat] = useState<Date | undefined>();
@@ -275,6 +279,7 @@ export const ChatLayout = () => {
 
     // Start streaming analysis
     setIsAnalyzing(true);
+    setShowAnalysisDisplay(true);
     
     toast({
       title: "Starting Analysis",
@@ -284,14 +289,15 @@ export const ChatLayout = () => {
   };
 
   const handleAnalysisComplete = (report: string) => {
-    // Add the full report as an AI message
-    addMessage({
-      content: report,
-      role: "assistant",
-      timestamp: new Date()
-    });
+    // Don't add the report as a chat message since it's already shown in StreamingAnalysisDisplay
+    // addMessage({
+    //   content: report,
+    //   role: "assistant",
+    //   timestamp: new Date()
+    // });
     
-    setIsAnalyzing(false);
+    // Don't set isAnalyzing to false immediately - let the display component handle it
+    // setIsAnalyzing(false);
     
     toast({
       title: "Analysis Complete",
@@ -305,11 +311,24 @@ export const ChatLayout = () => {
     setFileViewerOpen(true);
   };
 
+  const createNewConversationWithReset = () => {
+    setShowAnalysisDisplay(false);
+    setIsAnalyzing(false);
+    createNewConversation();
+  };
+
+  const handlePdfClick = (pdfUrl: string) => {
+    console.log("handlePdfClick called with:", pdfUrl);
+    setSelectedPdfUrl(pdfUrl);
+    setPdfViewerOpen(true);
+    console.log("PDF viewer should now be open");
+  };
+
   return (
     <div className="h-screen bg-gradient-chat flex flex-col overflow-hidden">
       <TopNavigation 
         onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        onNewChat={createNewConversation}
+        onNewChat={createNewConversationWithReset}
         sidebarOpen={sidebarOpen}
         isConnected={isConnected}
         isTyping={isTyping}
@@ -322,28 +341,30 @@ export const ChatLayout = () => {
           conversations={conversations}
           currentConversation={currentConversation}
           onSelectConversation={setCurrentConversation}
-          onNewChat={createNewConversation}
+          onNewChat={createNewConversationWithReset}
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
         />
         
-        <div className="flex-1 flex flex-col relative">
-          {hasMessages || isTyping || isAnalyzing ? (
-            <>
+        <div className="flex-1 flex flex-col relative min-h-0">
+          {hasMessages || isTyping || showAnalysisDisplay ? (
+            <div className="flex-1 flex flex-col min-h-0">
               <ChatWindow 
                 conversation={currentConversation}
                 isTyping={isTyping}
                 onFileClick={handleFileClick}
+                isAnalyzing={isAnalyzing}
+                analysisDisplay={
+                  showAnalysisDisplay ? (
+                    <StreamingAnalysisDisplay 
+                      isAnalyzing={isAnalyzing}
+                      onComplete={handleAnalysisComplete}
+                      onPdfClick={handlePdfClick}
+                    />
+                  ) : undefined
+                }
               />
-              {isAnalyzing && (
-                <div className="p-4 border-t border-gray-700">
-                  <StreamingAnalysisDisplay 
-                    isAnalyzing={isAnalyzing}
-                    onComplete={handleAnalysisComplete}
-                  />
-                </div>
-              )}
-            </>
+            </div>
           ) : (
             <WelcomeScreen />
           )}
@@ -358,6 +379,12 @@ export const ChatLayout = () => {
           files={selectedFiles}
           isOpen={fileViewerOpen}
           onClose={() => setFileViewerOpen(false)}
+        />
+        
+        <PdfViewer
+          pdfUrl={selectedPdfUrl}
+          isOpen={pdfViewerOpen}
+          onClose={() => setPdfViewerOpen(false)}
         />
       </div>
     </div>

@@ -51,7 +51,7 @@ export const WelcomeScreen = () => {
         </div>
 
         {/* Quick Analysis Button */}
-        <div className="mb-6">
+        <div className="mb-6 space-y-3">
           <Button
             onClick={handleRepositoryAnalysis}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
