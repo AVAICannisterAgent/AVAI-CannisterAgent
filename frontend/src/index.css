@@ -149,8 +149,47 @@
     @apply border-border;
   }
 
+  html {
+    height: 100%;
+    font-size: 16px; /* Base font size for better mobile accessibility */
+  }
+
   body {
     @apply bg-background text-foreground;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
+    /* Prevent bounce scrolling on iOS */
+    overscroll-behavior: none;
+    /* Improve touch scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #root {
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    /* Fix for mobile viewport height issues */
+    height: 100dvh; /* Use dynamic viewport height when supported */
+    min-height: 100vh; /* Fallback */
+    /* Remove max-height to allow input to be visible */
+  }
+
+  /* Responsive improvements */
+  @media (max-width: 640px) {
+    html {
+      font-size: 14px; /* Slightly smaller on mobile */
+    }
+  }
+
+  /* Fix for iOS safe areas */
+  @supports (padding: max(0px)) {
+    #root {
+      padding-left: max(0px, env(safe-area-inset-left));
+      padding-right: max(0px, env(safe-area-inset-right));
+    }
   }
 }
 
@@ -213,5 +252,58 @@
   .pill-hover:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Responsive utilities */
+  .mobile-only {
+    @media (min-width: 640px) {
+      display: none !important;
+    }
+  }
+  
+  .desktop-only {
+    @media (max-width: 639px) {
+      display: none !important;
+    }
+  }
+
+  /* Touch-friendly sizes */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Message Input Specific Styles */
+  .message-input-container {
+    flex-shrink: 0;
+    min-height: 80px;
+    max-height: 200px;
+    z-index: 10;
+    position: relative;
+    background: hsl(var(--background));
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  /* Safe area utilities */
+  .safe-top {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+  
+  .safe-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+  
+  .safe-left {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+  }
+  
+  .safe-right {
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
+
+  /* Improved scrolling */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
   }
 }

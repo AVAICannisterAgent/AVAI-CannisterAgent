@@ -54,14 +54,38 @@ class WebSocketService {
   private constructor() {
     // Singleton pattern - only one WebSocket connection per app
     this.clientId = this.generatePersistentClientId();
+    
+    // Environment-based WebSocket URL configuration
+    const getWebSocketUrl = () => {
+      const envUrl = import.meta.env.VITE_WEBSOCKET_URL;
+      if (envUrl) {
+        console.log('🔧 Using WebSocket URL from environment:', envUrl);
+        return envUrl;
+      }
+      
+      // Fallback logic for development vs production
+      const isDevelopment = import.meta.env.DEV || 
+                           window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1';
+      
+      const url = isDevelopment 
+        ? 'ws://localhost:8080/ws'
+        : 'wss://websocket.avai.life/ws';
+        
+      console.log('🔧 Using fallback WebSocket URL:', url, 'isDevelopment:', isDevelopment);
+      return url;
+    };
+    
     this.config = {
-      url: 'wss://websocket.avai.life/ws',
+      url: getWebSocketUrl(),
       clientType: 'dashboard',
       maxReconnectAttempts: 5, // Reduced for better performance
       reconnectBackoffMs: 5000, // Increased initial backoff
       heartbeatIntervalMs: 45000, // Increased to reduce server load
       connectionTimeoutMs: 15000 // Reasonable timeout
     };
+    
+    console.log('🚀 WebSocketService initialized with config:', this.config);
   }
 
   public static getInstance(): WebSocketService {

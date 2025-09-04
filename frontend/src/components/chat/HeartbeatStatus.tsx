@@ -38,7 +38,7 @@ export const HeartbeatStatus = ({
   };
 
   return (
-    <div className="flex items-center gap-2 px-2 py-1 bg-surface/30 rounded-lg">
+    <div className="flex items-center gap-1 sm:gap-2 px-2 py-1 bg-surface/30 rounded-lg">
       {/* Connection indicator */}
       <div className="flex items-center gap-1">
         {isConnected ? (
@@ -51,14 +51,14 @@ export const HeartbeatStatus = ({
       {/* Heart with pulse */}
       <div className="relative">
         <Heart 
-          className={`w-4 h-4 transition-all duration-300 ${getStatusColor()} ${
+          className={`w-3 h-3 sm:w-4 sm:h-4 transition-all duration-300 ${getStatusColor()} ${
             pulseActive ? 'scale-125' : 'scale-100'
           }`}
           fill={isConnected ? "currentColor" : "none"}
         />
         {pulseActive && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className={`w-4 h-4 rounded-full border ${getStatusColor().replace('text-', 'border-')} animate-ping opacity-50`} />
+            <div className={`w-3 h-3 sm:w-4 sm:h-4 rounded-full border ${getStatusColor().replace('text-', 'border-')} animate-ping opacity-50`} />
           </div>
         )}
       </div>
@@ -66,17 +66,18 @@ export const HeartbeatStatus = ({
       {/* Compact status */}
       <div className="text-xs">
         <span className={`font-medium ${getStatusColor()}`}>
-          {getStatusText()}
+          <span className="hidden sm:inline">{getStatusText()}</span>
+          <span className="sm:hidden">{isConnected ? '●' : '○'}</span>
         </span>
         {isTyping && waitingTime > 0 && (
-          <span className="text-text-secondary ml-1">
+          <span className="text-text-secondary ml-1 hidden sm:inline">
             ({waitingTime}s)
           </span>
         )}
       </div>
 
-      {/* AVAI badge */}
-      <div className="text-xs text-text-secondary">
+      {/* AVAI badge - hide on very small screens */}
+      <div className="text-xs text-text-secondary hidden sm:block">
         <Activity className="w-3 h-3 inline" />
       </div>
     </div>

@@ -96,6 +96,17 @@ export function ChatLayout() {
     return newConversation;
   };
 
+  // Initialize conversation on component mount
+  useEffect(() => {
+    console.log('🔍 ChatLayout mount effect - conversations:', conversations.length, 'currentConversation:', !!currentConversation);
+    // Create initial conversation if none exists
+    if (conversations.length === 0 && !currentConversation) {
+      console.log('✨ Creating initial welcome conversation');
+      const initialConversation = createNewConversation('Welcome to AVAI');
+      console.log('✅ Initial conversation created:', initialConversation.id);
+    }
+  }, []); // Empty dependency array - only run once on mount
+
   // WebSocket connection effect
   useEffect(() => {
     const handleConnectionChange = () => {
@@ -172,11 +183,22 @@ export function ChatLayout() {
     };
 
     // Subscribe to WebSocket events
+    console.log('🔗 Setting up WebSocket subscriptions...');
     const connectionSub = webSocketService.subscribe(handleConnectionChange, (msg) => msg.type === 'connected' || msg.type === 'error');
     const messageSub = webSocketService.subscribe(handleMessage);
 
-    // Initialize connection
-    webSocketService.connect();
+    // Initialize connection with debug logging
+    console.log('🚀 Initiating WebSocket connection...');
+    console.log('🔧 WebSocket Service Info:', webSocketService.connectionInfo);
+    webSocketService.connect()
+      .then(() => {
+        console.log('✅ WebSocket connection established successfully');
+        handleConnectionChange();
+      })
+      .catch((error) => {
+        console.error('❌ WebSocket connection failed:', error);
+        handleConnectionChange();
+      });
 
     return () => {
       webSocketService.unsubscribe(connectionSub);
@@ -210,8 +232,15 @@ export function ChatLayout() {
   };
 
   const handleSendMessage = async (content: string, files?: FileAttachment[]) => {
+    console.log('📤 Attempting to send message:', content.slice(0, 50) + '...');
+    console.log('🔗 Connection status before send:', {
+      isConnected: connectionStatus.isConnected,
+      webSocketServiceConnected: webSocketService.getIsConnected(),
+      clientId: webSocketService.getClientId()
+    });
+
     if (!connectionStatus.isConnected) {
-      console.error('WebSocket not connected');
+      console.error('❌ WebSocket not connected, cannot send message');
       return;
     }
 
@@ -229,11 +258,13 @@ export function ChatLayout() {
       timestamp: new Date(),
       files
     };
+    console.log('📝 Adding user message to conversation');
     addMessage(userMessage);
 
     // Check for GitHub URL and handle analysis
     const githubUrl = extractGitHubUrl(content);
     if (githubUrl) {
+      console.log('🔍 GitHub URL detected, starting analysis:', githubUrl);
       setCurrentRepositoryUrl(githubUrl);
       setIsAnalyzing(true);
       setShowAnalysisDisplay(true);
@@ -241,9 +272,15 @@ export function ChatLayout() {
 
     // Send message via WebSocket
     try {
-      webSocketService.sendChatMessage(content);
+      console.log('📡 Sending message via WebSocket service...');
+      const success = webSocketService.sendChatMessage(content);
+      console.log('📡 WebSocket send result:', success);
+      
+      if (!success) {
+        console.error('❌ Failed to send message via WebSocket');
+      }
     } catch (error) {
-      console.error('Send message error:', error);
+      console.error('❌ Send message error:', error);
     }
   };
 
@@ -292,7 +329,8 @@ export function ChatLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen w-full bg-background overflow-hidden">
+      {/* Sidebar */}
       <Sidebar
         conversations={conversations}
         currentConversation={currentConversation}
@@ -302,26 +340,36 @@ export function ChatLayout() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      <div className="flex-1 flex flex-col">
-        <TopNavigation
-          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          onNewChat={handleNewConversation}
-          sidebarOpen={sidebarOpen}
-          isConnected={connectionStatus.isConnected}
-        />
-
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <ChatWindow
-            conversation={currentConversation}
-            isTyping={isTyping}
-            onFileClick={(files) => handleFileClick(files)}
-            isAnalyzing={showAnalysisDisplay}
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
+        {/* Top Navigation */}
+        <div className="flex-shrink-0">
+          <TopNavigation
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+            onNewChat={handleNewConversation}
+            sidebarOpen={sidebarOpen}
+            isConnected={connectionStatus.isConnected}
           />
+        </div>
 
-          <MessageInput
-            onSendMessage={handleSendMessage}
-            disabled={!connectionStatus.isConnected}
-          />
+        {/* Chat Area - This should take remaining space */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="flex-1 min-h-0">
+            <ChatWindow
+              conversation={currentConversation}
+              isTyping={isTyping}
+              onFileClick={(files) => handleFileClick(files)}
+              isAnalyzing={showAnalysisDisplay}
+            />
+          </div>
+
+          {/* Message Input - Fixed at bottom */}
+          <div className="flex-shrink-0">
+            <MessageInput
+              onSendMessage={handleSendMessage}
+              disabled={!connectionStatus.isConnected}
+            />
+          </div>
         </div>
       </div>
 

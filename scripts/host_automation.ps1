@@ -33,8 +33,8 @@ function Write-Log {
 # Check if AVAI Redis worker is already running
 function Test-WorkerRunning {
     if (Test-Path $PidFile) {
-        $Pid = Get-Content $PidFile -ErrorAction SilentlyContinue
-        if ($Pid -and (Get-Process -Id $Pid -ErrorAction SilentlyContinue)) {
+        $WorkerPid = Get-Content $PidFile -ErrorAction SilentlyContinue
+        if ($WorkerPid -and (Get-Process -Id $WorkerPid -ErrorAction SilentlyContinue)) {
             return $true
         } else {
             # PID file exists but process is not running, clean up
@@ -47,35 +47,35 @@ function Test-WorkerRunning {
 
 # Start the AVAI Redis worker
 function Start-AvaiWorker {
-    Write-Log "🚀 Starting AVAI Redis worker..."
+    Write-Log "[START] Starting AVAI Redis worker..."
     
     # Check if already running
     if (Test-WorkerRunning) {
-        Write-Log "⚠️ AVAI Redis worker is already running" "WARNING"
+        Write-Log "[WARNING] AVAI Redis worker is already running" "WARNING"
         return
     }
     
     # Verify virtual environment activation script exists
     if (!(Test-Path $VenvActivationScript)) {
-        Write-Log "❌ Virtual environment activation script not found: $VenvActivationScript" "ERROR"
+        Write-Log "[ERROR] Virtual environment activation script not found: $VenvActivationScript" "ERROR"
         return
     }
     
     # Verify main.py exists
     if (!(Test-Path $MainPyScript)) {
-        Write-Log "❌ Main Python script not found: $MainPyScript" "ERROR"
+        Write-Log "[ERROR] Main Python script not found: $MainPyScript" "ERROR"
         return
     }
     
     try {
-        # Create the command to run main.py with Redis-only mode
+        # Create the command to run main.py with Redis queue mode
         $Command = @"
 & '$VenvActivationScript'
 if (`$LASTEXITCODE -eq 0) {
-    Write-Host '✅ Virtual environment activated successfully'
+    Write-Host '[SUCCESS] Virtual environment activated successfully'
     python '$MainPyScript' --redis-only
 } else {
-    Write-Host '❌ Failed to activate virtual environment'
+    Write-Host '[ERROR] Failed to activate virtual environment'
     exit 1
 }
 "@
@@ -90,41 +90,41 @@ if (`$LASTEXITCODE -eq 0) {
         if ($Process) {
             # Save PID for monitoring
             $Process.Id | Out-File -FilePath $PidFile -Encoding UTF8
-            Write-Log "✅ AVAI Redis worker started successfully (PID: $($Process.Id))"
-            Write-Log "📝 Output logs: $LogDir\avai_worker_output.log"
-            Write-Log "📝 Error logs: $LogDir\avai_worker_error.log"
+            Write-Log "[SUCCESS] AVAI Redis worker started successfully (PID: $($Process.Id))"
+            Write-Log "[LOG] Output logs: $LogDir\avai_worker_output.log"
+            Write-Log "[LOG] Error logs: $LogDir\avai_worker_error.log"
         } else {
-            Write-Log "❌ Failed to start AVAI Redis worker" "ERROR"
+            Write-Log "[ERROR] Failed to start AVAI Redis worker" "ERROR"
         }
         
     } catch {
-        Write-Log "❌ Exception starting AVAI Redis worker: $($_.Exception.Message)" "ERROR"
+        Write-Log "[ERROR] Exception starting AVAI Redis worker: $($_.Exception.Message)" "ERROR"
     }
 }
 
 # Stop the AVAI Redis worker
 function Stop-AvaiWorker {
-    Write-Log "🛑 Stopping AVAI Redis worker..."
+    Write-Log "[STOP] Stopping AVAI Redis worker..."
     
     if (Test-Path $PidFile) {
-        $Pid = Get-Content $PidFile -ErrorAction SilentlyContinue
-        if ($Pid -and (Get-Process -Id $Pid -ErrorAction SilentlyContinue)) {
+        $WorkerPid = Get-Content $PidFile -ErrorAction SilentlyContinue
+        if ($WorkerPid -and (Get-Process -Id $WorkerPid -ErrorAction SilentlyContinue)) {
             try {
-                Stop-Process -Id $Pid -Force
-                Write-Log "✅ AVAI Redis worker stopped (PID: $Pid)"
+                Stop-Process -Id $WorkerPid -Force
+                Write-Log "[SUCCESS] AVAI Redis worker stopped (PID: $WorkerPid)"
             } catch {
-                Write-Log "❌ Failed to stop AVAI Redis worker: $($_.Exception.Message)" "ERROR"
+                Write-Log "[ERROR] Failed to stop AVAI Redis worker: $($_.Exception.Message)" "ERROR"
             }
         }
         Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
     } else {
-        Write-Log "⚠️ AVAI Redis worker is not running" "WARNING"
+        Write-Log "[WARNING] AVAI Redis worker is not running" "WARNING"
     }
 }
 
 # Monitor Redis for trigger signals
 function Start-RedisMonitor {
-    Write-Log "👁️ Starting Redis monitor for automation triggers..."
+    Write-Log "[MONITOR] Starting Redis monitor for automation triggers..."
     
     while ($true) {
         try {
@@ -132,13 +132,13 @@ function Start-RedisMonitor {
             if (Test-Path $RedisCheckScript) {
                 $Result = & python $RedisCheckScript 2>&1
                 if ($LASTEXITCODE -eq 0 -and $Result -eq "START_WORKER") {
-                    Write-Log "🔔 Redis trigger received: Starting AVAI worker"
+                    Write-Log "[TRIGGER] Redis trigger received: Starting AVAI worker"
                     Start-AvaiWorker
                 } elseif ($LASTEXITCODE -eq 0 -and $Result -eq "STOP_WORKER") {
-                    Write-Log "🔔 Redis trigger received: Stopping AVAI worker"
+                    Write-Log "[TRIGGER] Redis trigger received: Stopping AVAI worker"
                     Stop-AvaiWorker
                 } elseif ($LASTEXITCODE -eq 0 -and $Result -eq "RESTART_WORKER") {
-                    Write-Log "🔔 Redis trigger received: Restarting AVAI worker for fresh start"
+                    Write-Log "[TRIGGER] Redis trigger received: Restarting AVAI worker for fresh start"
                     Stop-AvaiWorker
                     Start-Sleep -Seconds 2
                     Start-AvaiWorker
@@ -147,13 +147,13 @@ function Start-RedisMonitor {
             
             # Check if worker is still running
             if (!(Test-WorkerRunning)) {
-                Write-Log "⚠️ AVAI worker stopped unexpectedly, checking for restart trigger" "WARNING"
+                Write-Log "[WARNING] AVAI worker stopped unexpectedly, checking for restart trigger" "WARNING"
             }
             
             Start-Sleep -Seconds $CheckInterval
             
         } catch {
-            Write-Log "❌ Error in Redis monitor: $($_.Exception.Message)" "ERROR"
+            Write-Log "[ERROR] Error in Redis monitor: $($_.Exception.Message)" "ERROR"
             Start-Sleep -Seconds ($CheckInterval * 2)
         }
     }
@@ -162,24 +162,24 @@ function Start-RedisMonitor {
 # Get worker status
 function Get-WorkerStatus {
     if (Test-WorkerRunning) {
-        $Pid = Get-Content $PidFile
-        Write-Log "✅ AVAI Redis worker is running (PID: $Pid)" "INFO"
+        $WorkerPid = Get-Content $PidFile
+        Write-Log "[STATUS] AVAI Redis worker is running (PID: $WorkerPid)" "INFO"
         
         # Show recent logs
         $OutputLog = "$LogDir\avai_worker_output.log"
         if (Test-Path $OutputLog) {
-            Write-Log "📝 Recent output (last 10 lines):" "INFO"
+            Write-Log "[LOG] Recent output (last 10 lines):" "INFO"
             Get-Content $OutputLog -Tail 10 | ForEach-Object { Write-Log "   $_" "INFO" }
         }
     } else {
-        Write-Log "❌ AVAI Redis worker is not running" "WARNING"
+        Write-Log "[WARNING] AVAI Redis worker is not running" "WARNING"
     }
 }
 
 # Main execution
-Write-Log "🤖 AVAI Host Automation Script Started"
-Write-Log "📁 Root Directory: $RootDir"
-Write-Log "🔧 Action: $Action"
+Write-Log "[START] AVAI Host Automation Script Started"
+Write-Log "[INFO] Root Directory: $RootDir"
+Write-Log "[CONFIG] Action: $Action"
 
 switch ($Action.ToLower()) {
     "start" {
@@ -200,10 +200,10 @@ switch ($Action.ToLower()) {
         Start-RedisMonitor
     }
     default {
-        Write-Log "❌ Unknown action: $Action" "ERROR"
-        Write-Log "Available actions: start, stop, restart, status, monitor" "INFO"
+        Write-Log "[ERROR] Unknown action: $Action" "ERROR"
+        Write-Log "[INFO] Available actions: start, stop, restart, status, monitor" "INFO"
         exit 1
     }
 }
 
-Write-Log "🏁 AVAI Host Automation Script Completed"
+Write-Log "[DONE] AVAI Host Automation Script Completed"

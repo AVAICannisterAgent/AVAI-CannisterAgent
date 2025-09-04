@@ -29,23 +29,23 @@ export const TopNavigation = ({
   waitingTime = 0 
 }: TopNavigationProps) => {
   return (
-    <header className="h-14 border-b border-nav-border bg-nav-background backdrop-blur-md flex items-center justify-between px-4 relative z-50">
-      <div className="flex items-center gap-3">
+    <header className="h-11 sm:h-12 lg:h-14 border-b border-nav-border bg-nav-background backdrop-blur-md flex items-center justify-between px-3 sm:px-4 relative z-50">
+      <div className="flex items-center gap-2 sm:gap-3">
         <Button 
           variant="ghost" 
           size="sm"
           onClick={onToggleSidebar}
-          className="p-2 hover:bg-surface-hover transition-fast"
+          className="p-1.5 sm:p-2 hover:bg-surface-hover transition-fast"
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
         </Button>
         
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-            <Stethoscope className="w-5 h-5 text-white" />
+        <div className="flex items-center gap-1 sm:gap-2">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <Stethoscope className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
           </div>
-          <span className="font-semibold text-foreground hidden sm:block">
-            AVAI <span className="text-xs opacity-60">🩺</span>
+          <span className="font-semibold text-foreground text-sm sm:text-base">
+            AVAI <span className="text-xs opacity-60 hidden sm:inline">🩺</span>
           </span>
         </div>
       </div>
@@ -60,14 +60,14 @@ export const TopNavigation = ({
         />
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <Button
           variant="ghost"
           size="sm"
           onClick={onNewChat}
-          className="hidden sm:flex items-center gap-2 hover:bg-surface-hover transition-fast"
+          className="hidden md:flex items-center gap-2 hover:bg-surface-hover transition-fast text-xs sm:text-sm px-2 sm:px-3"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
           <span>New Chat</span>
         </Button>
 
@@ -75,28 +75,28 @@ export const TopNavigation = ({
           variant="ghost"
           size="sm"
           onClick={onNewChat}
-          className="sm:hidden p-2 hover:bg-surface-hover transition-fast"
+          className="md:hidden p-1.5 sm:p-2 hover:bg-surface-hover transition-fast"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="p-2 hover:bg-surface-hover transition-fast">
-              <Settings className="w-5 h-5" />
+            <Button variant="ghost" size="sm" className="p-1.5 sm:p-2 hover:bg-surface-hover transition-fast">
+              <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 bg-surface border-border">
-            <DropdownMenuItem className="hover:bg-surface-hover transition-fast">
+            <DropdownMenuItem className="hover:bg-surface-hover transition-fast text-xs sm:text-sm">
               <User className="w-4 h-4 mr-2" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem className="hover:bg-surface-hover transition-fast">
+            <DropdownMenuItem className="hover:bg-surface-hover transition-fast text-xs sm:text-sm">
               <Settings className="w-4 h-4 mr-2" />
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="hover:bg-surface-hover transition-fast text-destructive">
+            <DropdownMenuItem className="hover:bg-surface-hover transition-fast text-destructive text-xs sm:text-sm">
               Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -14,6 +14,8 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
   const [isComposing, setIsComposing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  console.log('📝 MessageInput render:', { disabled, hasOnSendMessage: !!onSendMessage });
+
   const handleSend = () => {
     const trimmedMessage = message.trim();
     if (trimmedMessage && !disabled) {
@@ -48,10 +50,10 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
   };
 
   return (
-    <div className="p-4 border-t border-border bg-background/50 backdrop-blur-sm">
+    <div className="message-input-container p-3 sm:p-4 bg-background/50 backdrop-blur-sm">
       <div className="max-w-4xl mx-auto">
         <div className={cn(
-          "relative flex items-end gap-3 p-3 rounded-2xl border transition-all duration-200",
+          "relative flex items-end gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl sm:rounded-2xl border transition-all duration-200",
           "bg-surface border-border hover:border-border-hover focus-within:border-primary/50",
           "shadow-sm hover:shadow-md focus-within:shadow-lg"
         )}>
@@ -59,10 +61,10 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
           <Button
             variant="ghost"
             size="sm"
-            className="p-2 hover:bg-surface-hover transition-fast flex-shrink-0"
+            className="p-1.5 sm:p-2 hover:bg-surface-hover transition-fast flex-shrink-0"
             disabled={disabled}
           >
-            <Paperclip className="w-4 h-4" />
+            <Paperclip className="w-3 h-3 sm:w-4 sm:h-4" />
           </Button>
 
           {/* Message textarea */}
@@ -79,22 +81,22 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
             placeholder={disabled ? "AVAI is analyzing your request... 🩺 (Priority queue active)" : "Ask AVAI anything about blockchain, audits, or Web3... 💬"}
             disabled={disabled}
             className={cn(
-              "flex-1 min-h-[40px] max-h-[120px] resize-none border-0 bg-transparent",
+              "flex-1 min-h-[32px] sm:min-h-[40px] max-h-[120px] resize-none border-0 bg-transparent",
               "focus-visible:ring-0 focus-visible:ring-offset-0 scrollbar-custom",
-              "placeholder:text-muted-foreground text-sm leading-relaxed p-0"
+              "placeholder:text-muted-foreground text-xs sm:text-sm leading-relaxed p-0"
             )}
             rows={1}
           />
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {/* Voice input button */}
             <Button
               variant="ghost"
               size="sm"
-              className="p-2 hover:bg-surface-hover transition-fast"
+              className="p-1.5 sm:p-2 hover:bg-surface-hover transition-fast"
               disabled={disabled}
             >
-              <Mic className="w-4 h-4" />
+              <Mic className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
 
             {/* Send button */}
@@ -102,20 +104,21 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
               onClick={handleSend}
               disabled={!message.trim() || disabled}
               className={cn(
-                "p-2 h-auto transition-all duration-200",
+                "p-1.5 sm:p-2 h-auto transition-all duration-200",
                 message.trim() && !disabled
                   ? "bg-gradient-primary hover:bg-primary-hover text-primary-foreground shadow-md hover:shadow-lg"
                   : "bg-muted hover:bg-muted text-muted-foreground"
               )}
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
           </div>
         </div>
 
         {/* Tips */}
         <div className="mt-2 text-xs text-muted-foreground text-center">
-          <span>Press Enter to send, Shift+Enter for new line</span>
+          <span className="hidden sm:inline">Press Enter to send, Shift+Enter for new line</span>
+          <span className="sm:hidden">Enter to send</span>
         </div>
       </div>
     </div>

@@ -19,7 +19,29 @@ export const useWebSocketManager = ({
   currentConversation
 }: WebSocketManagerProps) => {
   const { toast } = useToast();
-  const WEBSOCKET_URL = 'wss://websocket.avai.life/ws';
+  
+  // Environment-based WebSocket URL configuration
+  const getWebSocketUrl = () => {
+    const envUrl = import.meta.env.VITE_WEBSOCKET_URL;
+    if (envUrl) {
+      console.log('🔧 WebSocketManager using URL from environment:', envUrl);
+      return envUrl;
+    }
+    
+    // Fallback logic for development vs production
+    const isDevelopment = import.meta.env.DEV || 
+                         window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1';
+    
+    const url = isDevelopment 
+      ? 'ws://localhost:8080/ws'
+      : 'wss://websocket.avai.life/ws';
+      
+    console.log('🔧 WebSocketManager using fallback URL:', url, 'isDevelopment:', isDevelopment);
+    return url;
+  };
+
+  const WEBSOCKET_URL = getWebSocketUrl();
   
   const { isConnected, isReconnecting, sendMessage: wssSendMessage, subscribe, clientId } = useWebSocket(WEBSOCKET_URL);
 
