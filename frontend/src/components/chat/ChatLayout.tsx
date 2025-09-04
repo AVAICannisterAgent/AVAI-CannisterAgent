@@ -57,22 +57,28 @@ export function ChatLayout() {
 
   // Helper functions for conversation management
   const addMessage = (messageData: Omit<Message, 'id'>) => {
+    console.log('📝 addMessage called with:', messageData.role, messageData.content.slice(0, 50) + '...');
+    console.log('🔍 Current conversation before adding:', !!currentConversationRef.current, 'ID:', currentConversationRef.current?.id);
+    
     const newMessage: Message = {
       ...messageData,
       id: Date.now().toString()
     };
 
-    if (currentConversation) {
+    if (currentConversationRef.current) {
+      console.log('✅ Adding to existing conversation');
       const updatedConversation = {
-        ...currentConversation,
-        messages: [...currentConversation.messages, newMessage]
+        ...currentConversationRef.current,
+        messages: [...currentConversationRef.current.messages, newMessage]
       };
       setCurrentConversation(updatedConversation);
       setConversations(prev => 
         prev.map(conv => conv.id === updatedConversation.id ? updatedConversation : conv)
       );
+      console.log('✅ Conversation updated, new message count:', updatedConversation.messages.length);
     } else {
       // Create new conversation if none exists
+      console.log('🆕 Creating new conversation for message');
       const newConversation: Conversation = {
         id: Date.now().toString(),
         title: messageData.content.slice(0, 50) + '...',
@@ -81,6 +87,7 @@ export function ChatLayout() {
       };
       setCurrentConversation(newConversation);
       setConversations(prev => [newConversation, ...prev]);
+      console.log('✅ New conversation created with message, ID:', newConversation.id);
     }
   };
 
@@ -107,6 +114,19 @@ export function ChatLayout() {
     }
   }, []); // Empty dependency array - only run once on mount
 
+  // Create refs to access current state in callbacks
+  const currentConversationRef = useRef(currentConversation);
+  const conversationsRef = useRef(conversations);
+  
+  // Update refs when state changes
+  useEffect(() => {
+    currentConversationRef.current = currentConversation;
+  }, [currentConversation]);
+  
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
+
   // WebSocket connection effect
   useEffect(() => {
     const handleConnectionChange = () => {
@@ -119,6 +139,7 @@ export function ChatLayout() {
 
     const handleMessage = (message: any) => {
       console.log('📩 Received message:', message);
+      console.log('🔍 Current conversation from ref:', !!currentConversationRef.current, 'ID:', currentConversationRef.current?.id);
 
       switch (message.type) {
         case 'typing_start':
@@ -146,6 +167,31 @@ export function ChatLayout() {
               files: message.files
             };
             addMessage(newMessage);
+          }
+          setIsTyping(false);
+          waitingStartRef.current = null;
+          setWaitingTime(0);
+          break;
+
+        case 'ai_response':
+          // Handle AI responses from the WebSocket server
+          console.log('🤖 Processing ai_response:', message);
+          console.log('🔍 Current conversation state from ref:', !!currentConversationRef.current, 'messages:', currentConversationRef.current?.messages?.length || 0);
+          
+          if (message.payload && message.payload.response) {
+            const newMessage: Omit<Message, 'id'> = {
+              content: message.payload.response,
+              role: 'assistant',
+              timestamp: new Date(),
+              files: message.payload.files || []
+            };
+            
+            console.log('📝 Adding AI message to conversation:', newMessage.content.slice(0, 50) + '...');
+            addMessage(newMessage);
+            console.log('✅ AI response added to conversation');
+            console.log('🔍 Updated conversation:', currentConversationRef.current?.messages?.length || 0, 'messages');
+          } else {
+            console.error('❌ AI response missing payload or response content:', message);
           }
           setIsTyping(false);
           waitingStartRef.current = null;
