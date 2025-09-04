@@ -1,15 +1,15 @@
-import { useState, useEffect, useRef } from "react";
-import { TopNavigation } from "./TopNavigation";
-import { Sidebar } from "./Sidebar";
-import { ChatWindow } from "./ChatWindow";
-import { MessageInput } from "./MessageInput";
-import { FileViewer } from "./FileViewer";
-import { PdfViewer } from "./PdfViewer";
-import { WelcomeScreen } from "./WelcomeScreen";
-import { StreamingAnalysisDisplay } from "./StreamingAnalysisDisplay";
-import { useConversationManager } from "@/hooks/useConversationManager";
-import { useWebSocketManager } from "@/hooks/useWebSocketManager";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState, useEffect, useRef } from 'react';
+import { Sidebar } from './Sidebar';
+import { TopNavigation } from './TopNavigation';
+import { ChatWindow } from './ChatWindow';
+import { MessageInput } from './MessageInput';
+import { StreamingAnalysisDisplay } from './StreamingAnalysisDisplay';
+import { FileViewer } from './FileViewer';
+import { PdfViewer } from './PdfViewer';
+import WebSocketService from '../../services/WebSocketService';
+
+// Get singleton instance
+const webSocketService = WebSocketService.getInstance();
 
 export interface FileAttachment {
   id: string;
@@ -34,177 +34,164 @@ export interface Conversation {
   createdAt: Date;
 }
 
-// Production WebSocket URL - Docker backend via Cloudflare tunnel
-const WEBSOCKET_URL = 'wss://websocket.avai.life/ws';
-
-// Environment detection for Docker backend integration
-const isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
-const isDevelopment = typeof window !== 'undefined' && (
-  window.location.hostname.includes('localhost') || 
-  window.location.hostname.includes('127.0.0.1')
-);
-
-export const ChatLayout = () => {
-  const { toast } = useToast();
+export function ChatLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<FileAttachment[]>([]);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showAnalysisDisplay, setShowAnalysisDisplay] = useState(false);
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
-  const [selectedPdfUrl, setSelectedPdfUrl] = useState<string>("");
-  const [currentRepositoryUrl, setCurrentRepositoryUrl] = useState<string>("");
-  const [latestWebSocketMessage, setLatestWebSocketMessage] = useState<any>(null);
-  
-  // Heartbeat monitoring
-  const [lastHeartbeat, setLastHeartbeat] = useState<Date | undefined>();
+  const [selectedFiles, setSelectedFiles] = useState<FileAttachment[]>([]);
+  const [selectedPdfUrl, setSelectedPdfUrl] = useState<string>('');
+  const [showAnalysisDisplay, setShowAnalysisDisplay] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [currentRepositoryUrl, setCurrentRepositoryUrl] = useState<string>('');
+  const [isTyping, setIsTyping] = useState(false);
   const [waitingTime, setWaitingTime] = useState(0);
-  const waitingStartRef = useRef<Date | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState({
+    isConnected: false,
+    isReconnecting: false,
+    lastHeartbeat: new Date()
+  });
+  const waitingStartRef = useRef<number | null>(null);
+  const subscriptionRef = useRef<string | null>(null);
 
-  // Conversation management
-  const {
-    conversations,
-    currentConversation,
-    setCurrentConversation,
-    createNewConversation,
-    addMessage,
-    hasMessages
-  } = useConversationManager();
+  // Helper functions for conversation management
+  const addMessage = (messageData: Omit<Message, 'id'>) => {
+    const newMessage: Message = {
+      ...messageData,
+      id: Date.now().toString()
+    };
 
-  // WebSocket management with Docker backend integration
-  const {
-    isConnected,
-    isReconnecting,
-    sendMessage: wssSendMessage,
-    clientId
-  } = useWebSocketManager({
-    url: `${WEBSOCKET_URL}?type=dashboard&client_id=avai_frontend_${Date.now()}`,
-    onMessage: (data) => {
-      console.log('📨 ChatLayout received WebSocket message:', data);
-      
-      // Store the latest WebSocket message for StreamingAnalysisDisplay
-      setLatestWebSocketMessage(data);
-      
-      switch (data.type) {
-        case 'heartbeat':
-          console.log('💓 Heartbeat received');
-          setLastHeartbeat(new Date());
+    if (currentConversation) {
+      const updatedConversation = {
+        ...currentConversation,
+        messages: [...currentConversation.messages, newMessage]
+      };
+      setCurrentConversation(updatedConversation);
+      setConversations(prev => 
+        prev.map(conv => conv.id === updatedConversation.id ? updatedConversation : conv)
+      );
+    } else {
+      // Create new conversation if none exists
+      const newConversation: Conversation = {
+        id: Date.now().toString(),
+        title: messageData.content.slice(0, 50) + '...',
+        messages: [newMessage],
+        createdAt: new Date()
+      };
+      setCurrentConversation(newConversation);
+      setConversations(prev => [newConversation, ...prev]);
+    }
+  };
+
+  const createNewConversation = (title?: string) => {
+    const newConversation: Conversation = {
+      id: Date.now().toString(),
+      title: title || 'New Conversation',
+      messages: [],
+      createdAt: new Date()
+    };
+    setCurrentConversation(newConversation);
+    setConversations(prev => [newConversation, ...prev]);
+    return newConversation;
+  };
+
+  // WebSocket connection effect
+  useEffect(() => {
+    const handleConnectionChange = () => {
+      setConnectionStatus({
+        isConnected: webSocketService.getIsConnected(),
+        isReconnecting: webSocketService.getIsReconnecting(),
+        lastHeartbeat: webSocketService.getLastHeartbeat() || new Date()
+      });
+    };
+
+    const handleMessage = (message: any) => {
+      console.log('📩 Received message:', message);
+
+      switch (message.type) {
+        case 'typing_start':
+          if (message.clientId !== webSocketService.getClientId()) {
+            setIsTyping(true);
+            waitingStartRef.current = Date.now();
+            setWaitingTime(0);
+          }
           break;
-          
-        case 'chat_queued':
-          console.log('📤 Message queued for processing', {
-            promptId: data.promptId,
-            queuePosition: data.queuePosition,
-            queueCleared: data.queueCleared
-          });
-          setIsTyping(true);
-          waitingStartRef.current = new Date();
+
+        case 'typing_stop':
+          if (message.clientId !== webSocketService.getClientId()) {
+            setIsTyping(false);
+            waitingStartRef.current = null;
+            setWaitingTime(0);
+          }
+          break;
+
+        case 'message':
+          if (message.content && message.role === 'assistant') {
+            const newMessage: Omit<Message, 'id'> = {
+              content: message.content,
+              role: 'assistant',
+              timestamp: new Date(),
+              files: message.files
+            };
+            addMessage(newMessage);
+          }
+          setIsTyping(false);
+          waitingStartRef.current = null;
           setWaitingTime(0);
-          
-          // Reset analysis display for new prompt
+          break;
+
+        case 'error':
+          console.error('WebSocket error:', message.message);
+          break;
+
+        case 'analysis_start':
+          setShowAnalysisDisplay(true);
+          setIsAnalyzing(true);
+          break;
+
+        case 'analysis_complete':
+          setIsAnalyzing(false);
+          if (message.pdfUrl) {
+            handlePdfGenerated(message.pdfUrl);
+          }
+          break;
+
+        case 'queue_cleared':
+          // Handle fresh start - clear current state
           setShowAnalysisDisplay(false);
           setIsAnalyzing(false);
-          
-          // Enhanced feedback based on queue clearing
-          if (data.queueCleared) {
-            toast({
-              title: "Priority Request",
-              description: `🧹 Previous requests cleared. AVAI is focusing on your latest prompt... 🎯`,
-              duration: 3000,
-            });
-          } else {
-            toast({
-              title: "Message Sent",
-              description: "AVAI is diagnosing your request... 🩺",
-              duration: 3000,
-            });
-          }
-          break;
-        
-        case 'log_update':
-        case 'log_message':
-          // Log messages indicate analysis has started
-          if (!showAnalysisDisplay && !isAnalyzing) {
-            console.log('🎯 Analysis started - enabling live display');
-            setShowAnalysisDisplay(true);
-            setIsAnalyzing(true);
-          }
-          break;
-          
-        case 'audit_progress':
-          // Progress updates indicate analysis is active
-          if (!showAnalysisDisplay && !isAnalyzing) {
-            console.log('📊 Analysis progress detected - enabling live display');
-            setShowAnalysisDisplay(true);
-            setIsAnalyzing(true);
-          }
-          break;
-        
-        case 'ai_response':
-          console.log('🤖 AI Response received!', {
-            clientId: data.client_id,
-            currentClientId: clientId,
-            hasPayload: !!data.payload
-          });
           setIsTyping(false);
           waitingStartRef.current = null;
           setWaitingTime(0);
-          
-          // Check if this AI response is for this client
-          if (data.client_id && data.client_id !== clientId) {
-            console.log('⏭️ AI response not for this client, ignoring');
-            return;
-          }
-          
-          // Add AI message to conversation
-          const responseContent = data.payload?.response || data.message || 'No response received';
-          addMessage({
-            content: responseContent,
-            role: "assistant",
-            timestamp: new Date(data.timestamp || new Date()),
-          });
-          
-          // Show success feedback
-          toast({
-            title: "AVAI Response",
-            description: "🤖 Analysis complete!",
-            duration: 2000,
-          });
           break;
-          
-        case 'queue_cleared':
-          console.log('🗑️ Queue cleared notification:', {
-            clearedCount: data.cleared_count,
-            reason: (data as any).reason
-          });
-          // Optional: Show notification for queue clearing
-          // (Currently handled in chat_queued for better UX)
-          break;
-          
-        case 'error':
-          console.log('❌ WebSocket error received:', data.message);
-          setIsTyping(false);
-          waitingStartRef.current = null;
-          setWaitingTime(0);
-          toast({
-            title: "Error",
-            description: data.message || "An error occurred",
-            variant: "destructive"
-          });
-          break;
-      }
-    }
-  });
 
-  // Update waiting time when typing
+        default:
+          console.log('🔄 Unhandled message type:', message.type);
+      }
+    };
+
+    // Subscribe to WebSocket events
+    const connectionSub = webSocketService.subscribe(handleConnectionChange, (msg) => msg.type === 'connected' || msg.type === 'error');
+    const messageSub = webSocketService.subscribe(handleMessage);
+
+    // Initialize connection
+    webSocketService.connect();
+
+    return () => {
+      webSocketService.unsubscribe(connectionSub);
+      webSocketService.unsubscribe(messageSub);
+    };
+  }, []);
+
+  // Waiting time counter effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
     if (isTyping && waitingStartRef.current) {
       interval = setInterval(() => {
         if (waitingStartRef.current) {
-          const elapsed = Math.floor((Date.now() - waitingStartRef.current.getTime()) / 1000);
+          const elapsed = Math.floor((Date.now() - waitingStartRef.current) / 1000);
           setWaitingTime(elapsed);
         }
       }, 1000);
@@ -215,230 +202,155 @@ export const ChatLayout = () => {
     };
   }, [isTyping]);
 
-  // Listen for custom events from WelcomeScreen
-  useEffect(() => {
-    const handleSendMessage = (event: CustomEvent) => {
-      const { message } = event.detail;
-      if (message) {
-        // Check if this is a file-based analysis request
-        if (message.startsWith('FETCH_ANALYSIS_FROM_FILE:')) {
-          const fileName = message.replace('FETCH_ANALYSIS_FROM_FILE:', '');
-          handleFileBasedAnalysis(fileName);
-        } else {
-          sendMessage(message);
-        }
-      }
-    };
+  // GitHub URL extraction from message content
+  const extractGitHubUrl = (content: string): string | null => {
+    const githubUrlPattern = /https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+/g;
+    const match = content.match(githubUrlPattern);
+    return match ? match[0] : null;
+  };
 
-    window.addEventListener('avai-send-message', handleSendMessage as EventListener);
-    
-    return () => {
-      window.removeEventListener('avai-send-message', handleSendMessage as EventListener);
-    };
-  }, [isConnected, clientId]); // Re-attach when connection changes
-
-  // Show connection status
-  useEffect(() => {
-    if (isReconnecting) {
-      toast({
-        title: "Reconnecting to AVAI...",
-        description: "🩺 Getting back online",
-        duration: 2000,
-      });
-    } else if (isConnected) {
-      toast({
-        title: "Connected to AVAI",
-        description: "🟢 Blockchain doctor is ready!",
-        duration: 2000,
-      });
-    }
-  }, [isConnected, isReconnecting, toast]);
-
-  const sendMessage = async (content: string) => {
-    // Validate connection
-    if (!isConnected) {
-      toast({
-        title: "Not connected to AVAI",
-        description: "Please wait while we reconnect... 🔄",
-        variant: "destructive",
-      });
+  const handleSendMessage = async (content: string, files?: FileAttachment[]) => {
+    if (!connectionStatus.isConnected) {
+      console.error('WebSocket not connected');
       return;
     }
 
-    // Validate message content
-    const trimmedContent = content.trim();
-    if (!trimmedContent) {
-      toast({
-        title: "Empty message",
-        description: "Please enter a message to send to AVAI",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Extract GitHub URL if present for repository analysis
-    const githubUrlMatch = trimmedContent.match(/https:\/\/github\.com\/[^\s]+/);
-    if (githubUrlMatch) {
-      setCurrentRepositoryUrl(githubUrlMatch[0]);
-    }
-
-    // Reset analysis state for new prompt
+    // Clear previous analysis state for fresh start
+    setCurrentRepositoryUrl('');
     setShowAnalysisDisplay(false);
     setIsAnalyzing(false);
     setPdfViewerOpen(false);
-    setSelectedPdfUrl("");
+    setSelectedPdfUrl('');
 
-    // Add user message to conversation immediately for better UX
-    addMessage({
-      content: trimmedContent,
-      role: "user",
-      timestamp: new Date()
-    });
+    // Add user message to conversation
+    const userMessage: Omit<Message, 'id'> = {
+      content,
+      role: 'user',
+      timestamp: new Date(),
+      files
+    };
+    addMessage(userMessage);
 
-    // Send message through WebSocket with enhanced format
-    console.log('🚀 Sending message to AVAI:', {
-      length: trimmedContent.length,
-      clientId: clientId,
-      connected: isConnected
-    });
-    
-    const sent = wssSendMessage(trimmedContent);
-    if (!sent) {
-      toast({
-        title: "Failed to send message",
-        description: "Please check your connection and try again",
-        variant: "destructive",
-      });
-      return;
+    // Check for GitHub URL and handle analysis
+    const githubUrl = extractGitHubUrl(content);
+    if (githubUrl) {
+      setCurrentRepositoryUrl(githubUrl);
+      setIsAnalyzing(true);
+      setShowAnalysisDisplay(true);
     }
 
-    // Show immediate feedback
-    console.log('✅ Message sent successfully, waiting for queue response...');
-  };
-
-  const handleFileBasedAnalysis = async (fileName: string) => {
-    // Store the repository URL for the analysis
-    setCurrentRepositoryUrl(fileName);
-    
-    // Add user message for analysis request
-    addMessage({
-      content: `🔍 Analyzing repository: ${fileName}`,
-      role: "user",
-      timestamp: new Date()
-    });
-
-    // Start streaming analysis
-    setIsAnalyzing(true);
-    setShowAnalysisDisplay(true);
-    
-    toast({
-      title: "Starting Analysis",
-      description: "🩺 AVAI is beginning comprehensive repository scan...",
-      duration: 3000,
-    });
-  };
-
-  const handleAnalysisComplete = (report: string) => {
-    // Don't add the report as a chat message since it's already shown in StreamingAnalysisDisplay
-    // addMessage({
-    //   content: report,
-    //   role: "assistant",
-    //   timestamp: new Date()
-    // });
-    
-    // Don't set isAnalyzing to false immediately - let the display component handle it
-    // setIsAnalyzing(false);
-    
-    toast({
-      title: "Analysis Complete",
-      description: "📊 Security audit report ready!",
-      duration: 3000,
-    });
+    // Send message via WebSocket
+    try {
+      webSocketService.sendChatMessage(content);
+    } catch (error) {
+      console.error('Send message error:', error);
+    }
   };
 
   const handleFileClick = (files: FileAttachment[]) => {
-    setSelectedFiles(files);
-    setFileViewerOpen(true);
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type === 'pdf') {
+        setSelectedPdfUrl(file.url);
+        setPdfViewerOpen(true);
+      } else {
+        setSelectedFiles(files);
+        setFileViewerOpen(true);
+      }
+    }
   };
 
-  const createNewConversationWithReset = () => {
+  const handleAnalysisClose = () => {
     setShowAnalysisDisplay(false);
     setIsAnalyzing(false);
-    createNewConversation();
+    createNewConversation('Analysis Complete');
   };
 
-  const handlePdfClick = (pdfUrl: string) => {
-    console.log("handlePdfClick called with:", pdfUrl);
+  const handleAnalysisComplete = () => {
+    setIsAnalyzing(false);
+  };
+
+  const handlePdfClick = () => {
+    console.log('PDF clicked');
+  };
+
+  const handlePdfGenerated = (pdfUrl: string) => {
     setSelectedPdfUrl(pdfUrl);
     setPdfViewerOpen(true);
-    console.log("PDF viewer should now be open");
+  };
+
+  const handleConversationSelect = (conversation: Conversation) => {
+    setCurrentConversation(conversation);
+    setSidebarOpen(false);
+  };
+
+  const handleNewConversation = () => {
+    const newConv = createNewConversation();
+    setCurrentConversation(newConv);
+    setSidebarOpen(false);
+    return newConv;
   };
 
   return (
-    <div className="h-screen bg-gradient-chat flex flex-col overflow-hidden">
-      <TopNavigation 
-        onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        onNewChat={createNewConversationWithReset}
-        sidebarOpen={sidebarOpen}
-        isConnected={isConnected}
-        isTyping={isTyping}
-        lastHeartbeat={lastHeartbeat}
-        waitingTime={waitingTime}
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar
+        conversations={conversations}
+        currentConversation={currentConversation}
+        onSelectConversation={handleConversationSelect}
+        onNewChat={handleNewConversation}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
-      
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar 
-          conversations={conversations}
-          currentConversation={currentConversation}
-          onSelectConversation={setCurrentConversation}
-          onNewChat={createNewConversationWithReset}
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
+
+      <div className="flex-1 flex flex-col">
+        <TopNavigation
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          onNewChat={handleNewConversation}
+          sidebarOpen={sidebarOpen}
+          isConnected={connectionStatus.isConnected}
         />
-        
-        <div className="flex-1 flex flex-col relative min-h-0">
-          {hasMessages || isTyping || showAnalysisDisplay ? (
-            <div className="flex-1 flex flex-col min-h-0">
-              <ChatWindow 
-                conversation={currentConversation}
-                isTyping={isTyping}
-                onFileClick={handleFileClick}
-                isAnalyzing={isAnalyzing}
-                analysisDisplay={
-                  showAnalysisDisplay ? (
-                    <StreamingAnalysisDisplay 
-                      repositoryUrl={currentRepositoryUrl}
-                      isAnalyzing={isAnalyzing}
-                      onAnalysisComplete={() => handleAnalysisComplete('')}
-                      onPdfClick={() => handlePdfClick('security_audit_report.pdf')}
-                      webSocketData={latestWebSocketMessage}
-                    />
-                  ) : undefined
-                }
-              />
-            </div>
-          ) : (
-            <WelcomeScreen />
-          )}
-          
-          <MessageInput 
-            onSendMessage={sendMessage}
-            disabled={isTyping || isAnalyzing}
+
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <ChatWindow
+            conversation={currentConversation}
+            isTyping={isTyping}
+            onFileClick={(files) => handleFileClick(files)}
+            isAnalyzing={showAnalysisDisplay}
+          />
+
+          <MessageInput
+            onSendMessage={handleSendMessage}
+            disabled={!connectionStatus.isConnected}
           />
         </div>
-        
+      </div>
+
+      {showAnalysisDisplay && (
+        <StreamingAnalysisDisplay
+          repositoryUrl={currentRepositoryUrl}
+          isAnalyzing={isAnalyzing}
+          onAnalysisComplete={handleAnalysisComplete}
+          onPdfClick={handlePdfClick}
+        />
+      )}
+
+      {fileViewerOpen && selectedFiles.length > 0 && (
         <FileViewer
           files={selectedFiles}
           isOpen={fileViewerOpen}
           onClose={() => setFileViewerOpen(false)}
         />
-        
+      )}
+
+      {pdfViewerOpen && selectedPdfUrl && (
         <PdfViewer
           pdfUrl={selectedPdfUrl}
           isOpen={pdfViewerOpen}
           onClose={() => setPdfViewerOpen(false)}
         />
-      </div>
+      )}
     </div>
   );
-};
+}
+
+export default ChatLayout;
