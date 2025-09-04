@@ -3,7 +3,6 @@
   "outputDirectory": "dist",
   "installCommand": "npm install --force",
   "framework": "vite",
-  "functions": {},
   "rewrites": [
     {
       "source": "/(.*)",
