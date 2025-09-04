@@ -34,7 +34,7 @@ interface AnalysisResult {
   suggestion: string;
 }
 
-const DEMO_REPO_URL = "https://github.com/mrarejimmyz/MockRepoForDemo";
+const DEMO_REPO_URL = "https://github.com/AVAICannisterAgent/AVAI-CannisterAgent";
 
 const mockAnalysisResults: AnalysisResult[] = [
   {
@@ -179,7 +179,7 @@ export const CanisterDemo = () => {
                 <Github className="w-6 h-6 text-blue-400" />
                 <div>
                   <CardTitle className="text-white">Demo Repository</CardTitle>
-                  <CardDescription>MockRepoForDemo - Sample Motoko Canister</CardDescription>
+                  <CardDescription>AVAI Canister Agent - Advanced AI Security Platform</CardDescription>
                 </div>
               </div>
               <Button
@@ -387,9 +387,10 @@ export const CanisterDemo = () => {
           <CardContent className="text-slate-300">
             <p>
               This demonstration showcases AVAI's comprehensive canister analysis capabilities. 
-              The MockRepoForDemo repository contains sample Motoko code with intentional 
-              security vulnerabilities, performance issues, and code quality problems 
-              that AVAI can detect and provide actionable suggestions for.
+              The AVAI Canister Agent repository demonstrates production-ready AI security auditing 
+              capabilities for blockchain projects. This real implementation showcases advanced 
+              static analysis, vulnerability detection, and automated security reporting for 
+              Internet Computer (ICP) canisters and smart contracts.
             </p>
             <div className="mt-4 p-4 bg-blue-900/20 rounded-lg border border-blue-700">
               <p className="text-blue-300 font-medium">🎬 Perfect for Demo Videos!</p>

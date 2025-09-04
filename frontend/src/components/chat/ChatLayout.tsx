@@ -34,8 +34,15 @@ export interface Conversation {
   createdAt: Date;
 }
 
-// WebSocket URL for the AVAI tunnel
+// Production WebSocket URL - Docker backend via Cloudflare tunnel
 const WEBSOCKET_URL = 'wss://websocket.avai.life/ws';
+
+// Environment detection for Docker backend integration
+const isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost');
+const isDevelopment = typeof window !== 'undefined' && (
+  window.location.hostname.includes('localhost') || 
+  window.location.hostname.includes('127.0.0.1')
+);
 
 export const ChatLayout = () => {
   const { toast } = useToast();
@@ -47,6 +54,8 @@ export const ChatLayout = () => {
   const [showAnalysisDisplay, setShowAnalysisDisplay] = useState(false);
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
   const [selectedPdfUrl, setSelectedPdfUrl] = useState<string>("");
+  const [currentRepositoryUrl, setCurrentRepositoryUrl] = useState<string>("");
+  const [latestWebSocketMessage, setLatestWebSocketMessage] = useState<any>(null);
   
   // Heartbeat monitoring
   const [lastHeartbeat, setLastHeartbeat] = useState<Date | undefined>();
@@ -63,16 +72,19 @@ export const ChatLayout = () => {
     hasMessages
   } = useConversationManager();
 
-  // WebSocket management
+  // WebSocket management with Docker backend integration
   const {
     isConnected,
     isReconnecting,
     sendMessage: wssSendMessage,
     clientId
   } = useWebSocketManager({
-    url: WEBSOCKET_URL,
+    url: `${WEBSOCKET_URL}?type=dashboard&client_id=avai_frontend_${Date.now()}`,
     onMessage: (data) => {
       console.log('📨 ChatLayout received WebSocket message:', data);
+      
+      // Store the latest WebSocket message for StreamingAnalysisDisplay
+      setLatestWebSocketMessage(data);
       
       switch (data.type) {
         case 'heartbeat':
@@ -90,6 +102,10 @@ export const ChatLayout = () => {
           waitingStartRef.current = new Date();
           setWaitingTime(0);
           
+          // Reset analysis display for new prompt
+          setShowAnalysisDisplay(false);
+          setIsAnalyzing(false);
+          
           // Enhanced feedback based on queue clearing
           if (data.queueCleared) {
             toast({
@@ -103,6 +119,25 @@ export const ChatLayout = () => {
               description: "AVAI is diagnosing your request... 🩺",
               duration: 3000,
             });
+          }
+          break;
+        
+        case 'log_update':
+        case 'log_message':
+          // Log messages indicate analysis has started
+          if (!showAnalysisDisplay && !isAnalyzing) {
+            console.log('🎯 Analysis started - enabling live display');
+            setShowAnalysisDisplay(true);
+            setIsAnalyzing(true);
+          }
+          break;
+          
+        case 'audit_progress':
+          // Progress updates indicate analysis is active
+          if (!showAnalysisDisplay && !isAnalyzing) {
+            console.log('📊 Analysis progress detected - enabling live display');
+            setShowAnalysisDisplay(true);
+            setIsAnalyzing(true);
           }
           break;
         
@@ -241,6 +276,18 @@ export const ChatLayout = () => {
       return;
     }
 
+    // Extract GitHub URL if present for repository analysis
+    const githubUrlMatch = trimmedContent.match(/https:\/\/github\.com\/[^\s]+/);
+    if (githubUrlMatch) {
+      setCurrentRepositoryUrl(githubUrlMatch[0]);
+    }
+
+    // Reset analysis state for new prompt
+    setShowAnalysisDisplay(false);
+    setIsAnalyzing(false);
+    setPdfViewerOpen(false);
+    setSelectedPdfUrl("");
+
     // Add user message to conversation immediately for better UX
     addMessage({
       content: trimmedContent,
@@ -270,9 +317,12 @@ export const ChatLayout = () => {
   };
 
   const handleFileBasedAnalysis = async (fileName: string) => {
+    // Store the repository URL for the analysis
+    setCurrentRepositoryUrl(fileName);
+    
     // Add user message for analysis request
     addMessage({
-      content: `🔍 Analyzing repository: https://github.com/mrarejimmyz/MockRepoForDemo`,
+      content: `🔍 Analyzing repository: ${fileName}`,
       role: "user",
       timestamp: new Date()
     });
@@ -357,9 +407,11 @@ export const ChatLayout = () => {
                 analysisDisplay={
                   showAnalysisDisplay ? (
                     <StreamingAnalysisDisplay 
+                      repositoryUrl={currentRepositoryUrl}
                       isAnalyzing={isAnalyzing}
-                      onComplete={handleAnalysisComplete}
-                      onPdfClick={handlePdfClick}
+                      onAnalysisComplete={() => handleAnalysisComplete('')}
+                      onPdfClick={() => handlePdfClick('security_audit_report.pdf')}
+                      webSocketData={latestWebSocketMessage}
                     />
                   ) : undefined
                 }

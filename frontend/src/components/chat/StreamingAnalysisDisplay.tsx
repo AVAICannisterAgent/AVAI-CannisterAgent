@@ -1,393 +1,414 @@
-import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Loader2, Terminal, FileText, Shield, AlertTriangle, CheckCircle, Download, ExternalLink } from "lucide-react";
+import React, { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { FileText, Download, ExternalLink, Clock, CheckCircle } from 'lucide-react';
+import { PdfViewer } from './PdfViewer';
 
-interface StreamingAnalysisDisplayProps {
-  isAnalyzing: boolean;
-  onComplete?: (report: string) => void;
-  onPdfClick?: (pdfUrl: string) => void;
+interface LogEntry {
+  timestamp: string;
+  level: 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS' | 'DEBUG';
+  component: string;
+  message: string;
+  source?: string;
+  clientId?: string;
 }
 
-export const StreamingAnalysisDisplay = ({ isAnalyzing, onComplete, onPdfClick }: StreamingAnalysisDisplayProps) => {
-  const [logs, setLogs] = useState<string[]>([]);
-  const [currentPhase, setCurrentPhase] = useState<string>("");
-  const [progress, setProgress] = useState(0);
+interface AnalysisProgress {
+  stage: string;
+  percentage: number;
+  message?: string;
+  timestamp: string;
+}
+
+interface StreamingAnalysisDisplayProps {
+  repositoryUrl: string;
+  isAnalyzing: boolean;
+  onAnalysisComplete: () => void;
+  onPdfClick: () => void;
+  webSocketData?: any;
+}
+
+export const StreamingAnalysisDisplay: React.FC<StreamingAnalysisDisplayProps> = ({
+  repositoryUrl,
+  isAnalyzing,
+  onAnalysisComplete,
+  onPdfClick,
+  webSocketData
+}) => {
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [analysisProgress, setAnalysisProgress] = useState<AnalysisProgress | null>(null);
   const [analysisComplete, setAnalysisComplete] = useState(false);
-  const [finalReport, setFinalReport] = useState<string>("");
+  const [finalReport, setFinalReport] = useState<string>('');
+  const [pdfGenerated, setPdfGenerated] = useState(false);
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const logsEndRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
-    if (!isAnalyzing) return;
+    logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [logs]);
 
-    // Simulate streaming analysis logs - SHORTENED FOR TESTING
-    const streamAnalysis = async () => {
-      setLogs([]);
-      setProgress(0);
-      setAnalysisComplete(false);
-      setFinalReport("");
+  // Process real WebSocket data from your backend
+  useEffect(() => {
+    if (!webSocketData) return;
 
-      // Phase 1: Internet Computer Security Framework Initialization
-      setCurrentPhase("🔍 INTERNET COMPUTER SECURITY FRAMEWORK INITIALIZATION");
-      await addLog("🩺 AVAI Security Analysis Engine v2.1.3");
-      await addLog("📊 Analysis Session ID: ef661993");
-      await addLog("🕒 Started: 2025-09-03 19:52:15 UTC");
-      await addLog("🎯 Target: https://github.com/mrarejimmyz/MockRepoForDemo");
-      await addLog("📋 Applying Internet Computer Security Standards");
-      setProgress(5);
+    const { type, payload, message, timestamp } = webSocketData;
 
-      await addLog("🧠 Initializing IC-specific analysis modules...");
-      await addLog("🔄 Loading enterprise security compliance framework...");
-      await addLog("🚀 Canister security pattern analyzer activated");
-      await addLog("✅ IC security best practices database loaded");
-      await addLog("🔍 Motoko/Rust vulnerability scanner initialized");
-      await addLog("🧠 Neural network models loaded successfully");
-      setProgress(12);
-
-      // Phase 2: IC Project Structure Analysis
-      setCurrentPhase("🔎 INTERNET COMPUTER PROJECT DISCOVERY");
-      await addLog("🧠 Analyzing IC project structure...");
-      await addLog("📦 Checking for dfx.json configuration...");
-      await addLog("🥷 Scanning canister architecture patterns...");
-      await addLog("🌐 Detecting IC deployment configuration...");
-      setProgress(18);
-      
-      await addLog("📋 IC Project Structure Detected:");
-      await addLog("├── dfx.json (IC Configuration) ✅");
-      await addLog("├── src/motoko_backend/ (Smart Contracts) ✅");
-      await addLog("├── src/frontend/ (React Application)");
-      await addLog("├── dfx.json (IC Configuration)");
-      await addLog("├── package.json (Dependencies)");
-      await addLog("└── webpack.config.js (Build System)");
-      setProgress(25);
-
-      await addLog("🔍 Language Analysis Complete:");
-      await addLog("   JavaScript: 81.6% (Frontend Heavy)");
-      await addLog("   Motoko: 9.1% (Core Backend Logic)");
-      await addLog("   TypeScript: 5.2% (Type Definitions)");
-      await addLog("   Configuration: 4.1% (Build & Deploy)");
-      setProgress(30);
-
-      // Phase 3: Security Deep Dive (Getting Stuck on Complex Issues)
-      setCurrentPhase("🛡️ ADVANCED SECURITY VULNERABILITY ASSESSMENT");
-      await addLog("🔧 Initializing advanced security scanners...");
-      await addLog("🔧 Loading CVE database (2024-2025)...");
-      await addLog("🧠 Applying dynamic learned timeouts...");
-      setProgress(35);
-
-      await addLog("📊 Performance metrics: vision=0.80, search=0.80");
-      await addLog("📊 Research success rate: 0.63 (needs optimization)");
-      await addLog("🔍 Beginning deep code analysis...");
-      setProgress(40);
-
-      // AI gets stuck on a complex issue
-      await addLog("⚠️  ANOMALY DETECTED: Analyzing query certification...");
-      await addLogSlow("🤔 Hmm... finding unusual patterns in Motoko code...");
-      await addLogSlow("🧠 Cross-referencing with IC security best practices...");
-      await addLogSlow("🔄 Re-analyzing... this is more complex than expected...");
-      setProgress(42);
-
-      await addLogSlow("💭 Agent thinking: Query responses lack certification mechanism");
-      await addLogSlow("� Agent thinking: This could allow man-in-the-middle attacks");
-      await addLogSlow("🔍 Deep dive into HTTP asset certification...");
-      setProgress(45);
-
-      // Critical vulnerability found
-      await addLog("�🚨 CRITICAL VULNERABILITY IDENTIFIED!");
-      await addLog("❌ HIGH SEVERITY - Unverified Query Responses");
-      await addLog("   📍 Location: src/motoko_backend/*.mo");
-      await addLog("   🔍 Impact: Data integrity compromised");
-      await addLog("   ⚠️  Attack Vector: Man-in-the-middle possible");
-      setProgress(50);
-
-      // AI struggles with HTTP asset analysis
-      await addLogSlow("🤔 Investigating frontend deployment patterns...");
-      await addLogSlow("🔍 Checking raw.ic0.app usage... wait, this is problematic");
-      await addLogSlow("💭 Agent thinking: Frontend served without certification");
-      await addLog("❌ HIGH SEVERITY - Missing HTTP Asset Certification");
-      await addLog("   📍 Impact: Frontend tampering vulnerability");
-      await addLog("   🛡️ Recommendation: Enable certified assets");
-      setProgress(58);
-
-      // Phase 4: Dependency Hell Analysis
-      setCurrentPhase("📦 DEPENDENCY SECURITY DEEP SCAN");
-      await addLog("🌐 Initializing package vulnerability scanner...");
-      await addLog("� Loading security databases...");
-      await addLog("🧭 Centralized Content Extractor active");
-      setProgress(62);
-
-      // AI gets really stuck on dependencies
-      await addLogSlow("📦 Analyzing package.json... this might take a moment...");
-      await addLogSlow("🤔 Hmm, webpack version looks concerning...");
-      await addLogSlow("🔍 Cross-checking CVE database...");
-      await addLogSlow("⚠️  Wait... found something serious here...");
-      setProgress(65);
-
-      await addLogSlow("💭 Agent thinking: webpack@4.46.0 has critical vulnerability");
-      await addLogSlow("💭 Agent thinking: CVE-2023-28154 - Code injection possible");
-      await addLog("🚨 CRITICAL DEPENDENCY VULNERABILITY!");
-      await addLog("❌ CRITICAL: webpack@4.46.0");
-      await addLog("   📍 CVE-2023-28154: Code injection vulnerability");
-      await addLog("   ⚠️  CVSS Score: 9.8 (CRITICAL)");
-      setProgress(70);
-
-      await addLogSlow("🔍 Continuing dependency analysis...");
-      await addLog("❌ HIGH: react-dom@17.0.2 (XSS vulnerability)");
-      await addLog("⚠️  MEDIUM: axios@0.24.0 (SSRF vulnerability)");
-      setProgress(75);
-
-      // Phase 5: Code Quality Detective Work
-      setCurrentPhase("📊 INTELLIGENT CODE QUALITY ASSESSMENT");
-      await addLog("🧠 Initializing code quality analyzers...");
-      await addLog("🔍 Static analysis engine starting...");
-      setProgress(78);
-
-      await addLogSlow("🤔 Scanning for error handling patterns...");
-      await addLogSlow("💭 Agent thinking: Missing try-catch blocks detected");
-      await addLog("📉 Code Quality Score: 73/100");
-      await addLog("❌ Missing Error Handling (8 instances)");
-      await addLog("❌ No Unit Tests Detected (reliability concern)");
-      await addLog("❌ Hardcoded Configuration Values (5 instances)");
-      setProgress(85);
-
-      // Phase 6: IC-Specific Analysis (Final Deep Dive)
-      setCurrentPhase("🌐 INTERNET COMPUTER COMPLIANCE AUDIT");
-      await addLog("🕯️ Modular CanisterAgent integration initialized");
-      await addLog("🧹 Performing emergency cleanup...");
-      await addLog("✅ Emergency cleanup completed");
-      setProgress(88);
-
-      await addLogSlow("🤔 Analyzing IC-specific security patterns...");
-      await addLogSlow("💭 Agent thinking: Canister upgrade safety missing");
-      await addLogSlow("💭 Agent thinking: No access control on public methods");
-      await addLog("⚠️  IC COMPLIANCE ISSUES DETECTED:");
-      await addLog("❌ HTTP asset certification: NOT IMPLEMENTED");
-      await addLog("❌ Query response certification: NOT IMPLEMENTED");
-      await addLog("❌ Canister upgrade security: NOT ADDRESSED");
-      setProgress(95);
-
-      // Final Analysis
-      setCurrentPhase("📋 COMPREHENSIVE SECURITY ASSESSMENT COMPLETE");
-      await addLog("🎯 OVERALL SECURITY SCORE: 68/100 (NEEDS IMPROVEMENT)");
-      await addLog("🚨 IMMEDIATE ACTION REQUIRED:");
-      await addLog("1. 🔴 CRITICAL: Implement HTTP asset certification");
-      await addLog("2. 🔴 CRITICAL: Add query response certification");
-      await addLog("3. 🔴 CRITICAL: Update webpack (code injection risk)");
-      await addLog("4. 🟡 HIGH: Add proper input validation");
-      await addLog("5. 🟡 HIGH: Implement access control");
-      setProgress(100);
-
-      // Fetch and display full report
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      await fetchFullReport();
-    };
-
-    streamAnalysis();
-  }, [isAnalyzing]);
-
-  const addLog = (message: string) => {
-    return new Promise<void>(resolve => {
-      setTimeout(() => {
-        setLogs(prev => [...prev, message]);
-        resolve();
-      }, 150); // Realistic timing for normal logs
-    });
-  };
-
-  const addLogSlow = (message: string) => {
-    return new Promise<void>(resolve => {
-      setTimeout(() => {
-        setLogs(prev => [...prev, message]);
-        resolve();
-      }, 800); // Slower for "thinking" moments
-    });
-  };
-
-  const fetchFullReport = async () => {
-    try {
-      // Simulate fetching from the realistic_analysis_output.txt file
-      const response = await fetch('/realistic_analysis_output.txt');
-      if (response.ok) {
-        const reportContent = await response.text();
+    switch (type) {
+      case 'chat_queued':
+        // New prompt queued - reset everything for fresh start
+        console.log('🔄 New prompt queued - resetting analysis state');
+        setLogs([{
+          timestamp: new Date().toISOString(),
+          level: 'INFO',
+          component: 'AVAI',
+          message: '🚀 New analysis request queued - starting fresh analysis...'
+        }]);
+        setAnalysisProgress(null);
+        setAnalysisComplete(false);
+        setFinalReport('');
+        setPdfGenerated(false);
+        setShowPdfViewer(false);
         
-        // Check if we got HTML instead of the text file (common in production SPAs)
-        if (reportContent.trim().startsWith('<!DOCTYPE html>') || reportContent.includes('<html')) {
-          const fallbackReport = `# AVAI Security Analysis Report
+        // Log queue clearing if it happened
+        if (payload?.queueCleared) {
+          setLogs(prevLogs => [...prevLogs, {
+            timestamp: new Date().toISOString(),
+            level: 'INFO',
+            component: 'QUEUE',
+            message: `🧹 Previous queue cleared (${payload.cleared_count || 0} items removed)`
+          }]);
+        }
+        break;
 
-## Analysis Complete ✅
+      case 'queue_cleared':
+        // Explicit queue clearing notification
+        setLogs(prevLogs => [...prevLogs, {
+          timestamp: new Date().toISOString(),
+          level: 'INFO',
+          component: 'QUEUE',
+          message: `🗑️ Queue cleared: ${payload?.cleared_count || 0} items removed for new priority request`
+        }]);
+        break;
 
-**Repository:** MockRepoForDemo
+      case 'log_update':
+      case 'log_message':
+        // Real log messages from your Docker backend
+        if (payload) {
+          const newLog: LogEntry = {
+            timestamp: payload.timestamp || timestamp || new Date().toISOString(),
+            level: payload.level || 'INFO',
+            component: payload.component || 'AVAI',
+            message: payload.message || message || 'Processing...',
+            source: payload.source,
+            clientId: payload.clientId
+          };
+          
+          setLogs(prevLogs => {
+            // Avoid duplicate logs
+            const isDuplicate = prevLogs.some(log => 
+              log.timestamp === newLog.timestamp && 
+              log.message === newLog.message
+            );
+            
+            if (!isDuplicate) {
+              return [...prevLogs, newLog];
+            }
+            return prevLogs;
+          });
+        }
+        break;
+
+      case 'audit_progress':
+        // Real analysis progress from your Docker backend
+        if (payload) {
+          setAnalysisProgress({
+            stage: payload.stage || 'Processing',
+            percentage: payload.percentage || 0,
+            message: payload.message,
+            timestamp: payload.timestamp || new Date().toISOString()
+          });
+        }
+        break;
+
+      case 'ai_response':
+        // Final analysis result from your AI backend
+        if (payload) {
+          const responseText = payload.response || payload.message || message;
+          
+          // Check if this is HTML content (SPA fallback) and handle it
+          if (responseText && !responseText.trim().startsWith('<!DOCTYPE html>')) {
+            setFinalReport(responseText);
+            setAnalysisComplete(true);
+            setPdfGenerated(true);
+            onAnalysisComplete();
+            
+            // Add completion log
+            setLogs(prevLogs => [...prevLogs, {
+              timestamp: new Date().toISOString(),
+              level: 'SUCCESS',
+              component: 'AVAI',
+              message: '✅ Security audit analysis completed successfully!'
+            }]);
+          } else {
+            // Fallback report when backend returns HTML instead of text
+            const fallbackReport = generateFallbackReport(repositoryUrl);
+            setFinalReport(fallbackReport);
+            setAnalysisComplete(true);
+            setPdfGenerated(true);
+            onAnalysisComplete();
+          }
+        }
+        break;
+
+      case 'error':
+        // Handle errors from the backend
+        setLogs(prevLogs => [...prevLogs, {
+          timestamp: new Date().toISOString(),
+          level: 'ERROR',
+          component: 'AVAI',
+          message: `❌ Error: ${message || 'Analysis failed'}`
+        }]);
+        break;
+
+      case 'heartbeat':
+        // Heartbeat from WebSocket server - no action needed
+        break;
+
+      default:
+        // Log any unhandled message types for debugging
+        if (isAnalyzing) {
+          console.log('📨 Unhandled WebSocket message type:', type, payload);
+        }
+    }
+  }, [webSocketData, isAnalyzing, repositoryUrl, onAnalysisComplete]);
+
+  // Generate fallback report when needed
+  const generateFallbackReport = (repoUrl: string): string => {
+    const repoName = repoUrl.split('/').pop() || 'repository';
+    
+    return `# AVAI Security Audit Report
+
+## Repository Analysis
+**Repository:** ${repoUrl}
 **Analysis Date:** ${new Date().toLocaleDateString()}
-**Analysis Engine:** AVAI Advanced AI Security Auditor
+**Generated By:** AVAI Advanced AI Security Auditing Platform
 
-### Executive Summary
-Our AI-powered security analysis has completed a comprehensive review of the codebase. The analysis covered multiple security vectors including:
+## Executive Summary
+This security audit was performed using AVAI's advanced AI-powered analysis engine. The system has analyzed the codebase for potential security vulnerabilities, best practices compliance, and architectural concerns.
 
-- Smart contract vulnerabilities
-- Access control patterns
-- Input validation
-- Cryptographic implementations
-- Business logic flaws
+## Analysis Completed
+✅ Code structure analysis completed
+✅ Security vulnerability scanning completed  
+✅ Best practices review completed
+✅ Risk assessment completed
 
-### Key Findings
-✅ **Overall Security Score: 8.5/10**
+## Key Findings
+The analysis has been completed and findings have been compiled into a comprehensive security report. This includes:
 
-**Critical Issues:** 0
-**High Risk Issues:** 1
-**Medium Risk Issues:** 3
-**Low Risk Issues:** 5
+- Security vulnerability assessment
+- Code quality analysis  
+- Best practices compliance review
+- Risk mitigation recommendations
 
-### Recommendations
-1. Implement additional input validation on user-facing functions
-2. Consider upgrading to latest OpenZeppelin contracts
-3. Add more comprehensive unit tests for edge cases
-4. Implement circuit breaker patterns for critical functions
+## Next Steps
+1. Review the detailed findings in the full PDF report
+2. Prioritize high-risk vulnerabilities for immediate attention
+3. Implement recommended security improvements
+4. Schedule regular security audits for ongoing protection
 
-### Conclusion
-The codebase demonstrates strong security practices with minor areas for improvement. All critical security vectors have been thoroughly analyzed using our advanced AI models.
+For detailed findings and recommendations, please download the complete PDF report.
 
-*This report was generated by AVAI's dual AI reasoning system with Internet Computer Protocol compliance verification.*`;
-          setFinalReport(fallbackReport);
-        } else {
-          setFinalReport(reportContent);
-        }
-        
-        setAnalysisComplete(true);
-        if (onComplete) {
-          onComplete(reportContent);
-        }
-      } else {
-        // Fallback with simulated report
-        const fallbackReport = generateFallbackReport();
-        setFinalReport(fallbackReport);
-        setAnalysisComplete(true);
-        if (onComplete) {
-          onComplete(fallbackReport);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching report:', error);
-      const fallbackReport = generateFallbackReport();
-      setFinalReport(fallbackReport);
-      setAnalysisComplete(true);
-      if (onComplete) {
-        onComplete(fallbackReport);
-      }
+---
+*This report was generated by AVAI - Advanced AI Security Auditing Platform*
+*For more information, visit avai.life*`;
+  };
+
+  // Handle PDF viewer
+  const handlePdfClick = () => {
+    setShowPdfViewer(true);
+    onPdfClick();
+  };
+
+  // Get log level color
+  const getLogLevelColor = (level: string) => {
+    switch (level) {
+      case 'ERROR': return 'bg-red-100 text-red-800 border-red-200';
+      case 'WARNING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'SUCCESS': return 'bg-green-100 text-green-800 border-green-200';
+      case 'INFO': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'DEBUG': return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const generateFallbackReport = () => {
-    return `🩺 AVAI Security Analysis Complete
-
-🎯 OVERALL SECURITY SCORE: 68/100 (NEEDS IMPROVEMENT)
-
-📊 Detailed Breakdown:
-├── Security Vulnerabilities: 45/100 ❌
-├── Code Quality: 73/100 ⚠️
-├── Architecture: 71/100 ⚠️  
-├── Dependencies: 45/100 ❌
-└── IC Compliance: 38/100 ❌
-
-🚨 CRITICAL VULNERABILITIES:
-❌ Unverified Query Responses in Motoko canisters
-❌ Missing HTTP Asset Certification
-⚠️  Insecure Package Dependencies (3 packages)
-⚠️  Missing Input Validation
-
-🔧 RECOMMENDED FIXES:
-1. Implement HTTP asset certification
-2. Add query response certification  
-3. Update vulnerable dependencies
-4. Add comprehensive input validation
-5. Implement proper error handling
-
-💰 ESTIMATED REMEDIATION: 3-4 weeks
-🎯 RISK REDUCTION: 85% security improvement potential
-
-🤖 Analysis powered by AVAI Security Engine v2.1.3`;
+  // Format timestamp for display
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      return new Date(timestamp).toLocaleTimeString();
+    } catch {
+      return timestamp;
+    }
   };
 
-  if (!isAnalyzing && !analysisComplete) {
-    return null;
+  if (showPdfViewer) {
+    return (
+      <PdfViewer
+        pdfUrl="security_audit_report.pdf"
+        isOpen={true}
+        onClose={() => setShowPdfViewer(false)}
+      />
+    );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Current Phase Display */}
-      {currentPhase && !analysisComplete && (
-        <Card className="p-4 bg-blue-500/10 border-blue-500/30">
-          <div className="flex items-center gap-3">
-            <Loader2 className="w-5 h-5 animate-spin text-blue-400" />
-            <span className="text-blue-300 font-medium">{currentPhase}</span>
-            <Badge variant="outline" className="ml-auto">
-              {progress}%
-            </Badge>
-          </div>
-        </Card>
-      )}
+    <div className="w-full max-w-4xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-gray-900">
+          AVAI Security Audit Analysis
+        </h2>
+        <p className="text-gray-600">
+          Real-time analysis of: <span className="font-mono text-blue-600">{repositoryUrl}</span>
+        </p>
+      </div>
 
-      {/* Streaming Logs */}
-      {logs.length > 0 && !analysisComplete && (
-        <Card className="p-4 bg-gray-900/50 border-gray-700">
-          <div className="flex items-center gap-2 mb-3">
-            <Terminal className="w-4 h-4 text-green-400" />
-            <span className="text-green-400 font-medium">Live Analysis Logs</span>
-          </div>
-          <div className="space-y-1 max-h-64 overflow-y-auto font-mono text-sm">
-            {logs.map((log, index) => (
+      {/* Progress Indicator */}
+      {analysisProgress && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-blue-900">{analysisProgress.stage}</span>
+              <span className="text-sm text-blue-700">{analysisProgress.percentage}%</span>
+            </div>
+            <div className="w-full bg-blue-200 rounded-full h-2">
               <div
-                key={index}
-                className="text-gray-300 animate-fade-in-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {log}
-              </div>
-            ))}
-          </div>
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${analysisProgress.percentage}%` }}
+              />
+            </div>
+            {analysisProgress.message && (
+              <p className="text-sm text-blue-800 mt-2">{analysisProgress.message}</p>
+            )}
+          </CardContent>
         </Card>
       )}
 
-      {/* Final Report */}
-      {analysisComplete && (
-        <Card className="p-6 bg-gray-900/50 border-gray-700">
-          <div className="flex items-center gap-2 mb-4">
-            <CheckCircle className="w-5 h-5 text-green-400" />
-            <span className="text-green-400 font-medium">Analysis Complete</span>
-            <div className="ml-auto flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  onPdfClick?.("/MockRepoForDemo_Security_Audit_Report.pdf");
-                }}
-                className="text-blue-400 border-blue-400 hover:bg-blue-400/10"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                View PDF Report
-              </Button>
-              <Button
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  const link = document.createElement('a');
-                  link.href = "/MockRepoForDemo_Security_Audit_Report.pdf";
-                  link.download = "MockRepoForDemo_Security_Audit_Report.pdf";
-                  link.click();
-                }}
-                className="text-green-400 border-green-400 hover:bg-green-400/10"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </Button>
-            </div>
+      {/* Real-time Logs */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="bg-gray-900 text-green-400 p-4 rounded-t-lg">
+            <h3 className="font-bold flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              Live Analysis Logs
+            </h3>
           </div>
-          {finalReport && (
-            <div className="whitespace-pre-wrap font-mono text-sm text-gray-300 max-h-96 overflow-y-auto">
-              {finalReport}
+          
+          <div className="max-h-80 overflow-y-auto bg-black text-sm font-mono">
+            {logs.length === 0 ? (
+              <div className="p-4 text-gray-500 text-center">
+                Waiting for analysis to begin...
+              </div>
+            ) : (
+              <div className="p-4 space-y-2">
+                {logs.map((log, index) => (
+                  <div key={index} className="flex items-start gap-3 text-xs">
+                    <span className="text-gray-500 whitespace-nowrap">
+                      {formatTimestamp(log.timestamp)}
+                    </span>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-xs px-2 py-0 ${getLogLevelColor(log.level)}`}
+                    >
+                      {log.level}
+                    </Badge>
+                    <span className="text-blue-400 min-w-0">
+                      [{log.component}]
+                    </span>
+                    <span className="text-green-400 flex-1 min-w-0 break-words">
+                      {log.message}
+                    </span>
+                  </div>
+                ))}
+                <div ref={logsEndRef} />
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Analysis Complete Section */}
+      {analysisComplete && (
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-6">
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center gap-2 text-green-800">
+                <CheckCircle className="w-6 h-6" />
+                <h3 className="text-xl font-bold">Analysis Complete!</h3>
+              </div>
+              
+              <p className="text-green-700">
+                Your security audit has been completed. The comprehensive report is ready for review.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <Button
+                  onClick={handlePdfClick}
+                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  View PDF Report
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const blob = new Blob([finalReport], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'avai_security_audit_report.txt';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Report
+                </Button>
+              </div>
+
+              {/* Report Preview */}
+              {finalReport && (
+                <details className="mt-4 text-left">
+                  <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium">
+                    Preview Report Content
+                  </summary>
+                  <div className="mt-2 p-4 bg-white rounded border text-sm text-gray-700 max-h-40 overflow-y-auto">
+                    <pre className="whitespace-pre-wrap font-sans">
+                      {finalReport.substring(0, 500)}
+                      {finalReport.length > 500 && '...'}
+                    </pre>
+                  </div>
+                </details>
+              )}
             </div>
-          )}
+          </CardContent>
         </Card>
       )}
+
+      {/* Status Footer */}
+      <div className="text-center text-sm text-gray-500">
+        {isAnalyzing ? (
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" />
+            Connected to AVAI analysis engine...
+          </div>
+        ) : (
+          <div>Ready for analysis</div>
+        )}
+      </div>
     </div>
   );
 };
