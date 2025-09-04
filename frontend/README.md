@@ -1,73 +1,114 @@
-# Welcome to your Lovable project
+# AVAI Frontend Application
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/5154f0f6-502c-4760-9a56-8f04e3f5be50
+**AVAI Agent for Hire Frontend** - Advanced AI Agent Interface for Internet Computer Canister Integration
 
-## How can I edit this code?
+This is the frontend interface for the AVAI (Advanced AI Agent) system, providing a modern React-based UI for interacting with Internet Computer canisters and AI agents.
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- **Real-time WebSocket Communication** - Live updates and agent interactions
+- **Internet Computer Integration** - Direct canister communication
+- **Redis Queue Management** - Real-time task processing
+- **Responsive Design** - Modern UI with dark/light themes
+- **TypeScript Support** - Full type safety and developer experience
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5154f0f6-502c-4760-9a56-8f04e3f5be50) and start prompting.
+## Development Setup
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js 18+ and npm installed
+- Access to AVAI backend services
+- Internet Computer development environment (optional for local testing)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```bash
+# Clone the repository
+git clone https://github.com/AVAICannisterAgent/AVAI-CannisterAgent.git
+cd AVAI-CannisterAgent/frontend
 
-Follow these steps:
+# Install dependencies
+npm install
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Development Server
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+npm run dev
+```
 
-**Use GitHub Codespaces**
+The application will be available at `http://localhost:5173`
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Build and Deployment
 
-## What technologies are used for this project?
+### Build for Production
 
-This project is built with:
+```bash
+npm run build
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Preview Production Build
 
-## How can I deploy this project?
+```bash
+npm run preview
+```
 
-Simply open [Lovable](https://lovable.dev/projects/5154f0f6-502c-4760-9a56-8f04e3f5be50) and click on Share -> Publish.
+### Deploy to Production
 
-## Can I connect a custom domain to my Lovable project?
+Build the project and deploy the `dist` folder to your hosting platform.
 
-Yes, you can!
+## Technologies Used
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- **React** - Frontend framework
+- **TypeScript** - Type-safe development
+- **Vite** - Fast build tool and development server
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - Modern component library
+- **WebSocket API** - Real-time communication
+- **Internet Computer SDK** - Canister integration
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Project Structure
+
+```
+frontend/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── pages/         # Application pages
+│   ├── lib/           # Utility functions and configurations
+│   ├── hooks/         # Custom React hooks
+│   └── types/         # TypeScript type definitions
+├── public/            # Static assets
+└── dist/             # Production build output
+```
+
+## WebSocket Integration
+
+The frontend connects to the AVAI WebSocket server at `wss://websocket.avai.life/ws` for real-time agent communication and updates.
+
+## Internet Computer Integration
+
+This frontend is designed to work with AVAI canisters deployed on the Internet Computer network, providing seamless integration with decentralized backend services.
+
+## Configuration
+
+Environment variables can be configured in `.env` files:
+
+- `VITE_WEBSOCKET_URL` - WebSocket server URL
+- `VITE_API_URL` - Backend API URL
+- `VITE_CANISTER_ID` - Internet Computer canister ID
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+This project is part of the AVAI Agent for Hire system. See LICENSE.md for details.

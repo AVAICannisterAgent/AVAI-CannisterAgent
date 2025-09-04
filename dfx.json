@@ -137,7 +137,14 @@
   },
   "avai_integration": {
     "websocket_url": "wss://websocket.avai.life/ws",
-    "redis_host": "localhost",
+    "public_tunnel": {
+      "enabled": true,
+      "tunnel_id": "05187107-3e79-4bbf-9647-93556674e910",
+      "hostname": "websocket.avai.life",
+      "service_port": 8080,
+      "cloudflare_config": "cloudflare/config.yml"
+    },
+    "redis_host": "localhost", 
     "redis_port": 6379,
     "queue_names": {
       "prompt_queue": "avai:prompt_queue",
@@ -148,7 +155,22 @@
       "real_time_analysis": true,
       "redis_event_streaming": true,
       "websocket_notifications": true,
-      "dashboard_integration": true
+      "dashboard_integration": true,
+      "public_tunnel_integration": true
+    }
+  },
+  "tunnel_integration": {
+    "enabled": true,
+    "tunnel_service": "cloudflare",
+    "public_endpoints": {
+      "websocket": "wss://websocket.avai.life/ws",
+      "https": "https://websocket.avai.life",
+      "canister_bridge": "wss://websocket.avai.life/canister"
+    },
+    "local_services": {
+      "websocket_port": 8080,
+      "redis_port": 6379,
+      "canister_port": 4943
     }
   }
 }

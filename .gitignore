@@ -69,3 +69,15 @@ frontend/.next
 !deploy/**
 !config/
 !config/**
+config/nordvpn_socks5_example.toml
+config/gpu_optimized.toml
+config/config.example.toml
+config/config.example-model-ppio.toml
+config/config.example-model-ollama.toml
+config/config.example-model-google.toml
+.gitignore
+config/config.example-model-anthropic.toml
+config/config_ollama.toml
+config/config_ollama_gpu.toml
+config/config_hybrid.toml
+config/config.example-model-azure.toml
