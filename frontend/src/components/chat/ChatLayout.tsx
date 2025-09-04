@@ -5,6 +5,7 @@ import { ChatWindow } from "./ChatWindow";
 import { MessageInput } from "./MessageInput";
 import { FileViewer } from "./FileViewer";
 import { WelcomeScreen } from "./WelcomeScreen";
+import { StreamingAnalysisDisplay } from "./StreamingAnalysisDisplay";
 import { useConversationManager } from "@/hooks/useConversationManager";
 import { useWebSocketManager } from "@/hooks/useWebSocketManager";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +42,7 @@ export const ChatLayout = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [fileViewerOpen, setFileViewerOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<FileAttachment[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   // Heartbeat monitoring
   const [lastHeartbeat, setLastHeartbeat] = useState<Date | undefined>();
@@ -179,7 +181,13 @@ export const ChatLayout = () => {
     const handleSendMessage = (event: CustomEvent) => {
       const { message } = event.detail;
       if (message) {
-        sendMessage(message);
+        // Check if this is a file-based analysis request
+        if (message.startsWith('FETCH_ANALYSIS_FROM_FILE:')) {
+          const fileName = message.replace('FETCH_ANALYSIS_FROM_FILE:', '');
+          handleFileBasedAnalysis(fileName);
+        } else {
+          sendMessage(message);
+        }
       }
     };
 
@@ -257,6 +265,41 @@ export const ChatLayout = () => {
     console.log('✅ Message sent successfully, waiting for queue response...');
   };
 
+  const handleFileBasedAnalysis = async (fileName: string) => {
+    // Add user message for analysis request
+    addMessage({
+      content: `🔍 Analyzing repository: https://github.com/mrarejimmyz/MockRepoForDemo`,
+      role: "user",
+      timestamp: new Date()
+    });
+
+    // Start streaming analysis
+    setIsAnalyzing(true);
+    
+    toast({
+      title: "Starting Analysis",
+      description: "🩺 AVAI is beginning comprehensive repository scan...",
+      duration: 3000,
+    });
+  };
+
+  const handleAnalysisComplete = (report: string) => {
+    // Add the full report as an AI message
+    addMessage({
+      content: report,
+      role: "assistant",
+      timestamp: new Date()
+    });
+    
+    setIsAnalyzing(false);
+    
+    toast({
+      title: "Analysis Complete",
+      description: "📊 Security audit report ready!",
+      duration: 3000,
+    });
+  };
+
   const handleFileClick = (files: FileAttachment[]) => {
     setSelectedFiles(files);
     setFileViewerOpen(true);
@@ -285,19 +328,29 @@ export const ChatLayout = () => {
         />
         
         <div className="flex-1 flex flex-col relative">
-          {hasMessages || isTyping ? (
-            <ChatWindow 
-              conversation={currentConversation}
-              isTyping={isTyping}
-              onFileClick={handleFileClick}
-            />
+          {hasMessages || isTyping || isAnalyzing ? (
+            <>
+              <ChatWindow 
+                conversation={currentConversation}
+                isTyping={isTyping}
+                onFileClick={handleFileClick}
+              />
+              {isAnalyzing && (
+                <div className="p-4 border-t border-gray-700">
+                  <StreamingAnalysisDisplay 
+                    isAnalyzing={isAnalyzing}
+                    onComplete={handleAnalysisComplete}
+                  />
+                </div>
+              )}
+            </>
           ) : (
             <WelcomeScreen />
           )}
           
           <MessageInput 
             onSendMessage={sendMessage}
-            disabled={isTyping}
+            disabled={isTyping || isAnalyzing}
           />
         </div>
         

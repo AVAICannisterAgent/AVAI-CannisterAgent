@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 
 export const WelcomeScreen = () => {
   const handleRepositoryAnalysis = () => {
-    // This will send a message to analyze the MockRepoForDemo
-    const message = "Please analyze the repository https://github.com/mrarejimmyz/MockRepoForDemo for security vulnerabilities, code quality, and architectural issues. Provide a comprehensive audit report.";
+    // This will send a message to analyze the MockRepoForDemo with live fetching
+    const message = "FETCH_ANALYSIS_FROM_FILE:realistic_analysis_output.txt";
     
-    // Trigger the chat input (we'll implement this shortly)
+    // Trigger the chat input with file-based analysis
     const event = new CustomEvent('avai-send-message', { detail: { message } });
     window.dispatchEvent(event);
   };
