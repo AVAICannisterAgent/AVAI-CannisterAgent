@@ -12,6 +12,24 @@ interface PdfViewerProps {
 export const PdfViewer = ({ pdfUrl, isOpen, onClose }: PdfViewerProps) => {
   const [showFallback, setShowFallback] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [iframeError, setIframeError] = useState(false);
+
+  // Detect if we're in production environment
+  const isProduction = window.location.hostname === 'avai.life' || 
+                      window.location.hostname.includes('avai.life') ||
+                      window.location.protocol === 'https:' ||
+                      window.location.hostname !== 'localhost';
+
+  // Test if PDF is accessible
+  const testPdfAccess = async (url: string) => {
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      return response.ok;
+    } catch (error) {
+      console.warn('PDF accessibility test failed:', error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -21,21 +39,41 @@ export const PdfViewer = ({ pdfUrl, isOpen, onClose }: PdfViewerProps) => {
     };
 
     if (isOpen) {
+      console.log(`PDF Viewer opened - Production mode: ${isProduction}, URL: ${pdfUrl}`);
       setIsLoading(true);
       setShowFallback(false);
+      setIframeError(false);
       document.addEventListener('keydown', handleEscape);
       
-      // Give PDF some time to load before showing fallback
-      const timeout = setTimeout(() => {
-        setIsLoading(false);
-      }, 2000);
+      // Test PDF accessibility in production
+      if (isProduction) {
+        console.log('Production environment detected, testing PDF accessibility...');
+        testPdfAccess(pdfUrl).then(isAccessible => {
+          console.log(`PDF accessible: ${isAccessible}`);
+          setIsLoading(false);
+          if (!isAccessible) {
+            console.log('PDF not accessible in production, using fallback');
+            setShowFallback(true);
+          } else {
+            // Even if accessible, show fallback in production due to iframe restrictions
+            console.log('Using fallback UI for production security compliance');
+            setTimeout(() => setShowFallback(true), 500);
+          }
+        });
+      } else {
+        console.log('Development environment, attempting iframe load...');
+        // In development, give PDF time to load before showing fallback
+        const timeout = setTimeout(() => {
+          setIsLoading(false);
+        }, 2000);
+        return () => clearTimeout(timeout);
+      }
 
       return () => {
         document.removeEventListener('keydown', handleEscape);
-        clearTimeout(timeout);
       };
     }
-  }, [isOpen, onClose, pdfUrl]);
+  }, [isOpen, onClose, pdfUrl, isProduction]);
 
   if (!isOpen || !pdfUrl) return null;
 
@@ -104,14 +142,17 @@ export const PdfViewer = ({ pdfUrl, isOpen, onClose }: PdfViewerProps) => {
 
         {/* PDF Content */}
         <div className="flex-1 relative overflow-hidden bg-gray-800">
-          {showFallback ? (
+          {showFallback || isProduction ? (
             <div className="flex flex-col items-center justify-center h-full p-8 text-center">
               <div className="bg-gray-700 rounded-lg p-6 max-w-md">
                 <h3 className="text-lg font-semibold text-white mb-4">
-                  📄 PDF Viewer Not Available
+                  📄 Security Audit Report Ready
                 </h3>
                 <p className="text-gray-300 mb-6">
-                  Your browser doesn't support embedded PDF viewing. Use the buttons above to view the report:
+                  {isProduction 
+                    ? "For security reasons, PDF preview is not available in production. Use the buttons below to view the complete audit report:"
+                    : "Your browser doesn't support embedded PDF viewing. Use the buttons below to view the report:"
+                  }
                 </p>
                 <div className="space-y-3">
                   <Button
@@ -130,38 +171,46 @@ export const PdfViewer = ({ pdfUrl, isOpen, onClose }: PdfViewerProps) => {
                     Download PDF Report
                   </Button>
                 </div>
+                {isProduction && (
+                  <p className="text-xs text-gray-400 mt-4">
+                    💡 Production environments require opening PDFs in a new tab for security compliance
+                  </p>
+                )}
               </div>
             </div>
           ) : (
-            <iframe
-              src={pdfUrl}
-              className="w-full h-full border-0"
-              title="PDF Viewer"
-              style={{ minHeight: "600px" }}
-              onLoad={() => {
-                console.log("PDF iframe loaded successfully");
-                setIsLoading(false);
-              }}
-              onError={() => {
-                console.error("PDF iframe failed to load, showing fallback");
-                setShowFallback(true);
-                setIsLoading(false);
-              }}
-            />
-          )}
-          
-          {/* Manual fallback trigger if PDF doesn't load visually */}
-          {!showFallback && !isLoading && (
-            <div className="absolute bottom-4 right-4">
-              <Button
-                onClick={() => setShowFallback(true)}
-                variant="outline"
-                size="sm"
-                className="text-xs text-gray-400 border-gray-600 hover:bg-gray-700"
-              >
-                PDF not displaying? Click here
-              </Button>
-            </div>
+            <>
+              <iframe
+                src={pdfUrl}
+                className="w-full h-full border-0"
+                title="PDF Viewer"
+                style={{ minHeight: "600px" }}
+                onLoad={() => {
+                  console.log("PDF iframe loaded successfully");
+                  setIsLoading(false);
+                }}
+                onError={() => {
+                  console.error("PDF iframe failed to load, showing fallback");
+                  setShowFallback(true);
+                  setIframeError(true);
+                  setIsLoading(false);
+                }}
+              />
+              
+              {/* Manual fallback trigger if PDF doesn't load visually */}
+              {!showFallback && !isLoading && (
+                <div className="absolute bottom-4 right-4">
+                  <Button
+                    onClick={() => setShowFallback(true)}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs text-gray-400 border-gray-600 hover:bg-gray-700"
+                  >
+                    PDF not displaying? Click here
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -170,6 +219,7 @@ export const PdfViewer = ({ pdfUrl, isOpen, onClose }: PdfViewerProps) => {
           <div className="flex items-center justify-between text-sm text-gray-400">
             <span>
               📄 Security Audit Report - Generated by AVAI Analysis Engine
+              {isProduction && " • Production Mode"}
             </span>
             <span>
               Press ESC to close
