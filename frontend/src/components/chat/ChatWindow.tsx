@@ -120,8 +120,8 @@ export const ChatWindow = ({ conversation, isTyping, onFileClick, isAnalyzing, a
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-      <ScrollArea ref={scrollAreaRef} className="flex-1 scrollbar-custom">
-        <div className="p-4">
+      <ScrollArea ref={scrollAreaRef} className="flex-1 scrollbar-custom overflow-y-auto">
+        <div className="p-4 pb-6">
           <div className="max-w-4xl mx-auto space-y-6">
             {conversation.messages.map((message, index) => (
               <MessageBubble

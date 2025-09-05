@@ -64,6 +64,10 @@ export function ChatLayout() {
     progress: 0,
     details: ''
   });
+  
+  // Track processed message IDs to prevent duplicates
+  const processedMessageIds = useRef<Set<string>>(new Set());
+  
   const waitingStartRef = useRef<number | null>(null);
   const subscriptionRef = useRef<string | null>(null);
 
@@ -114,6 +118,30 @@ export function ChatLayout() {
     setConversations(prev => [newConversation, ...prev]);
     return newConversation;
   };
+
+  // Cleanup effect to ensure states are properly cleared
+  useEffect(() => {
+    // Clear stale processing states on component mount
+    const cleanup = () => {
+      setIsTyping(false);
+      waitingStartRef.current = null;
+      setWaitingTime(0);
+      setProcessingStatus({
+        isProcessing: false,
+        currentStep: '',
+        progress: 0,
+        details: ''
+      });
+      // Clear processed message IDs
+      processedMessageIds.current.clear();
+    };
+
+    // Initial cleanup
+    cleanup();
+
+    // Cleanup on unmount
+    return cleanup;
+  }, []);
 
   // Initialize conversation on component mount
   useEffect(() => {
@@ -190,6 +218,14 @@ export function ChatLayout() {
           console.log('🤖 Processing ai_response:', message);
           console.log('🔍 Current conversation state from ref:', !!currentConversationRef.current, 'messages:', currentConversationRef.current?.messages?.length || 0);
           
+          // Check for duplicate messages
+          const messageId = message.payload?.id || message.timestamp || Date.now().toString();
+          if (processedMessageIds.current.has(messageId)) {
+            console.log('🔄 Skipping duplicate message:', messageId);
+            break;
+          }
+          processedMessageIds.current.add(messageId);
+          
           if (message.payload && message.payload.response) {
             const newMessage: Omit<Message, 'id'> = {
               content: message.payload.response,
@@ -205,10 +241,11 @@ export function ChatLayout() {
           } else {
             console.error('❌ AI response missing payload or response content:', message);
           }
+          // Clear all processing states when response is complete
+          console.log('🧹 Clearing all processing states after AI response');
           setIsTyping(false);
           waitingStartRef.current = null;
           setWaitingTime(0);
-          // Clear processing status when response is complete
           setProcessingStatus({
             isProcessing: false,
             currentStep: '',
@@ -414,6 +451,8 @@ export function ChatLayout() {
     const newConv = createNewConversation();
     setCurrentConversation(newConv);
     setSidebarOpen(false);
+    // Clear processed message IDs for new conversation
+    processedMessageIds.current.clear();
     return newConv;
   };
 
