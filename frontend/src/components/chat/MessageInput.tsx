@@ -7,14 +7,32 @@ import { cn } from "@/lib/utils";
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
+  processingStatus?: {
+    isProcessing: boolean;
+    currentStep: string;
+    progress: number;
+    details: string;
+  };
 }
 
-export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputProps) => {
+export const MessageInput = ({ onSendMessage, disabled = false, processingStatus }: MessageInputProps) => {
   const [message, setMessage] = useState("");
   const [isComposing, setIsComposing] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  console.log('📝 MessageInput render:', { disabled, hasOnSendMessage: !!onSendMessage });
+  console.log('📝 MessageInput render:', { disabled, hasOnSendMessage: !!onSendMessage, processingStatus });
+
+  // Create dynamic placeholder based on processing status
+  const getPlaceholder = () => {
+    if (processingStatus?.isProcessing) {
+      const progressText = processingStatus.progress > 0 ? ` (${processingStatus.progress}%)` : '';
+      return `🔄 ${processingStatus.currentStep}${progressText} - ${processingStatus.details}`;
+    }
+    if (disabled) {
+      return "AVAI is analyzing your request... 🩺 (Priority queue active)";
+    }
+    return "Ask AVAI anything about blockchain, audits, or Web3... 💬";
+  };
 
   const handleSend = () => {
     const trimmedMessage = message.trim();
@@ -78,7 +96,7 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
             onKeyDown={handleKeyDown}
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
-            placeholder={disabled ? "AVAI is analyzing your request... 🩺 (Priority queue active)" : "Ask AVAI anything about blockchain, audits, or Web3... 💬"}
+            placeholder={getPlaceholder()}
             disabled={disabled}
             className={cn(
               "flex-1 min-h-[32px] sm:min-h-[40px] max-h-[120px] resize-none border-0 bg-transparent",
@@ -114,6 +132,27 @@ export const MessageInput = ({ onSendMessage, disabled = false }: MessageInputPr
             </Button>
           </div>
         </div>
+
+        {/* Processing status indicator with progress bar */}
+        {processingStatus?.isProcessing && (
+          <div className="mt-2 p-2 bg-surface border border-border rounded-lg">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+              <span>{processingStatus.currentStep}</span>
+              <span>{processingStatus.progress}%</span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-1.5">
+              <div 
+                className="bg-gradient-primary h-1.5 rounded-full transition-all duration-300"
+                style={{ width: `${processingStatus.progress}%` }}
+              />
+            </div>
+            {processingStatus.details && (
+              <div className="text-xs text-muted-foreground mt-1 truncate">
+                {processingStatus.details}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Tips */}
         <div className="mt-2 text-xs text-muted-foreground text-center">

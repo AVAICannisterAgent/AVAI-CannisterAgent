@@ -5,7 +5,8 @@ interface WebSocketMessage {
   type: 'chat_message' | 'ai_response' | 'chat_queued' | 'chat_ack' | 'ai_response_ack' | 
        'heartbeat' | 'error' | 'connected' | 'welcome' | 'log_summary' | 'stored_logs' | 
        'log_update' | 'message' | 'file' | 'typing' | 'ping' | 'pong' | 'queue_cleared' | 
-       'queue_status_update' | 'system_status' | 'audit_progress';
+       'queue_status_update' | 'system_status' | 'audit_progress' | 'processing_status' |
+       'log_broadcast';
   payload?: any;
   message?: string;
   timestamp?: string;

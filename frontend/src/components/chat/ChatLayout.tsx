@@ -52,6 +52,18 @@ export function ChatLayout() {
     isReconnecting: false,
     lastHeartbeat: new Date()
   });
+  // Processing status state
+  const [processingStatus, setProcessingStatus] = useState<{
+    isProcessing: boolean;
+    currentStep: string;
+    progress: number;
+    details: string;
+  }>({
+    isProcessing: false,
+    currentStep: '',
+    progress: 0,
+    details: ''
+  });
   const waitingStartRef = useRef<number | null>(null);
   const subscriptionRef = useRef<string | null>(null);
 
@@ -196,6 +208,13 @@ export function ChatLayout() {
           setIsTyping(false);
           waitingStartRef.current = null;
           setWaitingTime(0);
+          // Clear processing status when response is complete
+          setProcessingStatus({
+            isProcessing: false,
+            currentStep: '',
+            progress: 0,
+            details: ''
+          });
           break;
 
         case 'error':
@@ -221,6 +240,30 @@ export function ChatLayout() {
           setIsTyping(false);
           waitingStartRef.current = null;
           setWaitingTime(0);
+          setProcessingStatus({
+            isProcessing: false,
+            currentStep: '',
+            progress: 0,
+            details: ''
+          });
+          break;
+
+        case 'processing_status':
+          // Handle real-time processing status updates
+          console.log('🔄 Processing status update:', message.payload);
+          if (message.payload) {
+            setProcessingStatus({
+              isProcessing: true,
+              currentStep: message.payload.step || '',
+              progress: message.payload.progress || 0,
+              details: message.payload.details || ''
+            });
+            // Show processing indicator when status updates start coming
+            if (!isTyping) {
+              setIsTyping(true);
+              waitingStartRef.current = Date.now();
+            }
+          }
           break;
 
         default:
@@ -414,6 +457,7 @@ export function ChatLayout() {
             <MessageInput
               onSendMessage={handleSendMessage}
               disabled={!connectionStatus.isConnected}
+              processingStatus={processingStatus}
             />
           </div>
         </div>
