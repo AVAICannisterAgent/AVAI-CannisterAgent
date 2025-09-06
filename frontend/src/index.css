@@ -127,20 +127,50 @@
   }
   
   .scrollbar-custom::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
   }
   
   .scrollbar-custom::-webkit-scrollbar-track {
     background: transparent;
+    border-radius: 4px;
   }
   
   .scrollbar-custom::-webkit-scrollbar-thumb {
     background: hsl(var(--border));
-    border-radius: 3px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background-clip: content-box;
   }
   
   .scrollbar-custom::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--border-hover));
+    background-clip: content-box;
+  }
+  
+  /* Enhanced scrollbar for chat content */
+  .scrollbar-chat {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  
+  .scrollbar-chat::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  .scrollbar-chat::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+    border-radius: 6px;
+    margin: 4px;
+  }
+  
+  .scrollbar-chat::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, hsl(var(--border)), hsl(var(--border-hover)));
+    border-radius: 6px;
+    border: 2px solid hsl(var(--background));
+  }
+  
+  .scrollbar-chat::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, hsl(var(--border-hover)), hsl(var(--primary) / 0.5));
   }
 }
 
@@ -305,5 +335,67 @@
   .smooth-scroll {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Scroll fade indicators */
+  .scroll-fade-top {
+    background: linear-gradient(180deg, hsl(var(--background)) 0%, transparent 100%);
+    height: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    pointer-events: none;
+  }
+  
+  .scroll-fade-bottom {
+    background: linear-gradient(0deg, hsl(var(--background)) 0%, transparent 100%);
+    height: 20px;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    pointer-events: none;
+  }
+  
+  /* Message bubble layout improvements */
+  .message-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+  }
+  
+  .message-bubble {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .analysis-display {
+    position: relative;
+    z-index: 2;
+    margin: 1rem 0;
+  }
+  
+  /* Prevent content overlap */
+  .chat-content {
+    isolation: isolate;
+  }
+  
+  /* Enhanced message spacing */
+  .message-space {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Message content max heights with scroll */
+  .message-content-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+  
+  /* Analysis content scroll */
+  .analysis-scroll {
+    max-height: 500px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
   }
 }

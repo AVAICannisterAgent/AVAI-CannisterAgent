@@ -488,6 +488,14 @@ export function ChatLayout() {
               isTyping={isTyping}
               onFileClick={(files) => handleFileClick(files)}
               isAnalyzing={showAnalysisDisplay}
+              analysisDisplay={showAnalysisDisplay ? (
+                <StreamingAnalysisDisplay
+                  repositoryUrl={currentRepositoryUrl}
+                  isAnalyzing={isAnalyzing}
+                  onAnalysisComplete={handleAnalysisComplete}
+                  onPdfClick={handlePdfClick}
+                />
+              ) : undefined}
             />
           </div>
 
@@ -501,15 +509,6 @@ export function ChatLayout() {
           </div>
         </div>
       </div>
-
-      {showAnalysisDisplay && (
-        <StreamingAnalysisDisplay
-          repositoryUrl={currentRepositoryUrl}
-          isAnalyzing={isAnalyzing}
-          onAnalysisComplete={handleAnalysisComplete}
-          onPdfClick={handlePdfClick}
-        />
-      )}
 
       {fileViewerOpen && selectedFiles.length > 0 && (
         <FileViewer

@@ -1,5 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { ChevronDown } from "lucide-react";
 import { MessageBubble } from "./MessageBubble";
 import { TypingIndicator } from "./TypingIndicator";
 import type { Conversation, FileAttachment } from "./ChatLayout";
@@ -15,16 +17,37 @@ interface ChatWindowProps {
 export const ChatWindow = ({ conversation, isTyping, onFileClick, isAnalyzing, analysisDisplay }: ChatWindowProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  const [isAtBottom, setIsAtBottom] = useState(true);
 
   console.log('🔍 ChatWindow render - conversation:', !!conversation, 'messages:', conversation?.messages?.length || 0);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToBottom = (smooth = true) => {
+    messagesEndRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+  };
+
+  const handleScroll = () => {
+    if (scrollAreaRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollAreaRef.current;
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 100;
+      setIsAtBottom(isNearBottom);
+      setShowScrollButton(!isNearBottom && conversation && conversation.messages.length > 0);
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [conversation?.messages, isTyping, isAnalyzing]);
+    if (isAtBottom) {
+      scrollToBottom();
+    }
+  }, [conversation?.messages, isTyping, isAnalyzing, isAtBottom]);
+
+  useEffect(() => {
+    const scrollElement = scrollAreaRef.current;
+    if (scrollElement) {
+      scrollElement.addEventListener('scroll', handleScroll);
+      return () => scrollElement.removeEventListener('scroll', handleScroll);
+    }
+  }, [conversation]);
 
   // Show welcome screen when no conversation exists or conversation has no messages
   if (!conversation || (conversation && conversation.messages.length === 0)) {
@@ -119,27 +142,29 @@ export const ChatWindow = ({ conversation, isTyping, onFileClick, isAnalyzing, a
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-      <ScrollArea ref={scrollAreaRef} className="flex-1 scrollbar-custom overflow-y-auto">
-        <div className="p-4 pb-6">
-          <div className="max-w-4xl mx-auto space-y-6">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+      <ScrollArea ref={scrollAreaRef} className="flex-1 scrollbar-chat overflow-y-auto">
+        <div className="p-4 pb-6 chat-content">
+          <div className="max-w-4xl mx-auto message-container">
             {conversation.messages.map((message, index) => (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                isLast={index === conversation.messages.length - 1}
-                onFileClick={onFileClick}
-              />
+              <div key={message.id} className="message-bubble message-space">
+                <MessageBubble
+                  message={message}
+                  isLast={index === conversation.messages.length - 1}
+                  onFileClick={onFileClick}
+                  hideAnalysisContent={isAnalyzing}
+                />
+              </div>
             ))}
             
             {isTyping && (
-              <div className="animate-fade-in">
+              <div className="animate-fade-in message-space">
                 <TypingIndicator />
               </div>
             )}
 
             {isAnalyzing && analysisDisplay && (
-              <div className="animate-fade-in">
+              <div className="animate-fade-in analysis-display message-space">
                 {analysisDisplay}
               </div>
             )}
@@ -148,6 +173,22 @@ export const ChatWindow = ({ conversation, isTyping, onFileClick, isAnalyzing, a
           </div>
         </div>
       </ScrollArea>
+      
+      {/* Scroll to bottom button */}
+      {showScrollButton && (
+        <div className="absolute bottom-4 right-4 z-10">
+          <Button
+            onClick={() => {
+              setIsAtBottom(true);
+              scrollToBottom(true);
+            }}
+            size="sm"
+            className="rounded-full w-10 h-10 p-0 shadow-lg bg-primary hover:bg-primary-hover text-primary-foreground"
+          >
+            <ChevronDown className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

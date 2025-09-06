@@ -10,6 +10,7 @@ interface MessageBubbleProps {
   message: Message;
   isLast: boolean;
   onFileClick: (files: FileAttachment[]) => void;
+  hideAnalysisContent?: boolean; // Add prop to hide analysis content when StreamingAnalysisDisplay is active
 }
 
 const AnalysisLogs = ({ content }: { content: string }) => {
@@ -76,14 +77,14 @@ const AnalysisLogs = ({ content }: { content: string }) => {
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg p-4 font-mono text-sm max-h-96 overflow-y-auto">
-      <div className="flex items-center gap-2 mb-3 text-green-400">
+    <div className="bg-gray-900 rounded-lg p-4 font-mono text-sm max-h-96 overflow-y-auto scrollbar-custom">
+      <div className="flex items-center gap-2 mb-3 text-green-400 sticky top-0 bg-gray-900 pb-2 border-b border-gray-700">
         <Terminal className="w-4 h-4" />
         <span className="font-semibold">AVAI Security Analysis Engine v2.1.3</span>
         {isAnalyzing && <div className="animate-pulse">●</div>}
       </div>
       
-      <div className="space-y-1">
+      <div className="space-y-1 pb-2">
         {logs.slice(0, currentLogIndex + 1).map((log, index) => (
           <div key={index} className="flex items-start gap-2 opacity-0 animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
             {getLogIcon(log.level)}
@@ -138,9 +139,9 @@ const AnalysisReport = ({ content }: { content: string }) => {
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg p-6 space-y-6">
-      {/* Header */}
-      <div className="border-b border-gray-700 pb-4">
+    <div className="bg-gray-900 rounded-lg p-6 space-y-6 max-h-[600px] overflow-y-auto scrollbar-custom">
+      {/* Header - Sticky */}
+      <div className="border-b border-gray-700 pb-4 sticky top-0 bg-gray-900 z-10">
         <div className="flex items-center gap-3 mb-2">
           <FileText className="w-6 h-6 text-blue-400" />
           <h3 className="text-xl font-bold text-white">Comprehensive Security Audit Report</h3>
@@ -153,100 +154,103 @@ const AnalysisReport = ({ content }: { content: string }) => {
         </div>
       </div>
 
-      {/* Overall Score */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gray-800 rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-yellow-400 mb-1">68/100</div>
-          <div className="text-sm text-gray-400">Overall Security Score</div>
-          <div className="text-xs text-yellow-400 mt-1">Needs Improvement</div>
+      {/* Scrollable Content */}
+      <div className="space-y-6 pb-4">
+        {/* Overall Score */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gray-800 rounded-lg p-4 text-center">
+            <div className="text-3xl font-bold text-yellow-400 mb-1">68/100</div>
+            <div className="text-sm text-gray-400">Overall Security Score</div>
+            <div className="text-xs text-yellow-400 mt-1">Needs Improvement</div>
+          </div>
+          <div className="bg-gray-800 rounded-lg p-4 text-center">
+            <div className="text-3xl font-bold text-red-400 mb-1">6</div>
+            <div className="text-sm text-gray-400">Vulnerabilities Found</div>
+            <div className="text-xs text-red-400 mt-1">2 Critical, 2 High, 2 Medium</div>
+          </div>
+          <div className="bg-gray-800 rounded-lg p-4 text-center">
+            <div className="text-3xl font-bold text-orange-400 mb-1">3-4</div>
+            <div className="text-sm text-gray-400">Weeks to Fix</div>
+            <div className="text-xs text-orange-400 mt-1">Estimated Effort</div>
+          </div>
         </div>
-        <div className="bg-gray-800 rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-red-400 mb-1">6</div>
-          <div className="text-sm text-gray-400">Vulnerabilities Found</div>
-          <div className="text-xs text-red-400 mt-1">2 Critical, 2 High, 2 Medium</div>
-        </div>
-        <div className="bg-gray-800 rounded-lg p-4 text-center">
-          <div className="text-3xl font-bold text-orange-400 mb-1">3-4</div>
-          <div className="text-sm text-gray-400">Weeks to Fix</div>
-          <div className="text-xs text-orange-400 mt-1">Estimated Effort</div>
-        </div>
-      </div>
 
-      {/* Vulnerabilities Summary */}
-      <div>
-        <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-red-400" />
-          Critical Vulnerabilities
-        </h4>
-        <div className="space-y-2">
-          {vulnerabilities.slice(0, showFullReport ? vulnerabilities.length : 3).map((vuln, index) => (
-            <div key={index} className={`p-3 rounded-lg border ${getSeverityColor(vuln.severity)}`}>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(vuln.severity)}`}>
-                      {vuln.severity}
-                    </span>
-                    <span className="font-medium text-white">{vuln.title}</span>
+        {/* Vulnerabilities Summary */}
+        <div>
+          <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+            Critical Vulnerabilities
+          </h4>
+          <div className="space-y-2">
+            {vulnerabilities.slice(0, showFullReport ? vulnerabilities.length : 3).map((vuln, index) => (
+              <div key={index} className={`p-3 rounded-lg border ${getSeverityColor(vuln.severity)}`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(vuln.severity)}`}>
+                        {vuln.severity}
+                      </span>
+                      <span className="font-medium text-white">{vuln.title}</span>
+                    </div>
+                    <p className="text-sm text-gray-400">📍 {vuln.location}</p>
                   </div>
-                  <p className="text-sm text-gray-400">📍 {vuln.location}</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-red-400">CVSS: {vuln.cvss}</div>
+                  <div className="text-right">
+                    <div className="text-sm font-medium text-red-400">CVSS: {vuln.cvss}</div>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+          
+          {!showFullReport && vulnerabilities.length > 3 && (
+            <button
+              onClick={() => setShowFullReport(true)}
+              className="mt-3 text-blue-400 hover:text-blue-300 text-sm underline"
+            >
+              Show all {vulnerabilities.length} vulnerabilities
+            </button>
+          )}
+        </div>
+
+        {/* Quick Recommendations */}
+        <div>
+          <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-400" />
+            Immediate Actions Required
+          </h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-2 text-red-400">
+              <XCircle className="w-4 h-4 flex-shrink-0" />
+              <span>Implement HTTP asset certification (Critical)</span>
             </div>
-          ))}
-        </div>
-        
-        {!showFullReport && vulnerabilities.length > 3 && (
-          <button
-            onClick={() => setShowFullReport(true)}
-            className="mt-3 text-blue-400 hover:text-blue-300 text-sm underline"
-          >
-            Show all {vulnerabilities.length} vulnerabilities
-          </button>
-        )}
-      </div>
-
-      {/* Quick Recommendations */}
-      <div>
-        <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-          <CheckCircle className="w-5 h-5 text-green-400" />
-          Immediate Actions Required
-        </h4>
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2 text-red-400">
-            <XCircle className="w-4 h-4 flex-shrink-0" />
-            <span>Implement HTTP asset certification (Critical)</span>
-          </div>
-          <div className="flex items-center gap-2 text-red-400">
-            <XCircle className="w-4 h-4 flex-shrink-0" />
-            <span>Add query response certification (Critical)</span>
-          </div>
-          <div className="flex items-center gap-2 text-orange-400">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-            <span>Update vulnerable dependencies (High)</span>
-          </div>
-          <div className="flex items-center gap-2 text-orange-400">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-            <span>Implement input validation (High)</span>
+            <div className="flex items-center gap-2 text-red-400">
+              <XCircle className="w-4 h-4 flex-shrink-0" />
+              <span>Add query response certification (Critical)</span>
+            </div>
+            <div className="flex items-center gap-2 text-orange-400">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>Update vulnerable dependencies (High)</span>
+            </div>
+            <div className="flex items-center gap-2 text-orange-400">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>Implement input validation (High)</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Footer */}
-      <div className="border-t border-gray-700 pt-4 text-xs text-gray-500">
-        <div className="flex items-center justify-between">
-          <span>Generated by AVAI Security Analysis Engine v2.1.3</span>
-          <span>Full report: https://reports.avai.life/ef661993</span>
+        {/* Footer */}
+        <div className="border-t border-gray-700 pt-4 text-xs text-gray-500">
+          <div className="flex items-center justify-between">
+            <span>Generated by AVAI Security Analysis Engine v2.1.3</span>
+            <span>Full report: https://reports.avai.life/ef661993</span>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export const MessageBubble = ({ message, isLast, onFileClick }: MessageBubbleProps) => {
+export const MessageBubble = ({ message, isLast, onFileClick, hideAnalysisContent = false }: MessageBubbleProps) => {
   const { toast } = useToast();
 
   const copyToClipboard = async (text: string) => {
@@ -271,8 +275,8 @@ export const MessageBubble = ({ message, isLast, onFileClick }: MessageBubblePro
 
   const isUser = message.role === "user";
   const isAnalysisRequest = message.content.includes("analyze") && message.content.includes("MockRepoForDemo");
-  const showLogs = !isUser && isAnalysisRequest && message.content.includes("🩺");
-  const showReport = !isUser && isAnalysisRequest && !message.content.includes("🩺");
+  const showLogs = !isUser && isAnalysisRequest && message.content.includes("🩺") && !hideAnalysisContent;
+  const showReport = !isUser && isAnalysisRequest && !message.content.includes("🩺") && !hideAnalysisContent;
 
   return (
     <div className={cn(
@@ -302,9 +306,11 @@ export const MessageBubble = ({ message, isLast, onFileClick }: MessageBubblePro
           ) : showReport ? (
             <AnalysisReport content={message.content} />
           ) : (
-            <p className="text-sm whitespace-pre-wrap leading-relaxed">
-              {message.content}
-            </p>
+            <div className="max-h-96 overflow-y-auto scrollbar-custom">
+              <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                {message.content}
+              </p>
+            </div>
           )}
           
           {/* File attachments */}

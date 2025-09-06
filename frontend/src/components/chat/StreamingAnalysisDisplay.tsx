@@ -263,28 +263,28 @@ For detailed findings and recommendations, please download the complete PDF repo
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-6 p-4 bg-background rounded-lg border border-border">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-2xl font-bold text-foreground">
           AVAI Security Audit Analysis
         </h2>
-        <p className="text-gray-600">
-          Real-time analysis of: <span className="font-mono text-blue-600">{repositoryUrl}</span>
+        <p className="text-muted-foreground">
+          Real-time analysis of: <span className="font-mono text-primary">{repositoryUrl}</span>
         </p>
       </div>
 
       {/* Progress Indicator */}
       {analysisProgress && (
-        <Card className="border-blue-200 bg-blue-50">
+        <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-medium text-blue-900">{analysisProgress.stage}</span>
-              <span className="text-sm text-blue-700">{analysisProgress.percentage}%</span>
+              <span className="font-medium text-foreground">{analysisProgress.stage}</span>
+              <span className="text-sm text-muted-foreground">{analysisProgress.percentage}%</span>
             </div>
-            <div className="w-full bg-blue-200 rounded-full h-2">
+            <div className="w-full bg-muted rounded-full h-2">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-primary h-2 rounded-full transition-all duration-300"
                 style={{ width: `${analysisProgress.percentage}%` }}
               />
             </div>
