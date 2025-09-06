@@ -296,141 +296,121 @@ export const MessageBubble = ({ message, isLast, onFileClick, hideAnalysisConten
 
   return (
     <div className={cn(
-      "flex gap-4 group animate-fade-in",
-      isUser ? "justify-end" : "justify-start"
+      "flex gap-4 py-6 px-4 hover:bg-surface/30 transition-colors group",
+      isUser ? "bg-surface/10" : "bg-background"
     )}>
-      {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0 mt-1">
-          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-          </svg>
-        </div>
-      )}
-
-      <div className={cn(
-        "flex flex-col max-w-[90%] lg:max-w-[80%]",
-        isUser ? "items-end" : "items-start"
-      )}>
-        <div className={cn(
-          "relative px-4 py-3 rounded-2xl shadow-sm w-full",
-          isUser 
-            ? "message-user rounded-br-md" 
-            : "message-ai rounded-bl-md border border-border"
-        )}>
-          {showLogs ? (
-            <AnalysisLogs content={message.content} />
-          ) : showReport ? (
-            <AnalysisReport content={message.content} />
-          ) : (
-            <div 
-              className="scrollbar-custom scrollbar-always"
-              style={{
-                maxHeight: '120px', // Much smaller to trigger scrolling
-                overflowY: 'scroll',
-                overflowX: 'hidden',
-                border: '2px solid hsl(var(--border))', // More visible border
-                borderRadius: '6px',
-                padding: '8px',
-                backgroundColor: 'hsl(var(--background))'
-              }}
-            >
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                {message.content}
-              </p>
-              {/* Add indicator text */}
-              <div className="text-xs text-muted-foreground mt-2 italic">
-                📜 Scroll to see more content
-              </div>
-            </div>
-          )}
-          
-          {/* File attachments */}
-          {message.files && message.files.length > 0 && (
-            <div className="mt-3 space-y-2">
-              {message.files.map((file) => (
-                <FileCard
-                  key={file.id}
-                  file={file}
-                  onClick={() => onFileClick([file])}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className={cn(
-          "flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity",
-          isUser ? "flex-row-reverse" : "flex-row"
-        )}>
-          <span className="text-xs text-muted-foreground px-2">
-            {formatTime(message.timestamp)}
-          </span>
-
-          {!isUser && isLast && (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => copyToClipboard(message.content)}
-                className="h-6 w-6 p-0 hover:bg-surface-hover"
-              >
-                <Copy className="w-3 h-3" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 hover:bg-surface-hover"
-                onClick={() => {
-                  toast({
-                    title: "Regenerating response...",
-                    description: "This feature will be implemented soon",
-                    duration: 2000,
-                  });
-                }}
-              >
-                <RotateCcw className="w-3 h-3" />
-              </Button>
-
-              <div className="w-px h-4 bg-border mx-1" />
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 hover:bg-success/20 hover:text-success"
-                onClick={() => {
-                  toast({
-                    title: "Thanks for your feedback!",
-                    duration: 2000,
-                  });
-                }}
-              >
-                <ThumbsUp className="w-3 h-3" />
-              </Button>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 hover:bg-destructive/20 hover:text-destructive"
-                onClick={() => {
-                  toast({
-                    title: "Thanks for your feedback!",
-                    duration: 2000,
-                  });
-                }}
-              >
-                <ThumbsDown className="w-3 h-3" />
-              </Button>
-            </div>
-          )}
-        </div>
+      {/* Avatar */}
+      <div className="flex-shrink-0">
+        {isUser ? (
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+            U
+          </div>
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-2.9773c-.1969-.4615-.4859-.8746-.8497-1.2126a5.7453 5.7453 0 0 0-1.2126-.8497 5.9847 5.9847 0 0 0-2.9773-.5157H6.2181a5.9847 5.9847 0 0 0-2.9773.5157c-.4615.1969-.8746.4859-1.2126.8497a5.7453 5.7453 0 0 0-.8497 1.2126 5.9847 5.9847 0 0 0-.5157 2.9773v8.9578c0 1.0418.4242 1.9817 1.1061 2.6636.6819.6819 1.6218 1.1061 2.6636 1.1061h8.9578c1.0418 0 1.9817-.4242 2.6636-1.1061.6819-.6819 1.1061-1.6218 1.1061-2.6636z"/>
+            </svg>
+          </div>
+        )}
       </div>
 
-      {isUser && (
-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-1">
-          <span className="text-sm font-medium text-primary-foreground">U</span>
-        </div>
-      )}
+      {/* Message Content */}
+      <div className="flex-1 min-w-0 space-y-2">
+        {showLogs ? (
+          <AnalysisLogs content={message.content} />
+        ) : showReport ? (
+          <AnalysisReport content={message.content} />
+        ) : (
+          <div className="prose prose-invert max-w-none">
+            <div className="text-foreground text-[15px] leading-7 whitespace-pre-wrap">
+              {message.content}
+            </div>
+          </div>
+        )}
+        
+        {/* File attachments */}
+        {message.files && message.files.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {message.files.map((file) => (
+              <FileCard
+                key={file.id}
+                file={file}
+                onClick={() => onFileClick([file])}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Action buttons for AI messages */}
+        {!isUser && isLast && (
+          <div className="flex items-center gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-3 text-xs hover:bg-surface-hover rounded-md flex items-center gap-1"
+              onClick={() => copyToClipboard(message.content)}
+            >
+              <Copy className="w-3 h-3" />
+              Copy
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-3 text-xs hover:bg-surface-hover rounded-md flex items-center gap-1"
+              onClick={() => {
+                toast({
+                  title: "Regenerating response...",
+                  description: "This feature will be implemented soon",
+                  duration: 2000,
+                });
+              }}
+            >
+              <RotateCcw className="w-3 h-3" />
+              Regenerate
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-success/20 hover:text-success rounded-md"
+              onClick={() => {
+                toast({
+                  title: "Thanks for your feedback!",
+                  duration: 2000,
+                });
+              }}
+            >
+              <ThumbsUp className="w-3 h-3" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 hover:bg-destructive/20 hover:text-destructive rounded-md"
+              onClick={() => {
+                toast({
+                  title: "Thanks for your feedback!",
+                  duration: 2000,
+                });
+              }}
+            >
+              <ThumbsDown className="w-3 h-3" />
+            </Button>
+
+            <span className="text-xs text-muted-foreground ml-2">
+              {formatTime(message.timestamp)}
+            </span>
+          </div>
+        )}
+
+        {/* Timestamp for user messages */}
+        {isUser && (
+          <div className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+            {formatTime(message.timestamp)}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

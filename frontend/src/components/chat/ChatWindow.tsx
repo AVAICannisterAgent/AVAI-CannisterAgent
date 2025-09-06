@@ -157,33 +157,35 @@ export const ChatWindow = ({ conversation, isTyping, onFileClick, isAnalyzing, a
         onScroll={handleScroll}
       >
         <div className="chat-content flex-1 min-h-0">
-          <div className="p-4 pb-6">
-            <div className="max-w-4xl mx-auto message-container">
-              {conversation.messages.map((message, index) => (
-                <div key={message.id} className="message-bubble message-space">
-                  <MessageBubble
-                    message={message}
-                    isLast={index === conversation.messages.length - 1}
-                    onFileClick={onFileClick}
-                    hideAnalysisContent={isAnalyzing}
-                  />
-                </div>
-              ))}
-              
-              {isTyping && (
-                <div className="animate-fade-in message-space">
+          <div className="max-w-4xl mx-auto">
+            {conversation.messages.map((message, index) => (
+              <div key={message.id} className="border-b border-border/10 last:border-b-0">
+                <MessageBubble
+                  message={message}
+                  isLast={index === conversation.messages.length - 1}
+                  onFileClick={onFileClick}
+                  hideAnalysisContent={isAnalyzing}
+                />
+              </div>
+            ))}
+            
+            {isTyping && (
+              <div className="animate-fade-in border-b border-border/10">
+                <div className="py-6 px-4">
                   <TypingIndicator />
                 </div>
-              )}
+              </div>
+            )}
 
-              {isAnalyzing && analysisDisplay && (
-                <div className="animate-fade-in analysis-display message-space">
+            {isAnalyzing && analysisDisplay && (
+              <div className="animate-fade-in analysis-display border-b border-border/10">
+                <div className="py-6 px-4">
                   {analysisDisplay}
                 </div>
-              )}
-              
-              <div ref={messagesEndRef} />
-            </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
           </div>
         </div>
       </div>

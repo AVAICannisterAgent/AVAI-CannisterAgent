@@ -100,15 +100,17 @@
     background: var(--chat-background);
   }
 
-  /* Message bubble styles */
-  .message-user {
-    background: var(--user-message);
-    color: var(--user-message-foreground);
+  /* ChatGPT-like message styles */
+  .prose {
+    line-height: 1.75;
   }
   
-  .message-ai {
-    background: hsl(var(--ai-message));
-    color: hsl(var(--ai-message-foreground));
+  .prose p {
+    margin-bottom: 1rem;
+  }
+  
+  .prose p:last-child {
+    margin-bottom: 0;
   }
 
   /* Smooth transitions */
