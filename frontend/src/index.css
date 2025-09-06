@@ -454,6 +454,110 @@
     background: hsl(var(--border-hover)) !important;
   }
 
+  /* 🚀 STREAMLINED CHAT SYSTEM - GUARANTEED SCROLLING */
+  .streamlined-chat-window {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    background: hsl(var(--background));
+  }
+
+  .streamlined-scroll-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 0; /* CRITICAL: Forces flex child to respect parent height */
+    width: 100%;
+    position: relative;
+    /* Enhanced scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  .streamlined-scroll-container::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+  }
+
+  .streamlined-scroll-container::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+    border-radius: 4px;
+  }
+
+  .streamlined-scroll-container::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+    border: 1px solid hsl(var(--background));
+  }
+
+  .streamlined-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--border-hover));
+  }
+
+  .streamlined-messages-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .streamlined-message-item {
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+  }
+
+  .streamlined-typing-container {
+    margin: 1rem 0;
+    padding: 1rem;
+    flex-shrink: 0;
+  }
+
+  .streamlined-analysis-container {
+    margin: 1rem 0;
+    flex-shrink: 0;
+  }
+
+  .streamlined-scroll-buffer {
+    height: 100px; /* Ensure last message is scrollable */
+    flex-shrink: 0;
+  }
+
+  /* 🎯 STREAMLINED CHAT LAYOUT */
+  .streamlined-chat-layout {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+    background: hsl(var(--background));
+    overflow: hidden;
+  }
+
+  .streamlined-main-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .streamlined-chat-area {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 0; /* CRITICAL: Forces proper height calculation */
+    overflow: hidden;
+  }
+
+  .streamlined-input-container {
+    flex-shrink: 0;
+    border-top: 1px solid hsl(var(--border));
+    background: hsl(var(--background));
+    z-index: 10;
+  }
+
   /* Scrollable container - Simplified approach */
   .scrollable-container {
     overflow-y: auto;

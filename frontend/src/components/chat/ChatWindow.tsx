@@ -141,53 +141,38 @@ export const ChatWindow = ({ conversation, isTyping, onFileClick, isAnalyzing, a
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+    <div className="streamlined-chat-window">
       <div 
         ref={scrollAreaRef} 
-        className="flex-1 scrollbar-chat force-scroll scrollable-container"
-        style={{
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          height: '100%',
-          maxHeight: '100%',
-          minHeight: '0'
-        }}
+        className="streamlined-scroll-container"
         onScroll={handleScroll}
       >
-        <div className="chat-content">
-          <div className="max-w-4xl mx-auto">
-            {conversation.messages.map((message, index) => (
-              <div key={message.id} className="border-b border-border/10 last:border-b-0">
-                <MessageBubble
-                  message={message}
-                  isLast={index === conversation.messages.length - 1}
-                  onFileClick={onFileClick}
-                  hideAnalysisContent={isAnalyzing}
-                />
-              </div>
-            ))}
-            
-            {isTyping && (
-              <div className="animate-fade-in border-b border-border/10">
-                <div className="py-6 px-4">
-                  <TypingIndicator />
-                </div>
-              </div>
-            )}
+        <div className="streamlined-messages-wrapper">
+          {conversation.messages.map((message, index) => (
+            <div key={message.id} className="streamlined-message-item">
+              <MessageBubble
+                message={message}
+                isLast={index === conversation.messages.length - 1}
+                onFileClick={onFileClick}
+                hideAnalysisContent={isAnalyzing}
+              />
+            </div>
+          ))}
+          
+          {isTyping && (
+            <div className="streamlined-typing-container">
+              <TypingIndicator />
+            </div>
+          )}
 
-            {isAnalyzing && analysisDisplay && (
-              <div className="animate-fade-in analysis-display border-b border-border/10">
-                <div className="py-6 px-4">
-                  {analysisDisplay}
-                </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-            
-            {/* Add some bottom spacing to ensure scrolling works */}
-            <div className="h-20" />
-          </div>
+          {isAnalyzing && analysisDisplay && (
+            <div className="streamlined-analysis-container">
+              {analysisDisplay}
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+          <div className="streamlined-scroll-buffer" />
         </div>
       </div>
       

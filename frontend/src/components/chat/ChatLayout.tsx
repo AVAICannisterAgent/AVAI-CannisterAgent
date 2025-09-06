@@ -457,7 +457,7 @@ export function ChatLayout() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden chat-layout-main">
+    <div className="streamlined-chat-layout">
       {/* Sidebar */}
       <Sidebar
         conversations={conversations}
@@ -469,7 +469,7 @@ export function ChatLayout() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden main-chat-container">
+      <div className="streamlined-main-content">
         {/* Top Navigation */}
         <div className="flex-shrink-0">
           <TopNavigation
@@ -480,27 +480,25 @@ export function ChatLayout() {
           />
         </div>
 
-        {/* Chat Area - This should take remaining space */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden chat-area-container">
-          <div className="flex-1 min-h-0">
-            <ChatWindow
-              conversation={currentConversation}
-              isTyping={isTyping}
-              onFileClick={(files) => handleFileClick(files)}
-              isAnalyzing={showAnalysisDisplay}
-              analysisDisplay={showAnalysisDisplay ? (
-                <StreamingAnalysisDisplay
-                  repositoryUrl={currentRepositoryUrl}
-                  isAnalyzing={isAnalyzing}
-                  onAnalysisComplete={handleAnalysisComplete}
-                  onPdfClick={handlePdfClick}
-                />
-              ) : undefined}
-            />
-          </div>
+        {/* Chat Area - STREAMLINED */}
+        <div className="streamlined-chat-area">
+          <ChatWindow
+            conversation={currentConversation}
+            isTyping={isTyping}
+            onFileClick={(files) => handleFileClick(files)}
+            isAnalyzing={showAnalysisDisplay}
+            analysisDisplay={showAnalysisDisplay ? (
+              <StreamingAnalysisDisplay
+                repositoryUrl={currentRepositoryUrl}
+                isAnalyzing={isAnalyzing}
+                onAnalysisComplete={handleAnalysisComplete}
+                onPdfClick={handlePdfClick}
+              />
+            ) : undefined}
+          />
 
-          {/* Message Input - ABSOLUTELY Fixed at bottom */}
-          <div className="flex-shrink-0 message-input-wrapper">
+          {/* Message Input - STREAMLINED */}
+          <div className="streamlined-input-container">
             <MessageInput
               onSendMessage={handleSendMessage}
               disabled={!connectionStatus.isConnected}
