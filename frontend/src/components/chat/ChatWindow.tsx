@@ -150,13 +150,11 @@ export const ChatWindow = ({ conversation, isTyping, onFileClick, isAnalyzing, a
           overflowX: 'hidden',
           height: '100%',
           maxHeight: '100%',
-          minHeight: '0',
-          display: 'flex',
-          flexDirection: 'column'
+          minHeight: '0'
         }}
         onScroll={handleScroll}
       >
-        <div className="chat-content flex-1 min-h-0">
+        <div className="chat-content">
           <div className="max-w-4xl mx-auto">
             {conversation.messages.map((message, index) => (
               <div key={message.id} className="border-b border-border/10 last:border-b-0">
@@ -186,6 +184,9 @@ export const ChatWindow = ({ conversation, isTyping, onFileClick, isAnalyzing, a
             )}
             
             <div ref={messagesEndRef} />
+            
+            {/* Add some bottom spacing to ensure scrolling works */}
+            <div className="h-20" />
           </div>
         </div>
       </div>
