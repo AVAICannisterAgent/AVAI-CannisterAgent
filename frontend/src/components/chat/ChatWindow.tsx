@@ -144,40 +144,46 @@ export const ChatWindow = ({ conversation, isTyping, onFileClick, isAnalyzing, a
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
       <div 
         ref={scrollAreaRef} 
-        className="flex-1 scrollbar-chat"
+        className="flex-1 scrollbar-chat force-scroll scrollable-container"
         style={{
           overflowY: 'auto',
           overflowX: 'hidden',
-          height: '100%'
+          height: '100%',
+          maxHeight: '100%',
+          minHeight: '0',
+          display: 'flex',
+          flexDirection: 'column'
         }}
         onScroll={handleScroll}
       >
-        <div className="p-4 pb-6 chat-content">
-          <div className="max-w-4xl mx-auto message-container">
-            {conversation.messages.map((message, index) => (
-              <div key={message.id} className="message-bubble message-space">
-                <MessageBubble
-                  message={message}
-                  isLast={index === conversation.messages.length - 1}
-                  onFileClick={onFileClick}
-                  hideAnalysisContent={isAnalyzing}
-                />
-              </div>
-            ))}
-            
-            {isTyping && (
-              <div className="animate-fade-in message-space">
-                <TypingIndicator />
-              </div>
-            )}
+        <div className="chat-content flex-1 min-h-0">
+          <div className="p-4 pb-6">
+            <div className="max-w-4xl mx-auto message-container">
+              {conversation.messages.map((message, index) => (
+                <div key={message.id} className="message-bubble message-space">
+                  <MessageBubble
+                    message={message}
+                    isLast={index === conversation.messages.length - 1}
+                    onFileClick={onFileClick}
+                    hideAnalysisContent={isAnalyzing}
+                  />
+                </div>
+              ))}
+              
+              {isTyping && (
+                <div className="animate-fade-in message-space">
+                  <TypingIndicator />
+                </div>
+              )}
 
-            {isAnalyzing && analysisDisplay && (
-              <div className="animate-fade-in analysis-display message-space">
-                {analysisDisplay}
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
+              {isAnalyzing && analysisDisplay && (
+                <div className="animate-fade-in analysis-display message-space">
+                  {analysisDisplay}
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
           </div>
         </div>
       </div>

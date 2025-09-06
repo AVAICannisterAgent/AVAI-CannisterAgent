@@ -455,4 +455,29 @@
   .force-scroll::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--border-hover)) !important;
   }
+
+  /* Aggressive scrolling fix for chat container */
+  .scrollable-container {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .scrollable-container > * {
+    flex-shrink: 0;
+  }
+
+  /* Ensure message containers don't prevent scrolling */
+  .message-container {
+    min-height: min-content !important;
+    height: auto !important;
+  }
+
+  .chat-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: visible;
+  }
 }
