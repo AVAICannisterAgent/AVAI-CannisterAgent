@@ -207,7 +207,6 @@
     height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Open Sans', 'Helvetica Neue', sans-serif;
     /* Prevent bounce scrolling on iOS */
     overscroll-behavior: none;
@@ -218,11 +217,8 @@
   #root {
     height: 100vh;
     width: 100%;
-    overflow: hidden;
     /* Fix for mobile viewport height issues */
-    height: 100dvh; /* Use dynamic viewport height when supported */
     min-height: 100vh; /* Fallback */
-    /* Remove max-height to allow input to be visible */
   }
 
   /* Responsive improvements */
@@ -321,7 +317,7 @@
     min-width: 44px;
   }
 
-  /* Message Input Specific Styles */
+  /* Message input positioning - Conservative approach */
   .message-input-container {
     flex-shrink: 0;
     min-height: 80px;
@@ -458,15 +454,12 @@
     background: hsl(var(--border-hover)) !important;
   }
 
-  /* Aggressive scrolling fix for chat container */
+  /* Scrollable container - Simplified approach */
   .scrollable-container {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    height: 100% !important;
-    max-height: calc(100vh - 200px) !important;
-    min-height: 200px !important;
-    flex: 1 1 auto !important;
-    /* Ensure content can scroll without disrupting layout */
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+    flex: 1;
     position: relative;
   }
 
@@ -497,39 +490,36 @@
     flex-shrink: 0;
   }
 
-  /* Force proper layout structure */
+  /* Chat layout improvements - Simplified */
   .chat-layout-main {
-    min-height: 100vh !important;
-    display: flex !important;
-    flex-direction: column !important;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: row;
   }
 
   .chat-area-container {
-    flex: 1 1 auto !important;
-    display: flex !important;
-    flex-direction: column !important;
-    min-height: 0 !important;
-    overflow: hidden !important;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
   }
 
-  /* Main chat layout fixes */
+  /* Main chat layout fixes - Conservative approach */
   .main-chat-container {
-    display: flex !important;
-    flex-direction: column !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    overflow: hidden !important;
-    position: relative !important;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
   }
 
-  /* Ensure message input wrapper stays at bottom */
+  /* Message input wrapper - Clean bottom positioning */
   .message-input-wrapper {
-    position: sticky !important;
-    bottom: 0 !important;
-    z-index: 100 !important;
-    background: hsl(var(--background)) !important;
-    border-top: 1px solid hsl(var(--border)) !important;
-    flex-shrink: 0 !important;
-    margin-top: auto !important;
+    position: relative;
+    z-index: 10;
+    background: hsl(var(--background));
+    border-top: 1px solid hsl(var(--border));
+    flex-shrink: 0;
   }
 }
