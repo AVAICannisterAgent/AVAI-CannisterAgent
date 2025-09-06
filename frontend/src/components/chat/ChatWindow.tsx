@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import { MessageBubble } from "./MessageBubble";
@@ -143,7 +142,16 @@ export const ChatWindow = ({ conversation, isTyping, onFileClick, isAnalyzing, a
 
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
-      <ScrollArea ref={scrollAreaRef} className="flex-1 scrollbar-chat overflow-y-auto">
+      <div 
+        ref={scrollAreaRef} 
+        className="flex-1 scrollbar-chat"
+        style={{
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          height: '100%'
+        }}
+        onScroll={handleScroll}
+      >
         <div className="p-4 pb-6 chat-content">
           <div className="max-w-4xl mx-auto message-container">
             {conversation.messages.map((message, index) => (
@@ -172,7 +180,7 @@ export const ChatWindow = ({ conversation, isTyping, onFileClick, isAnalyzing, a
             <div ref={messagesEndRef} />
           </div>
         </div>
-      </ScrollArea>
+      </div>
       
       {/* Scroll to bottom button */}
       {showScrollButton && (
