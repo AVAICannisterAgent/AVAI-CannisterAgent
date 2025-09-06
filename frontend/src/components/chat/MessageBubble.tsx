@@ -77,7 +77,15 @@ const AnalysisLogs = ({ content }: { content: string }) => {
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg p-4 font-mono text-sm max-h-96 overflow-y-auto scrollbar-custom">
+    <div 
+      className="bg-gray-900 rounded-lg p-4 font-mono text-sm scrollbar-custom scrollbar-always"
+      style={{
+        maxHeight: '300px',
+        overflowY: 'scroll',
+        overflowX: 'hidden',
+        border: '1px solid hsl(var(--border))'
+      }}
+    >
       <div className="flex items-center gap-2 mb-3 text-green-400 sticky top-0 bg-gray-900 pb-2 border-b border-gray-700">
         <Terminal className="w-4 h-4" />
         <span className="font-semibold">AVAI Security Analysis Engine v2.1.3</span>
@@ -139,7 +147,15 @@ const AnalysisReport = ({ content }: { content: string }) => {
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg p-6 space-y-6 max-h-[600px] overflow-y-auto scrollbar-custom">
+    <div 
+      className="bg-gray-900 rounded-lg p-6 space-y-6 scrollbar-custom scrollbar-always"
+      style={{
+        maxHeight: '400px',
+        overflowY: 'scroll',
+        overflowX: 'hidden',
+        border: '1px solid hsl(var(--border))'
+      }}
+    >
       {/* Header - Sticky */}
       <div className="border-b border-gray-700 pb-4 sticky top-0 bg-gray-900 z-10">
         <div className="flex items-center gap-3 mb-2">
@@ -306,7 +322,17 @@ export const MessageBubble = ({ message, isLast, onFileClick, hideAnalysisConten
           ) : showReport ? (
             <AnalysisReport content={message.content} />
           ) : (
-            <div className="max-h-96 overflow-y-auto scrollbar-custom">
+            <div 
+              className="scrollbar-custom scrollbar-always"
+              style={{
+                maxHeight: '200px',
+                overflowY: 'scroll',
+                overflowX: 'hidden',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '6px',
+                padding: '8px'
+              }}
+            >
               <p className="text-sm whitespace-pre-wrap leading-relaxed">
                 {message.content}
               </p>
