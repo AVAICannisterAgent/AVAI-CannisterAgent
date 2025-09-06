@@ -469,7 +469,7 @@ export function ChatLayout() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden main-chat-container">
         {/* Top Navigation */}
         <div className="flex-shrink-0">
           <TopNavigation
@@ -500,7 +500,7 @@ export function ChatLayout() {
           </div>
 
           {/* Message Input - Fixed at bottom */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 message-input-wrapper">
             <MessageInput
               onSendMessage={handleSendMessage}
               disabled={!connectionStatus.isConnected}
