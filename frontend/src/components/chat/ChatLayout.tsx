@@ -457,7 +457,7 @@ export function ChatLayout() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden">
+    <div className="flex h-screen w-full bg-background overflow-hidden chat-layout-main">
       {/* Sidebar */}
       <Sidebar
         conversations={conversations}
@@ -481,7 +481,7 @@ export function ChatLayout() {
         </div>
 
         {/* Chat Area - This should take remaining space */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden chat-area-container">
           <div className="flex-1 min-h-0">
             <ChatWindow
               conversation={currentConversation}
@@ -499,7 +499,7 @@ export function ChatLayout() {
             />
           </div>
 
-          {/* Message Input - Fixed at bottom */}
+          {/* Message Input - ABSOLUTELY Fixed at bottom */}
           <div className="flex-shrink-0 message-input-wrapper">
             <MessageInput
               onSendMessage={handleSendMessage}
