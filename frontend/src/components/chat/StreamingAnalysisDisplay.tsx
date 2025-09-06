@@ -263,9 +263,9 @@ For detailed findings and recommendations, please download the complete PDF repo
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6 p-4 bg-background rounded-lg border border-border">
-      {/* Header */}
-      <div className="text-center space-y-2">
+    <div className="w-full max-w-4xl mx-auto space-y-6 p-4 bg-background rounded-lg border border-border max-h-[600px] overflow-y-auto scrollbar-custom">
+      {/* Header - Sticky */}
+      <div className="text-center space-y-2 sticky top-0 bg-background pb-4 border-b border-border z-10">
         <h2 className="text-2xl font-bold text-foreground">
           AVAI Security Audit Analysis
         </h2>
@@ -274,20 +274,22 @@ For detailed findings and recommendations, please download the complete PDF repo
         </p>
       </div>
 
-      {/* Progress Indicator */}
-      {analysisProgress && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-medium text-foreground">{analysisProgress.stage}</span>
-              <span className="text-sm text-muted-foreground">{analysisProgress.percentage}%</span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-2">
-              <div
-                className="bg-primary h-2 rounded-full transition-all duration-300"
-                style={{ width: `${analysisProgress.percentage}%` }}
-              />
-            </div>
+      {/* Scrollable Content */}
+      <div className="space-y-6 pb-4">
+        {/* Progress Indicator */}
+        {analysisProgress && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-medium text-foreground">{analysisProgress.stage}</span>
+                <span className="text-sm text-muted-foreground">{analysisProgress.percentage}%</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div
+                  className="bg-primary h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${analysisProgress.percentage}%` }}
+                />
+              </div>
             {analysisProgress.message && (
               <p className="text-sm text-blue-800 mt-2">{analysisProgress.message}</p>
             )}
@@ -305,7 +307,7 @@ For detailed findings and recommendations, please download the complete PDF repo
             </h3>
           </div>
           
-          <div className="max-h-80 overflow-y-auto bg-black text-sm font-mono">
+          <div className="max-h-80 overflow-y-auto bg-black text-sm font-mono scrollbar-custom">
             {logs.length === 0 ? (
               <div className="p-4 text-gray-500 text-center">
                 Waiting for analysis to begin...
@@ -338,77 +340,76 @@ For detailed findings and recommendations, please download the complete PDF repo
         </CardContent>
       </Card>
 
-      {/* Analysis Complete Section */}
-      {analysisComplete && (
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="p-6">
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-2 text-green-800">
-                <CheckCircle className="w-6 h-6" />
-                <h3 className="text-xl font-bold">Analysis Complete!</h3>
-              </div>
-              
-              <p className="text-green-700">
-                Your security audit has been completed. The comprehensive report is ready for review.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                <Button
-                  onClick={handlePdfClick}
-                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-                >
-                  <FileText className="w-4 h-4" />
-                  View PDF Report
-                </Button>
+        {/* Analysis Complete Section */}
+        {analysisComplete && (
+          <Card className="border-success/20 bg-success/5">
+            <CardContent className="p-6">
+              <div className="text-center space-y-4">
+                <div className="flex items-center justify-center gap-2 text-success">
+                  <CheckCircle className="w-6 h-6" />
+                  <h3 className="text-xl font-bold">Analysis Complete!</h3>
+                </div>
                 
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const blob = new Blob([finalReport], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'avai_security_audit_report.txt';
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Download Report
-                </Button>
+                <p className="text-foreground">
+                  Your security audit has been completed. The comprehensive report is ready for review.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                  <Button
+                    onClick={handlePdfClick}
+                    className="bg-primary hover:bg-primary-hover text-primary-foreground flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    View PDF Report
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const blob = new Blob([finalReport], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'avai_security_audit_report.txt';
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Report
+                  </Button>
+                </div>
+
+                {/* Report Preview */}
+                {finalReport && (
+                  <details className="mt-4 text-left">
+                    <summary className="cursor-pointer text-primary hover:text-primary-hover font-medium">
+                      Preview Report Content
+                    </summary>
+                    <div className="mt-2 p-4 bg-muted rounded border text-sm text-foreground max-h-40 overflow-y-auto scrollbar-custom">
+                      <pre className="whitespace-pre-wrap font-sans">
+                        {finalReport.substring(0, 500)}
+                        {finalReport.length > 500 && '...'}
+                      </pre>
+                    </div>
+                  </details>
+                )}
               </div>
-
-              {/* Report Preview */}
-              {finalReport && (
-                <details className="mt-4 text-left">
-                  <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium">
-                    Preview Report Content
-                  </summary>
-                  <div className="mt-2 p-4 bg-white rounded border text-sm text-gray-700 max-h-40 overflow-y-auto">
-                    <pre className="whitespace-pre-wrap font-sans">
-                      {finalReport.substring(0, 500)}
-                      {finalReport.length > 500 && '...'}
-                    </pre>
-                  </div>
-                </details>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Status Footer */}
-      <div className="text-center text-sm text-gray-500">
+            </CardContent>
+          </Card>
+        )}      {/* Status Footer */}
+      <div className="text-center text-sm text-muted-foreground">
         {isAnalyzing ? (
           <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" />
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
             Connected to AVAI analysis engine...
           </div>
         ) : (
           <div>Ready for analysis</div>
         )}
       </div>
+      </div> {/* Close scrollable content div */}
     </div>
   );
 };
