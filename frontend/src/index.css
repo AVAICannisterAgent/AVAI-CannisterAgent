@@ -123,43 +123,43 @@
   /* Enhanced scrollbar visibility */
   .scrollbar-custom {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--border)) hsl(var(--background));
+    scrollbar-color: #666 #333;
   }
   
   .scrollbar-custom::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
+    width: 16px; /* Even wider */
+    height: 16px;
   }
   
   .scrollbar-custom::-webkit-scrollbar-track {
-    background: hsl(var(--background));
-    border-radius: 6px;
-    border: 1px solid hsl(var(--border));
+    background: #2a2a2a;
+    border-radius: 8px;
+    border: 2px solid #1a1a1a;
   }
   
   .scrollbar-custom::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, hsl(var(--border)), hsl(var(--border-hover)));
-    border-radius: 6px;
-    border: 2px solid hsl(var(--background));
-    min-height: 20px;
+    background: linear-gradient(135deg, #666, #888);
+    border-radius: 8px;
+    border: 2px solid #2a2a2a;
+    min-height: 30px;
   }
   
   .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, hsl(var(--border-hover)), hsl(var(--primary) / 0.7));
+    background: linear-gradient(135deg, #888, #aaa);
   }
   
   .scrollbar-custom::-webkit-scrollbar-corner {
-    background: hsl(var(--background));
+    background: #2a2a2a;
   }
   
   /* Force scrollbar to always show */
   .scrollbar-always {
     overflow-y: scroll !important;
-    scrollbar-width: thin !important;
+    scrollbar-width: auto !important;
   }
   
   .scrollbar-always::-webkit-scrollbar {
-    width: 12px !important;
+    width: 16px !important;
     display: block !important;
   }
   

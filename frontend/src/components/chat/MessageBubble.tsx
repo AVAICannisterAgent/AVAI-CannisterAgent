@@ -325,17 +325,22 @@ export const MessageBubble = ({ message, isLast, onFileClick, hideAnalysisConten
             <div 
               className="scrollbar-custom scrollbar-always"
               style={{
-                maxHeight: '200px',
+                maxHeight: '120px', // Much smaller to trigger scrolling
                 overflowY: 'scroll',
                 overflowX: 'hidden',
-                border: '1px solid hsl(var(--border))',
+                border: '2px solid hsl(var(--border))', // More visible border
                 borderRadius: '6px',
-                padding: '8px'
+                padding: '8px',
+                backgroundColor: 'hsl(var(--background))'
               }}
             >
               <p className="text-sm whitespace-pre-wrap leading-relaxed">
                 {message.content}
               </p>
+              {/* Add indicator text */}
+              <div className="text-xs text-muted-foreground mt-2 italic">
+                📜 Scroll to see more content
+              </div>
             </div>
           )}
           
