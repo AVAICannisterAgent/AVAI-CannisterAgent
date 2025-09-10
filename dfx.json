@@ -9,6 +9,15 @@
           "name": "candid:service"
         }
       ]
+    },
+    "avai_audit_engine": {
+      "type": "motoko",
+      "main": "src/avai_audit_engine/main.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
     }
   },
   "networks": {
