@@ -1,0 +1,364 @@
+# Unified AVAI System - Complete Docker Infrastructure
+# Combines Python AVAI + Motoko Canister + Redis + WebSocket
+version: '3.8'
+
+services:
+  # ========================================
+  # CORE INFRASTRUCTURE
+  # ========================================
+  
+  # Primary Redis - Central data store
+  redis:
+    image: redis:7-alpine
+    container_name: avai-redis-unified
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-unified-data:/data
+    networks:
+      - avai-unified-network
+    environment:
+      - REDIS_PORT=6379
+    command: |
+      sh -c "
+      redis-server \
+        --appendonly yes \
+        --maxmemory 512mb \
+        --maxmemory-policy allkeys-lru \
+        --save 300 1 \
+        --bind 0.0.0.0 \
+        --protected-mode no
+      "
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 600M
+          cpus: '0.5'
+
+  # ========================================
+  # MOTOKO DEVELOPMENT ENVIRONMENT  
+  # ========================================
+  
+  # Motoko Canister Development
+  motoko-canister:
+    build:
+      context: .
+      dockerfile: Dockerfile.motoko
+    container_name: avai-motoko-unified
+    restart: unless-stopped
+    ports:
+      - "4943:4943"   # DFX replica
+      - "8100:8000"   # Canister frontend (mapped to avoid conflicts)
+      - "8101:8080"   # Development server
+    volumes:
+      # Source code mounts
+      - ./motoko_modules:/workspace/src:rw
+      - ./dfx.json:/workspace/dfx.json:rw  
+      - ./canister_ids.json:/workspace/canister_ids.json:rw
+      # Persistent DFX data
+      - motoko-dfx-data:/workspace/.dfx
+      - motoko-vessel-data:/workspace/.vessel
+      # Logs and workspace
+      - ./logs:/workspace/logs:rw
+      - ./workspace:/workspace/workspace:rw
+      # Scripts
+      - ./deploy_to_mainnet.sh:/workspace/deploy_to_mainnet.sh:ro
+    environment:
+      - DFX_NETWORK=local
+      - RUST_BACKTRACE=1
+      - MOTOKO_BASE_VERSION=0.11.1
+      - DFX_VERSION=0.22.0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - avai-unified-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    working_dir: /workspace
+    # Start DFX replica in background and keep container running
+    command: >
+      bash -c "
+      echo '🚀 Starting AVAI Motoko Environment...';
+      
+      # Ensure proper permissions
+      chmod +x /workspace/deploy_to_mainnet.sh 2>/dev/null || true;
+      
+      # Clean any stale processes
+      killall -9 replica ic-https-outcalls-adapter 2>/dev/null || true;
+      
+      # Start DFX replica with proper binding
+      echo '📡 Starting DFX replica...';
+      dfx start --clean --background --host 127.0.0.1;
+      
+      # Wait for replica to be ready
+      sleep 10;
+      
+      # Deploy canister if needed
+      if ! dfx canister status avai_project_backend 2>/dev/null; then
+        echo '🚀 Deploying AVAI canister...';
+        dfx deploy --yes || echo '⚠️ Deploy failed - will retry later';
+      fi;
+      
+      # Keep container running
+      echo '✅ Motoko environment ready!';
+      tail -f /dev/null
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "dfx ping local || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 120s
+
+  # ========================================
+  # PYTHON AVAI SYSTEM
+  # ========================================
+
+  # Enhanced AVAI Processor
+  avai-processor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: avai-processor-unified
+    restart: unless-stopped
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - WEBSOCKET_URL=ws://websocket-server:8080/ws
+      - MOTOKO_CANISTER_URL=http://motoko-canister:4943
+      - PYTHONUNBUFFERED=1
+      - PYTHONIOENCODING=utf-8
+      - OLLAMA_HOST=host.docker.internal:11434
+      - REDIS_LOGGER_ENABLED=true
+    volumes:
+      - ./logs:/app/logs:rw
+      - ./workspace:/app/workspace:rw
+      - .:/app:ro
+    networks:
+      - avai-unified-network
+    depends_on:
+      redis:
+        condition: service_healthy
+      websocket-server:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: python main_enhanced.py --auto-start
+    healthcheck:
+      test: ["CMD", "python", "-c", "import redis; r=redis.Redis(host='redis', port=6379); r.ping()"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+
+  # ========================================
+  # COMMUNICATION LAYER
+  # ========================================
+
+  # WebSocket Server for real-time communication
+  websocket-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.websocket
+    container_name: avai-websocket-unified  
+    restart: unless-stopped
+    ports:
+      - "8080:8080"   # WebSocket endpoint
+      - "8443:8443"   # HTTPS WebSocket
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - PORT=8080
+      - SECURE_PORT=8443
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+    networks:
+      - avai-unified-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+          cpus: '0.5'
+
+  # Python-Motoko Integration Bridge
+  integration-bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: avai-integration-bridge
+    restart: unless-stopped
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MOTOKO_URL=http://motoko-canister:4943
+      - WEBSOCKET_URL=ws://websocket-server:8080/ws
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./logs:/app/logs:rw
+      - .:/app:ro
+    networks:
+      - avai-unified-network
+    depends_on:
+      redis:
+        condition: service_healthy
+      motoko-canister:
+        condition: service_healthy
+      websocket-server:
+        condition: service_healthy
+    command: >
+      python -c "
+      import time, redis, requests, json, logging;
+      logging.basicConfig(level=logging.INFO);
+      logger = logging.getLogger('integration-bridge');
+      logger.info('🔗 Python-Motoko Integration Bridge starting...');
+      
+      r = redis.Redis(host='redis', port=6379);
+      
+      def process_motoko_tasks():
+          try:
+              # Check for tasks requiring Motoko processing
+              task = r.lpop('motoko_queue');
+              if task:
+                  data = json.loads(task);
+                  logger.info(f'📤 Processing Motoko task: {data.get(\"type\", \"unknown\")}');
+                  
+                  # Forward to Motoko canister
+                  response = requests.post(
+                      'http://motoko-canister:4943/api/v2/canister/bkyz2-fmaaa-aaaaa-qaaaq-cai/call',
+                      json=data,
+                      timeout=30
+                  );
+                  
+                  # Queue response back to Python
+                  r.lpush('python_responses', response.text);
+                  logger.info('✅ Task processed and response queued');
+                  
+          except Exception as e:
+              logger.error(f'❌ Integration error: {e}');
+      
+      logger.info('✅ Integration bridge ready!');
+      while True:
+          process_motoko_tasks();
+          time.sleep(1);
+      "
+    healthcheck:
+      test: ["CMD", "python", "-c", "import redis; r=redis.Redis(host='redis', port=6379); r.ping()"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  # ========================================
+  # AUTOMATION & MONITORING  
+  # ========================================
+
+  # Host Automation System
+  host-automation:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: avai-host-automation-unified
+    restart: unless-stopped
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - WEBSOCKET_URL=ws://websocket-server:8080/ws
+      - CHECK_INTERVAL=30
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./logs:/app/logs:rw
+      - .:/app:ro
+    networks:
+      - avai-unified-network
+    depends_on:
+      redis:
+        condition: service_healthy
+      websocket-server:
+        condition: service_healthy
+    command: python host_trigger_system.py
+    healthcheck:
+      test: ["CMD", "python", "-c", "import redis; r=redis.Redis(host='redis', port=6379); r.ping()"]
+      interval: 60s
+      timeout: 10s
+      retries: 2
+
+  # ========================================
+  # EXTERNAL CONNECTIVITY
+  # ========================================
+
+  # Cloudflare Tunnel for public access
+  cloudflare-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: avai-tunnel-unified
+    restart: unless-stopped
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./cloudflare/config.yml:/etc/cloudflared/config.yml:ro
+      - ./cloudflare/credentials.json:/etc/cloudflared/credentials.json:ro
+    networks:
+      - avai-unified-network
+    depends_on:
+      websocket-server:
+        condition: service_healthy
+      motoko-canister:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          memory: 150M
+          cpus: '0.3'
+
+# ========================================
+# PERSISTENT VOLUMES
+# ========================================
+volumes:
+  redis-unified-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/redis
+  motoko-dfx-data:
+    driver: local  
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/dfx
+  motoko-vessel-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data/vessel
+
+# ========================================
+# NETWORK CONFIGURATION
+# ========================================
+networks:
+  avai-unified-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: avai-unified-br0
+      com.docker.network.enable_ipv4: "true"
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
