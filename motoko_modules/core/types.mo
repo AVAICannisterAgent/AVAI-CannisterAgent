@@ -562,4 +562,62 @@ module Types {
         // This would be implemented with proper time formatting
         Int.toText(timestamp)
     };
+    
+    // ================================
+    // AUDIT SYSTEM TYPES
+    // ================================
+    
+    /// Audit initialization request
+    public type AuditInitRequest = {
+        repositoryUrl : Text;
+        auditType : Text; // "basic", "comprehensive", "deep"
+        clientId : Text;
+    };
+    
+    /// Repository analysis request
+    public type RepositoryAnalysisRequest = {
+        repositoryUrl : Text;
+        analysisType : Text;
+        generateReport : Bool;
+        includeSecurityScan : Bool;
+        includeDependencyAudit : Bool;
+        includeCodeQuality : Bool;
+    };
+    
+    /// Analysis result
+    public type AnalysisResult = {
+        repositoryUrl : Text;
+        analysisType : Text;
+        findingsCount : Nat;
+        securityIssues : Nat;
+        codeQualityScore : Float;
+        dependencyVulnerabilities : Nat;
+        riskLevel : Text;
+        recommendations : [Text];
+        analysisTimestamp : Int;
+        processingTime : Int;
+    };
+    
+    /// Audit report request
+    public type AuditReportRequest = {
+        auditId : Text;
+        reportType : Text; // "executive_summary", "detailed", "technical"
+        includeRecommendations : Bool;
+        outputFormat : Text; // "pdf", "html", "json"
+    };
+    
+    /// Audit report result
+    public type AuditReportResult = {
+        auditId : Text;
+        reportType : Text;
+        totalFindings : Nat;
+        criticalIssues : Nat;
+        highSeverityIssues : Nat;
+        mediumSeverityIssues : Nat;
+        lowSeverityIssues : Nat;
+        overallRiskScore : Float;
+        reportPath : Text;
+        reportGenerated : Bool;
+        generationTime : Int;
+    };
 }

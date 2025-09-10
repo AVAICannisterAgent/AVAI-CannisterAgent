@@ -501,4 +501,91 @@ module Utils {
         
         info
     };
+    
+    // ================================
+    // AUDIT SYSTEM UTILITIES
+    // ================================
+    
+    /// Validate GitHub repository URL format
+    public func isValidGitHubUrl(url: Text): Bool {
+        let lowerUrl = Text.toLowercase(url);
+        Text.contains(lowerUrl, #text "github.com") and
+        (Text.contains(lowerUrl, #text "https://") or Text.contains(lowerUrl, #text "http://"))
+    };
+    
+    /// Extract repository name from GitHub URL
+    public func extractRepoName(url: Text): ?Text {
+        if (not isValidGitHubUrl(url)) {
+            return null;
+        };
+        
+        // Simple extraction - look for github.com/owner/repo pattern
+        let parts = Text.split(url, #char '/');
+        let partsArray = Iter.toArray(parts);
+        
+        if (partsArray.size() >= 5) {
+            ?partsArray[4] // Return repo name
+        } else {
+            null
+        }
+    };
+    
+    /// Calculate audit risk level based on findings
+    public func calculateRiskLevel(
+        securityIssues: Nat,
+        codeQualityIssues: Nat,
+        documentationGaps: Nat
+    ): Types.RiskLevel {
+        let totalIssues = securityIssues + codeQualityIssues + documentationGaps;
+        
+        if (totalIssues == 0) {
+            #Low
+        } else if (totalIssues <= 3) {
+            #Medium
+        } else if (totalIssues <= 7) {
+            #High
+        } else {
+            #Critical
+        }
+    };
+    
+    /// Format audit summary for reporting
+    public func formatAuditSummary(
+        repositoryUrl: Text,
+        analysisResult: Types.AnalysisResult,
+        riskLevel: Types.RiskLevel
+    ): Text {
+        var summary = "=== AUDIT SUMMARY ===\n";
+        summary := summary # "Repository: " # repositoryUrl # "\n";
+        summary := summary # "Risk Level: " # formatRiskLevel(riskLevel) # "\n";
+        summary := summary # "Analysis Status: " # (if (analysisResult.success) "COMPLETED" else "FAILED") # "\n";
+        
+        if (analysisResult.success) {
+            summary := summary # "Files Analyzed: " # Nat.toText(analysisResult.filesAnalyzed) # "\n";
+            summary := summary # "Issues Found: " # Nat.toText(analysisResult.issuesFound) # "\n";
+            summary := summary # "Security Score: " # Float.toText(analysisResult.securityScore) # "/100\n";
+        };
+        
+        summary := summary # "Timestamp: " # Int.toText(analysisResult.timestamp) # "\n";
+        summary # "===================";
+    };
+    
+    /// Format risk level for display
+    private func formatRiskLevel(risk: Types.RiskLevel): Text {
+        switch (risk) {
+            case (#Low) { "LOW" };
+            case (#Medium) { "MEDIUM" };
+            case (#High) { "HIGH" };
+            case (#Critical) { "CRITICAL" };
+        }
+    };
+    
+    /// Check if text contains analysis-related keywords
+    public func containsAnalysisKeywords(text: Text): Bool {
+        let lowerText = Text.toLowercase(text);
+        containsAny(lowerText, [
+            "security", "vulnerability", "audit", "analysis", "review",
+            "code quality", "documentation", "best practices", "compliance"
+        ])
+    };
 }

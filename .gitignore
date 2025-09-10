@@ -137,6 +137,14 @@ tests/
 **/test/
 **/tests/
 
+# EXCLUDE all debug files - debug should never be pushed
+debug_*.py
+debug_*.sh
+*_debug.py
+*_debug.sh
+**/*debug*.py
+**/*debug*.sh
+
 # Exclude Docker generated files, logs, and temporary files
 **/.dfx/
 **/node_modules/
