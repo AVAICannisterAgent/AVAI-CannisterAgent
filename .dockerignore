@@ -1,0 +1,87 @@
+# Docker ignore file to reduce build context size
+
+# Large directories
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node modules
+node_modules/
+npm-debug.log*
+
+# Large model files
+*.bin
+*.gguf
+*.safetensors
+models/
+workspace/
+
+# Documentation
+*.md
+*.pdf
+docs/
+documentation/
+
+# Text files (but allow requirements.txt)
+*.txt
+!requirements*.txt
+
+# Test files
+test_*.py
+*_test.py
+tests/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# Cache directories
+.cache/
+.pytest_cache/
+
+# Frontend build artifacts
+dist/
+build/
+
+# Exclude large development files
+frontend/node_modules/
+frontend/dist/
+frontend/.next/
+
+# Exclude Docker files from context
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Large data files
+*.csv
+*.json
+*.xml
+workspace/
