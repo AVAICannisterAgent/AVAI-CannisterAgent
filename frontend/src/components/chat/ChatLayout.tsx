@@ -303,6 +303,18 @@ export function ChatLayout() {
           }
           break;
 
+        case 'stored_logs':
+          // Handle stored logs from enhanced AVAI orchestrator
+          console.log('📋 Stored logs received:', message.payload?.length || 0, 'entries');
+          // These are historical logs, can be used for debugging or analysis history
+          break;
+
+        case 'heartbeat':
+          // Handle heartbeat messages from enhanced AVAI orchestrator
+          console.log('💓 Heartbeat received - Server healthy with', message.clients, 'clients');
+          // Update connection status or server health indicators if needed
+          break;
+
         default:
           console.log('🔄 Unhandled message type:', message.type);
       }

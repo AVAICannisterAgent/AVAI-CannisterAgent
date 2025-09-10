@@ -22,6 +22,10 @@
 !src/
 !src/**
 
+# Include NEW Motoko modules directory - COMPLETE TRACKING
+!motoko_modules/
+!motoko_modules/**
+
 # Include app directory structure
 !app/agent/
 app/agent/*
@@ -31,6 +35,15 @@ app/agent/*
 # Include canister integration files
 !app/integration/
 !app/integration/**
+
+# Include centralized services for analysis
+!app/core/
+!app/core/**
+!app/websocket/
+!app/websocket/**
+!app/redis_integration.py
+!service_manager.py
+!websocket_server.js
 
 # Include canister test files
 !test_canister_integration.py
@@ -82,4 +95,114 @@ config/config_ollama_gpu.toml
 config/config_hybrid.toml
 config/config.example-model-azure.toml
 frontend/public/realistic_analysis_output.txt
+
+# Include essential Docker files only
+!Dockerfile
+!Dockerfile.motoko
+!docker-compose.yml
+!docker-compose-unified.yml
+!.dockerignore
+
+# Exclude redundant docker files
+Dockerfile.*
+docker-compose-*.yml
+# Re-include essential ones
+!Dockerfile.motoko
+!docker-compose-unified.yml
+
+# Include only essential deployment scripts
+!deploy_optimized.ps1
+!deploy_to_mainnet.sh
+!manage_unified_system.ps1
+
+# Exclude redundant deployment files
+deploy_*.ps1
+deploy_*.sh
+manage_*.ps1  
+manage_*.sh
+# Re-include the essential ones
+!deploy_optimized.ps1
+!deploy_to_mainnet.sh
+!manage_unified_system.ps1
+
+# EXCLUDE all test files - tests should never be pushed
+test_*.py
+test_*.sh
+*_test.py
+tests/
+**/*test*.py
+**/*test*.sh
+**/*test*.js
+**/*test*.ts
+**/test/
+**/tests/
+
+# Exclude Docker generated files, logs, and temporary files
+**/.dfx/
+**/node_modules/
+**/.env
+**/.env.*
+**/logs/
+**/tmp/
+**/*.log
+*.log
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/__pycache__/
+
+# Exclude development and temporary files
+.venv/
+venv/
+.vscode/
+.claude/
+temp_analysis/
+sessions/
+data/
+realistic_analysis_output.txt
+workspace/
+legacy_files/
+
+# Exclude redundant documentation and reports
+*_REPORT.md
+*_COMPLETE.md
+*_SUCCESS*.md
+*_TODO.md
+*_AUDIT.md
+*_ANALYSIS.md
+DEMO_*.md
+HOST_*.md
+IMPLEMENTATION_*.md
+
+# Include important function fix report
+!FUNCTION_INTERFACE_FIX_SUCCESS_REPORT.md
+
+# Exclude backup and example files
+*_backup.*
+dfx_backup.json
+dfx_test.json
+dfx_simple.json
+*example*
+*.example
+requirements-*.txt
+# Re-include main requirements
+!requirements.txt
+
+# Exclude batch and automation scripts (keep only essential)
+*.bat
+start-*.bat
+start-*.sh
+stop-*.bat  
+stop-*.sh
+activate_*.bat
+activate_*.ps1
+setup_*.ps1
+optimize_*.py
+ultimate_*.py
+enhanced_*.py
+simple_*.py
+stable_*.py
+lightweight_*.py
+automated_*.py
+quick_*.py
 

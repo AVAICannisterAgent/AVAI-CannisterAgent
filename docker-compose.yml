@@ -1,0 +1,189 @@
+services:
+  # Redis server - Lightweight configuration for queue management only
+  redis:
+    image: redis:7-alpine
+    container_name: avai-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru --save 300 1
+    volumes:
+      - redis-data:/data
+    networks:
+      - avai-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 60s
+      timeout: 5s
+      retries: 2
+    deploy:
+      resources:
+        limits:
+          memory: 300M
+          cpus: '0.5'
+
+  # WebSocket server - Minimal for real-time communication
+  websocket-server:
+    build:
+      context: .
+      dockerfile: docker/websocket/Dockerfile
+    container_name: avai-websocket
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - PORT=8080
+      - NODE_ENV=production
+      - LOG_LEVEL=warn
+    networks:
+      - avai-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      interval: 60s
+      timeout: 5s
+      retries: 2
+    deploy:
+      resources:
+        limits:
+          memory: 200M
+          cpus: '0.5'
+
+  # Lightweight Response Bridge - DISABLED: WebSocket server handles response delivery directly
+  # response-bridge:
+  #   image: python:3.11-slim
+  #   container_name: avai-response-bridge
+  #   restart: unless-stopped
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #     websocket-server:
+  #       condition: service_healthy
+  #   environment:
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #     - WEBSOCKET_URL=ws://websocket-server:8080/ws
+  #     - LOG_LEVEL=WARNING
+  #   volumes:
+  #     # Mount only essential files
+  #     - ./lightweight_response_bridge.py:/app/lightweight_response_bridge.py:ro
+  #     - ./logs:/app/logs
+  #   working_dir: /app
+  #   networks:
+  #     - avai-network
+  #   command: >
+  #     sh -c "pip install --no-cache-dir redis==5.0.1 websockets==12.0 &&
+  #            python lightweight_response_bridge.py"
+  #   healthcheck:
+  #     test: ["CMD", "python", "-c", "import redis; r=redis.Redis(host='redis', port=6379); r.ping()"]
+  #     interval: 120s
+  #     timeout: 10s
+  #     retries: 2
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 150M
+  #         cpus: '0.3'
+
+  # Cloudflare tunnel - Essential for public access
+  cloudflare-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: avai-tunnel
+    restart: unless-stopped
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./cloudflare/config.yml:/etc/cloudflared/config.yml:ro
+      - ./cloudflare/credentials.json:/etc/cloudflared/credentials.json:ro
+    networks:
+      - avai-network
+    depends_on:
+      websocket-server:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+          cpus: '0.2'
+
+  # Host Automation Trigger - Monitors queue and triggers containerized worker
+  host-automation:
+    build:
+      context: .
+      dockerfile: docker/automation/Dockerfile
+    container_name: avai-host-automation
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      websocket-server:
+        condition: service_healthy
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - WEBSOCKET_URL=ws://websocket-server:8080/ws
+      - CHECK_INTERVAL=30
+      - LOG_LEVEL=INFO
+    networks:
+      - avai-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import redis; r=redis.Redis(host='redis', port=6379); r.ping()"]
+      interval: 60s
+      timeout: 10s
+      retries: 2
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+          cpus: '0.2'
+
+  # Containerized AVAI Processor - Runs main_enhanced.py in container
+  avai-processor:
+    build:
+      context: .
+      dockerfile: docker/processor/Dockerfile
+    container_name: avai-processor
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      websocket-server:
+        condition: service_healthy
+      host-automation:
+        condition: service_started
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - WEBSOCKET_URL=ws://websocket-server:8080/ws
+      - PYTHONUNBUFFERED=1
+      - PYTHONIOENCODING=utf-8
+      - OLLAMA_HOST=host.docker.internal:11434
+    volumes:
+      - ./logs:/app/logs
+      - ./workspace:/app/workspace
+    networks:
+      - avai-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import redis; r=redis.Redis(host='redis', port=6379); r.ping()"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  avai-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: avai-br0

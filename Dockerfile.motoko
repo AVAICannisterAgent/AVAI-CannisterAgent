@@ -1,0 +1,99 @@
+# AVAI Motoko Development Environment - Optimized
+FROM ubuntu:22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DFX_VERSION=0.22.0
+ENV MOTOKO_BASE_VERSION=0.11.1
+ENV RUST_BACKTRACE=1
+ENV PATH="/root/.local/share/dfx/bin:$PATH"
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    libc6-dev \
+    m4 \
+    ca-certificates \
+    expect \
+    jq \
+    netcat \
+    procps \
+    psmisc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js (required for some DFX operations)
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
+# Create workspace
+WORKDIR /workspace
+
+# Install DFX with automated responses
+RUN mkdir -p /root/.local/share/dfx/bin && \
+    curl -fsSL https://internetcomputer.org/install.sh > /tmp/install.sh && \
+    expect -c " \
+        spawn bash /tmp/install.sh; \
+        expect \"Proceed with installation?\"; \
+        send \"y\\r\"; \
+        expect eof" || echo "DFX installation completed"
+
+# Alternative DFX installation method if expect fails
+RUN if [ ! -f /root/.local/share/dfx/bin/dfx ]; then \
+        echo "Using alternative DFX installation method..."; \
+        curl -L https://github.com/dfinity/sdk/releases/download/${DFX_VERSION}/dfx-${DFX_VERSION}-x86_64-linux.tar.gz | tar -xz -C /root/.local/share/dfx/bin/; \
+    fi
+
+# Verify DFX installation and set permissions
+RUN chmod +x /root/.local/share/dfx/bin/dfx 2>/dev/null || true
+RUN echo 'export PATH="/root/.local/share/dfx/bin:$PATH"' >> ~/.bashrc
+
+# Install Vessel (Motoko package manager)
+RUN wget -q https://github.com/dfinity/vessel/releases/download/v0.6.4/vessel-linux64 -O /usr/local/bin/vessel && \
+    chmod +x /usr/local/bin/vessel
+
+# Copy project files
+COPY . /workspace/
+
+# Set proper permissions
+RUN chmod +x /workspace/*.sh 2>/dev/null || true
+
+# Create dfx identity in non-interactive mode
+RUN /root/.local/share/dfx/bin/dfx identity new --storage-mode=plaintext motoko_dev 2>/dev/null || echo "Identity creation attempted"
+
+# Expose ports for dfx
+EXPOSE 4943 8080 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD /root/.local/share/dfx/bin/dfx --version || exit 1
+
+# Create optimized start script  
+RUN echo '#!/bin/bash' > /workspace/start_dfx_optimized.sh && \
+    echo 'set -e' >> /workspace/start_dfx_optimized.sh && \
+    echo 'echo "🚀 Starting AVAI Motoko Environment..."' >> /workspace/start_dfx_optimized.sh && \
+    echo 'killall -9 replica ic-https-outcalls-adapter pocket-ic-server 2>/dev/null || true' >> /workspace/start_dfx_optimized.sh && \
+    echo 'rm -f /tmp/.dfx-* 2>/dev/null || true' >> /workspace/start_dfx_optimized.sh && \
+    echo 'mkdir -p /workspace/.dfx/network/local /workspace/.vessel' >> /workspace/start_dfx_optimized.sh && \
+    echo 'chmod -R 755 /workspace/.dfx /workspace/.vessel 2>/dev/null || true' >> /workspace/start_dfx_optimized.sh && \
+    echo 'cd /workspace' >> /workspace/start_dfx_optimized.sh && \
+    echo 'echo "📡 Starting DFX replica..."' >> /workspace/start_dfx_optimized.sh && \
+    echo 'dfx start --clean --background --host 127.0.0.1' >> /workspace/start_dfx_optimized.sh && \
+    echo 'echo "⏳ Waiting for replica..."' >> /workspace/start_dfx_optimized.sh && \
+    echo 'sleep 15' >> /workspace/start_dfx_optimized.sh && \
+    echo 'if dfx ping local >/dev/null 2>&1; then' >> /workspace/start_dfx_optimized.sh && \
+    echo '  echo "✅ Replica ready!"' >> /workspace/start_dfx_optimized.sh && \
+    echo '  dfx deploy --yes 2>/dev/null || echo "⚠️ Deploy will retry"' >> /workspace/start_dfx_optimized.sh && \
+    echo 'else' >> /workspace/start_dfx_optimized.sh && \
+    echo '  echo "⚠️ Replica not ready yet"' >> /workspace/start_dfx_optimized.sh && \
+    echo 'fi' >> /workspace/start_dfx_optimized.sh && \
+    echo 'echo "🎉 Environment ready!"' >> /workspace/start_dfx_optimized.sh && \
+    echo 'exec tail -f /dev/null' >> /workspace/start_dfx_optimized.sh && \
+    chmod +x /workspace/start_dfx_optimized.sh
+
+# Default command
+CMD ["/workspace/start_dfx_optimized.sh"]
