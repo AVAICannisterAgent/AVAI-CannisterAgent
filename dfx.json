@@ -11,5 +11,19 @@
       ]
     }
   },
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:4943",
+      "type": "ephemeral"
+    },
+    "mainnet": {
+      "providers": ["https://ic0.app"],
+      "type": "persistent"
+    },
+    "testnet": {
+      "providers": ["https://testnet.dfinity.network"],
+      "type": "persistent"
+    }
+  },
   "dfx": "0.22.0"
 }
