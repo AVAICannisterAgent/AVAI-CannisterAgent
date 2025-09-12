@@ -9,13 +9,13 @@ import Text "mo:base/Text";
 import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 import Result "mo:base/Result";
+import Iter "mo:base/Iter";
 import Debug "mo:base/Debug";
 import Random "mo:base/Random";
 import Nat "mo:base/Nat";
 import Int "mo:base/Int";
 import Float "mo:base/Float";
 import Char "mo:base/Char";
-import Iter "mo:base/Iter";
 
 module Utils {
     
@@ -195,7 +195,7 @@ module Utils {
         ];
         
         Array.filter<Text>(Iter.toArray(words), func(word) {
-            word.size() > 2 and not Array.find<Text>(stopWords, func(stop) = stop == word) != null
+            word.size() > 2 and Array.find<Text>(stopWords, func(stop) = stop == word) == null
         })
     };
     
@@ -424,7 +424,9 @@ module Utils {
         
         // Truncate if too long
         if (sanitized3.size() > 500) {
-            Text.take(sanitized3, 497) # "..."
+            let chars = Text.toArray(sanitized3);
+            let truncatedChars = Array.take(chars, 497);
+            Text.fromIter(truncatedChars.vals()) # "..."
         } else {
             sanitized3
         }
@@ -535,7 +537,7 @@ module Utils {
         securityIssues: Nat,
         codeQualityIssues: Nat,
         documentationGaps: Nat
-    ): Types.RiskLevel {
+    ): Types.Severity {
         let totalIssues = securityIssues + codeQualityIssues + documentationGaps;
         
         if (totalIssues == 0) {
@@ -553,30 +555,28 @@ module Utils {
     public func formatAuditSummary(
         repositoryUrl: Text,
         analysisResult: Types.AnalysisResult,
-        riskLevel: Types.RiskLevel
+        riskLevel: Types.Severity
     ): Text {
         var summary = "=== AUDIT SUMMARY ===\n";
         summary := summary # "Repository: " # repositoryUrl # "\n";
         summary := summary # "Risk Level: " # formatRiskLevel(riskLevel) # "\n";
-        summary := summary # "Analysis Status: " # (if (analysisResult.success) "COMPLETED" else "FAILED") # "\n";
-        
-        if (analysisResult.success) {
-            summary := summary # "Files Analyzed: " # Nat.toText(analysisResult.filesAnalyzed) # "\n";
-            summary := summary # "Issues Found: " # Nat.toText(analysisResult.issuesFound) # "\n";
-            summary := summary # "Security Score: " # Float.toText(analysisResult.securityScore) # "/100\n";
-        };
-        
-        summary := summary # "Timestamp: " # Int.toText(analysisResult.timestamp) # "\n";
+        summary := summary # "Analysis Type: " # analysisResult.analysisType # "\n";
+        summary := summary # "Findings Count: " # Nat.toText(analysisResult.findingsCount) # "\n";
+        summary := summary # "Security Issues: " # Nat.toText(analysisResult.securityIssues) # "\n";
+        summary := summary # "Code Quality Score: " # Float.toText(analysisResult.codeQualityScore) # "/100\n";
+        summary := summary # "Dependency Vulnerabilities: " # Nat.toText(analysisResult.dependencyVulnerabilities) # "\n";
+        summary := summary # "Timestamp: " # Int.toText(analysisResult.analysisTimestamp) # "\n";
         summary # "===================";
     };
     
     /// Format risk level for display
-    private func formatRiskLevel(risk: Types.RiskLevel): Text {
+    private func formatRiskLevel(risk: Types.Severity): Text {
         switch (risk) {
             case (#Low) { "LOW" };
             case (#Medium) { "MEDIUM" };
             case (#High) { "HIGH" };
             case (#Critical) { "CRITICAL" };
+            case (#Info) { "INFO" };
         }
     };
     

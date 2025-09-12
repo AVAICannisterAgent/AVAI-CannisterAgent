@@ -1,6 +1,42 @@
 {
   "version": 1,
   "canisters": {
+    "avai_browser_agent": {
+      "type": "motoko",
+      "main": "motoko_modules/agents/browser_agent.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "avai_github_agent": {
+      "type": "motoko",
+      "main": "motoko_modules/agents/github_agent.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "avai_canister_agent": {
+      "type": "motoko",
+      "main": "motoko_modules/agents/canister_agent.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "avai_main_orchestrator": {
+      "type": "motoko",
+      "main": "motoko_modules/orchestrator/main_orchestrator.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
     "avai_project_backend": {
       "type": "motoko",
       "main": "src/avai_project_backend/main_fixed.mo",
@@ -22,15 +58,19 @@
   },
   "networks": {
     "local": {
-      "bind": "127.0.0.1:4943",
+      "bind": "0.0.0.0:4943",
       "type": "ephemeral"
     },
-    "mainnet": {
-      "providers": ["https://ic0.app"],
+    "testnet": {
+      "providers": [
+        "https://testnet.dfinity.network"
+      ],
       "type": "persistent"
     },
-    "testnet": {
-      "providers": ["https://testnet.dfinity.network"],
+    "mainnet": {
+      "providers": [
+        "https://ic0.app"
+      ],
       "type": "persistent"
     }
   },
