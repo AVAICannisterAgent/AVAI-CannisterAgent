@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Sidebar } from './Sidebar';
-import { TopNavigation } from './TopNavigation';
-import { ChatWindow } from './ChatWindow';
-import { MessageInput } from './MessageInput';
-import { StreamingAnalysisDisplay } from './StreamingAnalysisDisplay';
-import { FileViewer } from './FileViewer';
-import { PdfViewer } from './PdfViewer';
+import { useEffect, useRef, useState } from 'react';
 import WebSocketService from '../../services/WebSocketService';
+import { ChatWindow } from './ChatWindow';
+import { FileViewer } from './FileViewer';
+import { MessageInput } from './MessageInput';
+import { PdfViewer } from './PdfViewer';
+import { Sidebar } from './Sidebar';
+import { StreamingAnalysisDisplay } from './StreamingAnalysisDisplay';
+import { TopNavigation } from './TopNavigation';
 
 // Get singleton instance
 const webSocketService = WebSocketService.getInstance();
@@ -64,10 +64,10 @@ export function ChatLayout() {
     progress: 0,
     details: ''
   });
-  
+
   // Track processed message IDs to prevent duplicates
   const processedMessageIds = useRef<Set<string>>(new Set());
-  
+
   const waitingStartRef = useRef<number | null>(null);
   const subscriptionRef = useRef<string | null>(null);
 
@@ -75,7 +75,7 @@ export function ChatLayout() {
   const addMessage = (messageData: Omit<Message, 'id'>) => {
     console.log('📝 addMessage called with:', messageData.role, messageData.content.slice(0, 50) + '...');
     console.log('🔍 Current conversation before adding:', !!currentConversationRef.current, 'ID:', currentConversationRef.current?.id);
-    
+
     const newMessage: Message = {
       ...messageData,
       id: Date.now().toString()
@@ -88,7 +88,7 @@ export function ChatLayout() {
         messages: [...currentConversationRef.current.messages, newMessage]
       };
       setCurrentConversation(updatedConversation);
-      setConversations(prev => 
+      setConversations(prev =>
         prev.map(conv => conv.id === updatedConversation.id ? updatedConversation : conv)
       );
       console.log('✅ Conversation updated, new message count:', updatedConversation.messages.length);
@@ -157,12 +157,12 @@ export function ChatLayout() {
   // Create refs to access current state in callbacks
   const currentConversationRef = useRef(currentConversation);
   const conversationsRef = useRef(conversations);
-  
+
   // Update refs when state changes
   useEffect(() => {
     currentConversationRef.current = currentConversation;
   }, [currentConversation]);
-  
+
   useEffect(() => {
     conversationsRef.current = conversations;
   }, [conversations]);
@@ -217,7 +217,7 @@ export function ChatLayout() {
           // Handle AI responses from the WebSocket server
           console.log('🤖 Processing ai_response:', message);
           console.log('🔍 Current conversation state from ref:', !!currentConversationRef.current, 'messages:', currentConversationRef.current?.messages?.length || 0);
-          
+
           // Check for duplicate messages
           const messageId = message.payload?.id || message.timestamp || Date.now().toString();
           if (processedMessageIds.current.has(messageId)) {
@@ -225,7 +225,7 @@ export function ChatLayout() {
             break;
           }
           processedMessageIds.current.add(messageId);
-          
+
           if (message.payload && message.payload.response) {
             const newMessage: Omit<Message, 'id'> = {
               content: message.payload.response,
@@ -233,7 +233,7 @@ export function ChatLayout() {
               timestamp: new Date(),
               files: message.payload.files || []
             };
-            
+
             console.log('📝 Adding AI message to conversation:', newMessage.content.slice(0, 50) + '...');
             addMessage(newMessage);
             console.log('✅ AI response added to conversation');
@@ -259,15 +259,87 @@ export function ChatLayout() {
           break;
 
         case 'analysis_start':
+          console.log('🚀 Analysis started:', message.analysis_id);
           setShowAnalysisDisplay(true);
           setIsAnalyzing(true);
+          setIsTyping(true);
+          waitingStartRef.current = Date.now();
           break;
 
         case 'analysis_complete':
+          console.log('✅ Analysis complete:', message.result);
           setIsAnalyzing(false);
+          setIsTyping(false);
+          waitingStartRef.current = null;
+          setWaitingTime(0);
+
+          // Create a comprehensive AI response from the analysis results
+          if (message.result) {
+            const result = message.result;
+            let responseContent = `🎯 **Analysis Complete**\n\n`;
+
+            if (result.analysis_type) {
+              responseContent += `**Type:** ${result.analysis_type.replace('_', ' ').toUpperCase()}\n`;
+            }
+
+            if (result.prompt_complexity) {
+              responseContent += `**Complexity:** ${result.prompt_complexity}\n`;
+            }
+
+            if (result.word_count) {
+              responseContent += `**Word Count:** ${result.word_count}\n`;
+            }
+
+            if (result.insights && result.insights.length > 0) {
+              responseContent += `\n**Key Insights:**\n`;
+              result.insights.forEach((insight, index) => {
+                responseContent += `${index + 1}. ${insight}\n`;
+              });
+            }
+
+            // Add any additional result data
+            if (result.score !== undefined) {
+              responseContent += `\n**Security Score:** ${result.score}/100\n`;
+            }
+
+            if (result.status) {
+              responseContent += `\n**Status:** ${result.status}\n`;
+            }
+
+            const analysisMessage: Omit<Message, 'id'> = {
+              content: responseContent,
+              role: 'assistant',
+              timestamp: new Date(),
+              files: []
+            };
+
+            addMessage(analysisMessage);
+          }
+
           if (message.pdfUrl) {
             handlePdfGenerated(message.pdfUrl);
           }
+          break;
+
+        case 'log':
+          // Handle real-time analysis logs
+          if (message.level && message.message) {
+            console.log(`📋 [${message.level.toUpperCase()}] ${message.message}`);
+
+            // For important logs, show them as processing status
+            if (message.level === 'info' || message.level === 'warning' || message.level === 'success') {
+              setProcessingStatus({
+                isProcessing: true,
+                currentStep: message.message,
+                progress: 0,
+                details: `${message.level.toUpperCase()} - Real-time analysis`
+              });
+            }
+          }
+          break;
+
+        case 'connection':
+          console.log('🔗 Connection status:', message.message);
           break;
 
         case 'queue_cleared':
@@ -347,7 +419,7 @@ export function ChatLayout() {
   // Waiting time counter effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     if (isTyping && waitingStartRef.current) {
       interval = setInterval(() => {
         if (waitingStartRef.current) {
@@ -413,7 +485,7 @@ export function ChatLayout() {
       console.log('📡 Sending message via WebSocket service...');
       const success = webSocketService.sendChatMessage(content);
       console.log('📡 WebSocket send result:', success);
-      
+
       if (!success) {
         console.error('❌ Failed to send message via WebSocket');
       }
