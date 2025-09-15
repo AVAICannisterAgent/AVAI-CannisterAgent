@@ -1,5 +1,5 @@
-// Browser Agent - Motoko Implementation
-// Handles web automation and browser-based tasks
+// Browser Agent - Motoko Implementation with Cloudflare Tunnel Integration
+// Handles web automation coordination via Cloudflare → Docker → Host
 
 import Debug "mo:base/Debug";
 import Time "mo:base/Time";
@@ -10,6 +10,10 @@ import Text "mo:base/Text";
 import Types "../core/types";
 
 actor BrowserAgent {
+    
+    // Cloudflare tunnel endpoints for communication
+    private let CLOUDFLARE_DOCKER_ENDPOINT = "https://docker.avai.life/docker/process";
+    private let CLOUDFLARE_HOST_ENDPOINT = "https://host.avai.life/host/process";
     
     // Browser action types
     public type BrowserAction = {
@@ -30,6 +34,8 @@ actor BrowserAgent {
         status: Text;
         pythonCommand: Text;
         executionRequired: Bool;
+        cloudflareEndpoint: Text;
+        communicationFlow: Text;
     };
     
     // Agent configuration
@@ -46,82 +52,93 @@ actor BrowserAgent {
         
         switch (action) {
             case (#Navigate(url)) {
-                // REAL: Coordinate navigation and delegate to Python
+                // REAL: Coordinate navigation via Cloudflare → Docker → Host
                 {
                     success = true;
-                    message = "Navigation coordinated, delegating to Python execution layer";
+                    message = "Navigation coordinated via Cloudflare tunnel to Docker middleware";
                     data = ?url;
                     screenshot = null;
                     timestamp = timestamp;
-                    // NOTE: Python layer will handle actual browser automation
-                    status = "ready_for_python_handoff";
+                    status = "ready_for_cloudflare_routing";
                     pythonCommand = "browser_tool.navigate(" # url # ")";
                     executionRequired = true;
+                    cloudflareEndpoint = CLOUDFLARE_HOST_ENDPOINT;
+                    communicationFlow = "Motoko → Cloudflare → Docker → Host";
                 }
             };
             case (#Click(selector)) {
-                // REAL: Coordinate click and delegate to Python
+                // REAL: Coordinate click via Cloudflare → Docker → Host
                 {
                     success = true;
-                    message = "Click action coordinated, delegating to Python";
+                    message = "Click action coordinated via Cloudflare tunnel";
                     data = ?selector;
                     screenshot = null;
                     timestamp = timestamp;
-                    status = "ready_for_python_handoff";
+                    status = "ready_for_cloudflare_routing";
                     pythonCommand = "browser_tool.click('" # selector # "')";
                     executionRequired = true;
+                    cloudflareEndpoint = CLOUDFLARE_HOST_ENDPOINT;
+                    communicationFlow = "Motoko → Cloudflare → Docker → Host";
                 }
             };
             case (#Type({selector; text})) {
-                // REAL: Coordinate typing and delegate to Python
+                // REAL: Coordinate typing via Cloudflare → Docker → Host
                 {
                     success = true;
-                    message = "Type action coordinated, delegating to Python";
+                    message = "Type action coordinated via Cloudflare tunnel";
                     data = ?text;
                     screenshot = null;
                     timestamp = timestamp;
-                    status = "ready_for_python_handoff";
+                    status = "ready_for_cloudflare_routing";
                     pythonCommand = "browser_tool.type('" # selector # "', '" # text # "')";
                     executionRequired = true;
+                    cloudflareEndpoint = CLOUDFLARE_HOST_ENDPOINT;
+                    communicationFlow = "Motoko → Cloudflare → Docker → Host";
                 }
             };
             case (#Extract(selector)) {
-                // REAL: Coordinate extraction and delegate to Python
+                // REAL: Coordinate extraction via Cloudflare → Docker → Host
                 {
                     success = true;
-                    message = "Data extraction coordinated, delegating to Python";
+                    message = "Data extraction coordinated via Cloudflare tunnel";
                     data = ?selector;
                     screenshot = null;
                     timestamp = timestamp;
-                    status = "ready_for_python_handoff";
+                    status = "ready_for_cloudflare_routing";
                     pythonCommand = "browser_tool.extract('" # selector # "')";
                     executionRequired = true;
+                    cloudflareEndpoint = CLOUDFLARE_HOST_ENDPOINT;
+                    communicationFlow = "Motoko → Cloudflare → Docker → Host";
                 }
             };
             case (#Screenshot) {
-                // REAL: Coordinate screenshot and delegate to Python
+                // REAL: Coordinate screenshot via Cloudflare → Docker → Host
                 {
                     success = true;
-                    message = "Screenshot capture coordinated, delegating to Python";
+                    message = "Screenshot capture coordinated via Cloudflare tunnel";
                     data = null;
                     screenshot = null;
                     timestamp = timestamp;
-                    status = "ready_for_python_handoff";
+                    status = "ready_for_cloudflare_routing";
                     pythonCommand = "browser_tool.screenshot()";
                     executionRequired = true;
+                    cloudflareEndpoint = CLOUDFLARE_HOST_ENDPOINT;
+                    communicationFlow = "Motoko → Cloudflare → Docker → Host";
                 }
             };
             case (#WaitForElement(selector)) {
-                // REAL: Coordinate waiting and delegate to Python
+                // REAL: Coordinate waiting via Cloudflare → Docker → Host
                 {
                     success = true;
-                    message = "Wait action coordinated, delegating to Python";
+                    message = "Wait action coordinated via Cloudflare tunnel";
                     data = ?selector;
                     screenshot = null;
                     timestamp = timestamp;
-                    status = "ready_for_python_handoff";
+                    status = "ready_for_cloudflare_routing";
                     pythonCommand = "browser_tool.wait_for_element('" # selector # "')";
                     executionRequired = true;
+                    cloudflareEndpoint = CLOUDFLARE_HOST_ENDPOINT;
+                    communicationFlow = "Motoko → Cloudflare → Docker → Host";
                 }
             };
         }

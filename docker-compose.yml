@@ -22,6 +22,39 @@ services:
           memory: 300M
           cpus: '0.5'
 
+  # Docker Middleware - Handles Motoko → Docker → Host communication
+  docker-middleware:
+    build:
+      context: .
+      dockerfile: docker/middleware/Dockerfile
+    container_name: avai-docker-middleware
+    restart: unless-stopped
+    ports:
+      - "8082:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PORT=8080
+      - PYTHONUNBUFFERED=1
+      - CONTAINER_TYPE=middleware
+    networks:
+      - avai-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.8'
+
   # WebSocket server - Minimal for real-time communication
   websocket-server:
     build:
@@ -139,6 +172,41 @@ services:
           memory: 100M
           cpus: '0.2'
 
+  # Automated Docker Host Service - Handles GitHub repo analysis and web automation
+  docker-host-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.host
+    container_name: avai-docker-host
+    restart: unless-stopped
+    ports:
+      - "8083:8082"
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - DISPLAY=:99
+      - CHROME_BIN=/usr/bin/chromium
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/workspace/data
+      - ./logs:/workspace/logs
+      - ./screenshots:/workspace/screenshots
+    networks:
+      - avai-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.8'
+
   # Containerized AVAI Processor - Runs main_enhanced.py in container
   avai-processor:
     build:
@@ -153,10 +221,13 @@ services:
         condition: service_healthy
       host-automation:
         condition: service_started
+      docker-host-service:
+        condition: service_healthy
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - WEBSOCKET_URL=ws://websocket-server:8080/ws
+      - DOCKER_HOST_URL=http://docker-host-service:8082
       - PYTHONUNBUFFERED=1
       - PYTHONIOENCODING=utf-8
       - OLLAMA_HOST=host.docker.internal:11434
