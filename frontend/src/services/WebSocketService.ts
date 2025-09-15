@@ -6,9 +6,12 @@ interface WebSocketMessage {
   'heartbeat' | 'error' | 'connected' | 'welcome' | 'log_summary' | 'stored_logs' |
   'log_update' | 'message' | 'file' | 'typing' | 'ping' | 'pong' | 'queue_cleared' |
   'queue_status_update' | 'system_status' | 'audit_progress' | 'processing_status' |
-  'log_broadcast';
+  'log_broadcast' | 'analysis_request' | 'analysis_start' | 'analysis_complete' | 'log';
   payload?: any;
   message?: string;
+  prompt?: string;
+  analysis_type?: string;
+  repo_context?: string;
   timestamp?: string;
   source?: string;
   clientId?: string;
@@ -325,9 +328,11 @@ class WebSocketService {
 
   public sendChatMessage(message: string): boolean {
     return this.sendMessage({
-      type: 'chat_message',
-      message: message.trim(),
-      source: 'react_frontend'
+      type: 'analysis_request',
+      prompt: message.trim(),
+      source: 'react_frontend',
+      analysis_type: 'chat',
+      repo_context: 'User chat message - general AI assistance request'
     });
   }
 
