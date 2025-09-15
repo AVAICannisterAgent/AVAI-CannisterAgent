@@ -1,12 +1,12 @@
-import { Stethoscope, Activity, Shield, GitBranch, Search, FileCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Activity, FileCode, GitBranch, Shield, Stethoscope } from "lucide-react";
 
 export const WelcomeScreen = () => {
   const handleRepositoryAnalysis = () => {
-    // This will send a message to analyze the MockRepoForDemo with live fetching
-    const message = "FETCH_ANALYSIS_FROM_FILE:realistic_analysis_output.txt";
-    
-    // Trigger the chat input with file-based analysis
+    // Send a real analysis request through WebSocket
+    const message = "Please analyze the MockRepoForDemo repository - provide a comprehensive security audit and code analysis.";
+
+    // Trigger the chat input with real analysis request
     const event = new CustomEvent('avai-send-message', { detail: { message } });
     window.dispatchEvent(event);
   };
@@ -29,7 +29,7 @@ export const WelcomeScreen = () => {
         <h1 className="text-3xl font-bold text-foreground mb-3">
           Welcome to <span className="text-blue-400 font-extrabold drop-shadow-glow">AVAI</span>
         </h1>
-        
+
         <p className="text-foreground/90 text-lg mb-6 leading-relaxed">
           Advanced AI-powered blockchain security auditing and code analysis platform.
         </p>
