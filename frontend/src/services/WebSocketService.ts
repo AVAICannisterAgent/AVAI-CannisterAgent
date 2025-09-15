@@ -61,16 +61,9 @@ class WebSocketService {
 
     // Always use production WebSocket URL through Cloudflare tunnel
     const getWebSocketUrl = () => {
-      const envUrl = import.meta.env.VITE_WEBSOCKET_URL;
-      if (envUrl) {
-        console.log('🔧 Using WebSocket URL from environment:', envUrl);
-        return envUrl;
-      }
-
-      // Always use production WebSocket URL (websocket.avai.life via Cloudflare tunnel)
+      // Always use production WebSocket URL - no localhost fallback
       const url = 'wss://websocket.avai.life/ws';
-
-      console.log('🔧 Using production WebSocket URL:', url);
+      console.log('🔧 Using production WebSocket URL (forced):', url);
       return url;
     };
 

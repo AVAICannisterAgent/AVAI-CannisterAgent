@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WebSocket Frontend Debug</title>
+</head>
+
+<body>
+    <h1>AVAI Frontend WebSocket Debug</h1>
+    <div id="status">Connecting...</div>
+    <div id="logs"></div>
+    <input type="text" id="messageInput" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send Message</button>
+
+    <script>
+        const logsDiv = document.getElementById('logs');
+        const statusDiv = document.getElementById('status');
+
+        function log(message) {
+            console.log(message);
+            logsDiv.innerHTML += '<div>' + new Date().toLocaleTimeString() + ': ' + message + '</div>';
+        }
+
+        // Test WebSocket connection
+        const clientId = `debug_client_${Date.now()}`;
+        const wsUrl = `wss://websocket.avai.life/ws?type=dashboard&client_id=${clientId}`;
+
+        log('🔌 Connecting to: ' + wsUrl);
+
+        const ws = new WebSocket(wsUrl);
+
+        ws.onopen = function () {
+            log('✅ WebSocket connected!');
+            statusDiv.textContent = 'Connected';
+            statusDiv.style.color = 'green';
+        };
+
+        ws.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            log('📥 Received: ' + data.type + ' - ' + (data.message || JSON.stringify(data)));
+        };
+
+        ws.onerror = function (error) {
+            log('❌ WebSocket error: ' + error);
+            statusDiv.textContent = 'Error';
+            statusDiv.style.color = 'red';
+        };
+
+        ws.onclose = function () {
+            log('🔌 WebSocket closed');
+            statusDiv.textContent = 'Disconnected';
+            statusDiv.style.color = 'red';
+        };
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value;
+            if (message && ws.readyState === WebSocket.OPEN) {
+                const payload = {
+                    type: 'analysis_request',
+                    prompt: message,
+                    client_id: clientId,
+                    timestamp: new Date().toISOString()
+                };
+
+                log('📤 Sending: ' + message);
+                ws.send(JSON.stringify(payload));
+                input.value = '';
+            } else {
+                log('❌ Cannot send - WebSocket not open or no message');
+            }
+        }
+
+        // Send message on Enter key
+        document.getElementById('messageInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+
+</html>

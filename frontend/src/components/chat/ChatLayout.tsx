@@ -169,7 +169,18 @@ export function ChatLayout() {
 
   // WebSocket connection effect
   useEffect(() => {
+    console.log('🔗 ChatLayout WebSocket useEffect mounted');
+    console.log('🔧 WebSocket Service Initial State:', {
+      isConnected: webSocketService.getIsConnected(),
+      clientId: webSocketService.getClientId(),
+      connectionState: webSocketService.connectionState
+    });
+
     const handleConnectionChange = () => {
+      console.log('🔄 Connection state changed:', {
+        isConnected: webSocketService.getIsConnected(),
+        isReconnecting: webSocketService.getIsReconnecting()
+      });
       setConnectionStatus({
         isConnected: webSocketService.getIsConnected(),
         isReconnecting: webSocketService.getIsReconnecting(),
@@ -267,47 +278,69 @@ export function ChatLayout() {
           break;
 
         case 'analysis_complete':
-          console.log('✅ Analysis complete:', message.result);
+          console.log('✅ Analysis complete:', message);
           setIsAnalyzing(false);
           setIsTyping(false);
           waitingStartRef.current = null;
           setWaitingTime(0);
 
-          // Create a comprehensive AI response from the analysis results
+          // Use the complete dynamic analysis result from the WebSocket
           if (message.result) {
             const result = message.result;
-            let responseContent = `🎯 **Analysis Complete**\n\n`;
 
-            if (result.analysis_type) {
-              responseContent += `**Type:** ${result.analysis_type.replace('_', ' ').toUpperCase()}\n`;
+            // Use the pre-formatted analysis content from the server
+            let responseContent = result.content || result.result || '';
+
+            // If no pre-formatted content, build it from components (fallback)
+            if (!responseContent) {
+              responseContent = `🎯 **Analysis Complete**\n\n`;
+              const typeDisplay = result.analysis_type ? result.analysis_type.replace('_', ' ').toUpperCase() : 'ANALYSIS';
+              const complexityDisplay = result.prompt_complexity || 'STANDARD';
+              const wordCountDisplay = result.word_count || '-';
+
+              responseContent += `**${typeDisplay}** | Complexity: ${complexityDisplay} | Words: ${wordCountDisplay}\n\n`;
+
+              if (result.insights && result.insights.length > 0) {
+                responseContent += `**Key Insights:**\n`;
+                result.insights.forEach((insight, index) => {
+                  responseContent += `• ${insight}\n`;
+                });
+              }
+
+              if (result.score !== undefined) {
+                responseContent += `\n**Security Score:** ${result.score}/100\n`;
+              }
+
+              if (result.status) {
+                responseContent += `\n**Status:** ${result.status}\n`;
+              }
+
+              if (result.recommendations && result.recommendations.length > 0) {
+                responseContent += `\n**Recommendations:**\n`;
+                result.recommendations.forEach((rec, index) => {
+                  responseContent += `${index + 1}. ${rec}\n`;
+                });
+              }
+
+              if (result.summary) {
+                responseContent += `\n**Summary:**\n${result.summary}\n`;
+              }
             }
 
-            if (result.prompt_complexity) {
-              responseContent += `**Complexity:** ${result.prompt_complexity}\n`;
-            }
-
-            if (result.word_count) {
-              responseContent += `**Word Count:** ${result.word_count}\n`;
-            }
-
-            if (result.insights && result.insights.length > 0) {
-              responseContent += `\n**Key Insights:**\n`;
-              result.insights.forEach((insight, index) => {
-                responseContent += `${index + 1}. ${insight}\n`;
-              });
-            }
-
-            // Add any additional result data
-            if (result.score !== undefined) {
-              responseContent += `\n**Security Score:** ${result.score}/100\n`;
-            }
-
-            if (result.status) {
-              responseContent += `\n**Status:** ${result.status}\n`;
-            }
+            console.log('📋 Using analysis content:', responseContent.substring(0, 200) + '...');
 
             const analysisMessage: Omit<Message, 'id'> = {
               content: responseContent,
+              role: 'assistant',
+              timestamp: new Date(),
+              files: []
+            };
+
+            addMessage(analysisMessage);
+          } else {
+            // Fallback if no result data - show the raw message
+            const analysisMessage: Omit<Message, 'id'> = {
+              content: `Analysis completed!\n\n${JSON.stringify(message, null, 2)}`,
               role: 'assistant',
               timestamp: new Date(),
               files: []
@@ -319,9 +352,7 @@ export function ChatLayout() {
           if (message.pdfUrl) {
             handlePdfGenerated(message.pdfUrl);
           }
-          break;
-
-        case 'log':
+          break; case 'log':
           // Handle real-time analysis logs
           if (message.level && message.message) {
             console.log(`📋 [${message.level.toUpperCase()}] ${message.message}`);

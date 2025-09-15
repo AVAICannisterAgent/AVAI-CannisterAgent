@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { FileText, Download, ExternalLink, Clock, CheckCircle } from 'lucide-react';
+import { CheckCircle, Download, FileText } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import { PdfViewer } from './PdfViewer';
 
 interface LogEntry {
@@ -70,7 +69,7 @@ export const StreamingAnalysisDisplay: React.FC<StreamingAnalysisDisplayProps> =
         setFinalReport('');
         setPdfGenerated(false);
         setShowPdfViewer(false);
-        
+
         // Log queue clearing if it happened
         if (payload?.queueCleared) {
           setLogs(prevLogs => [...prevLogs, {
@@ -104,14 +103,14 @@ export const StreamingAnalysisDisplay: React.FC<StreamingAnalysisDisplayProps> =
             source: payload.source,
             clientId: payload.clientId
           };
-          
+
           setLogs(prevLogs => {
             // Avoid duplicate logs
-            const isDuplicate = prevLogs.some(log => 
-              log.timestamp === newLog.timestamp && 
+            const isDuplicate = prevLogs.some(log =>
+              log.timestamp === newLog.timestamp &&
               log.message === newLog.message
             );
-            
+
             if (!isDuplicate) {
               return [...prevLogs, newLog];
             }
@@ -136,14 +135,14 @@ export const StreamingAnalysisDisplay: React.FC<StreamingAnalysisDisplayProps> =
         // Final analysis result from your AI backend
         if (payload) {
           const responseText = payload.response || payload.message || message;
-          
+
           // Check if this is HTML content (SPA fallback) and handle it
           if (responseText && !responseText.trim().startsWith('<!DOCTYPE html>')) {
             setFinalReport(responseText);
             setAnalysisComplete(true);
             setPdfGenerated(true);
             onAnalysisComplete();
-            
+
             // Add completion log
             setLogs(prevLogs => [...prevLogs, {
               timestamp: new Date().toISOString(),
@@ -187,7 +186,7 @@ export const StreamingAnalysisDisplay: React.FC<StreamingAnalysisDisplayProps> =
   // Generate fallback report when needed
   const generateFallbackReport = (repoUrl: string): string => {
     const repoName = repoUrl.split('/').pop() || 'repository';
-    
+
     return `# AVAI Security Audit Report
 
 ## Repository Analysis
@@ -231,15 +230,15 @@ For detailed findings and recommendations, please download the complete PDF repo
     onPdfClick();
   };
 
-  // Get log level color
+  // Get log level color (compact version)
   const getLogLevelColor = (level: string) => {
     switch (level) {
-      case 'ERROR': return 'bg-red-100 text-red-800 border-red-200';
-      case 'WARNING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'SUCCESS': return 'bg-green-100 text-green-800 border-green-200';
-      case 'INFO': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'DEBUG': return 'bg-gray-100 text-gray-800 border-gray-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'ERROR': return 'bg-red-500 text-white';
+      case 'WARNING': return 'bg-yellow-500 text-black';
+      case 'SUCCESS': return 'bg-green-500 text-white';
+      case 'INFO': return 'bg-blue-500 text-white';
+      case 'DEBUG': return 'bg-gray-500 text-white';
+      default: return 'bg-gray-500 text-white';
     }
   };
 
@@ -263,30 +262,30 @@ For detailed findings and recommendations, please download the complete PDF repo
   }
 
   return (
-    <div 
-      className="w-full max-w-4xl mx-auto space-y-6 p-4 bg-background rounded-lg border border-border analysis-container force-scroll"
-      style={{ 
-        maxHeight: '600px', 
+    <div
+      className="w-full max-w-4xl mx-auto space-y-4 p-3 bg-background rounded-lg border border-border analysis-container force-scroll"
+      style={{
+        maxHeight: '500px',
         overflowY: 'auto',
         overflowX: 'hidden'
       }}
     >
-      {/* Header - Sticky */}
-      <div className="text-center space-y-2 sticky top-0 bg-background pb-4 border-b border-border z-10">
-        <h2 className="text-2xl font-bold text-foreground">
-          AVAI Security Audit Analysis
-        </h2>
-        <p className="text-muted-foreground">
-          Real-time analysis of: <span className="font-mono text-primary">{repositoryUrl}</span>
+      {/* Compact Header */}
+      <div className="text-center space-y-1 sticky top-0 bg-background pb-2 border-b border-border z-10">
+        <h3 className="text-lg font-bold text-foreground">
+          AVAI Security Audit
+        </h3>
+        <p className="text-sm text-muted-foreground truncate">
+          {repositoryUrl}
         </p>
       </div>
 
       {/* Scrollable Content */}
-      <div className="space-y-6 pb-4">
+      <div className="space-y-3 pb-2">
         {/* Progress Indicator */}
         {analysisProgress && (
           <Card className="border-primary/20 bg-primary/5">
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-medium text-foreground">{analysisProgress.stage}</span>
                 <span className="text-sm text-muted-foreground">{analysisProgress.percentage}%</span>
@@ -297,75 +296,71 @@ For detailed findings and recommendations, please download the complete PDF repo
                   style={{ width: `${analysisProgress.percentage}%` }}
                 />
               </div>
-            {analysisProgress.message && (
-              <p className="text-sm text-blue-800 mt-2">{analysisProgress.message}</p>
-            )}
+              {analysisProgress.message && (
+                <p className="text-sm text-blue-800 mt-2">{analysisProgress.message}</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Compact Real-time Logs */}
+        <Card>
+          <CardContent className="p-0">
+            <div className="bg-gray-900 text-green-400 p-2 rounded-t-lg">
+              <h4 className="text-sm font-bold flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                Live Analysis Logs
+              </h4>
+            </div>
+
+            <div
+              className="bg-black text-xs font-mono analysis-logs force-scroll p-2"
+              style={{
+                maxHeight: '280px',
+                overflowY: 'auto',
+                overflowX: 'hidden'
+              }}
+            >
+              {logs.length === 0 ? (
+                <div className="text-gray-500">
+                  <div className="text-center mb-2">waiting for analysis to begin...</div>
+                  <div className="space-y-1 opacity-50">
+                    <div>🟢 waiting for analysis to begin...</div>
+                    <div>� Initializing security audit process...</div>
+                    <div>� Loading vulnerability detection...</div>
+                    <div>� Preparing blockchain security checks...</div>
+                    <div>🟢 Configuring real-time monitoring...</div>
+                    <div>� Setting up cryptographic validation...</div>
+                    <div>� Enabling ICP network diagnostics...</div>
+                    <div>🟢 Loading AI network schedulers...</div>
+                    <div>� Analyzing smart contract...</div>
+                    <div>✏️ Ready for analysis</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-2 space-y-1">
+                  {logs.map((log, index) => (
+                    <div key={index} className="flex items-start gap-2 text-xs">
+                      <span className="text-gray-500 text-xs">
+                        {formatTimestamp(log.timestamp).slice(-8)}
+                      </span>
+                      <span className={`px-1 rounded text-xs ${getLogLevelColor(log.level)}`}>
+                        {log.level.charAt(0)}
+                      </span>
+                      <span className="text-blue-400 text-xs">
+                        [{log.component}]
+                      </span>
+                      <span className="text-green-400 flex-1 break-words text-xs">
+                        {log.message}
+                      </span>
+                    </div>
+                  ))}
+                  <div ref={logsEndRef} />
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
-      )}
-
-      {/* Real-time Logs */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="bg-gray-900 text-green-400 p-4 rounded-t-lg">
-            <h3 className="font-bold flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              Live Analysis Logs
-            </h3>
-          </div>
-          
-          <div 
-            className="bg-black text-sm font-mono analysis-logs force-scroll"
-            style={{ 
-              maxHeight: '320px', 
-              overflowY: 'auto',
-              overflowX: 'hidden'
-            }}
-          >
-            {logs.length === 0 ? (
-              <div className="p-4 text-gray-500 text-center">
-                <div>Waiting for analysis to begin...</div>
-                {/* Add some test content to ensure scrolling is visible */}
-                <div className="mt-4 text-xs opacity-50">
-                  <div>🔍 Initializing security analysis engine...</div>
-                  <div>📊 Loading vulnerability database...</div>
-                  <div>🛡️ Preparing blockchain security checks...</div>
-                  <div>⚡ Configuring real-time monitoring...</div>
-                  <div>🔐 Setting up cryptographic validation...</div>
-                  <div>📈 Initializing performance metrics...</div>
-                  <div>🌐 Connecting to IC network endpoints...</div>
-                  <div>🧪 Loading test frameworks...</div>
-                  <div>📋 Preparing audit checklist...</div>
-                  <div>🚀 Ready to begin comprehensive analysis...</div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-4 space-y-2">
-                {logs.map((log, index) => (
-                  <div key={index} className="flex items-start gap-3 text-xs">
-                    <span className="text-gray-500 whitespace-nowrap">
-                      {formatTimestamp(log.timestamp)}
-                    </span>
-                    <Badge 
-                      variant="outline" 
-                      className={`text-xs px-2 py-0 ${getLogLevelColor(log.level)}`}
-                    >
-                      {log.level}
-                    </Badge>
-                    <span className="text-blue-400 min-w-0">
-                      [{log.component}]
-                    </span>
-                    <span className="text-green-400 flex-1 min-w-0 break-words">
-                      {log.message}
-                    </span>
-                  </div>
-                ))}
-                <div ref={logsEndRef} />
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
         {/* Analysis Complete Section */}
         {analysisComplete && (
@@ -376,7 +371,7 @@ For detailed findings and recommendations, please download the complete PDF repo
                   <CheckCircle className="w-6 h-6" />
                   <h3 className="text-xl font-bold">Analysis Complete!</h3>
                 </div>
-                
+
                 <p className="text-foreground">
                   Your security audit has been completed. The comprehensive report is ready for review.
                 </p>
@@ -389,7 +384,7 @@ For detailed findings and recommendations, please download the complete PDF repo
                     <FileText className="w-4 h-4" />
                     View PDF Report
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     onClick={() => {
@@ -414,10 +409,10 @@ For detailed findings and recommendations, please download the complete PDF repo
                     <summary className="cursor-pointer text-primary hover:text-primary-hover font-medium">
                       Preview Report Content
                     </summary>
-                    <div 
+                    <div
                       className="mt-2 p-4 bg-muted rounded border text-sm text-foreground analysis-report-preview force-scroll"
-                      style={{ 
-                        maxHeight: '160px', 
+                      style={{
+                        maxHeight: '160px',
                         overflowY: 'auto',
                         overflowX: 'hidden'
                       }}
@@ -433,16 +428,16 @@ For detailed findings and recommendations, please download the complete PDF repo
             </CardContent>
           </Card>
         )}      {/* Status Footer */}
-      <div className="text-center text-sm text-muted-foreground">
-        {isAnalyzing ? (
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
-            Connected to AVAI analysis engine...
-          </div>
-        ) : (
-          <div>Ready for analysis</div>
-        )}
-      </div>
+        <div className="text-center text-sm text-muted-foreground">
+          {isAnalyzing ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" />
+              Connected to AVAI analysis engine...
+            </div>
+          ) : (
+            <div>Ready for analysis</div>
+          )}
+        </div>
       </div> {/* Close scrollable content div */}
     </div>
   );
