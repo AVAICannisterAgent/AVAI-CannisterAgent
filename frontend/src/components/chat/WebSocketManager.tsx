@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
-import { useWebSocket } from "@/hooks/useWebSocket";
 import { useToast } from "@/hooks/use-toast";
-import type { Message, Conversation } from "./ChatLayout";
+import { useWebSocket } from "@/hooks/useWebSocket";
+import { useEffect } from "react";
+import type { Conversation, Message } from "./ChatLayout";
 
 interface WebSocketManagerProps {
   onTypingChange: (isTyping: boolean) => void;
@@ -19,7 +19,7 @@ export const useWebSocketManager = ({
   currentConversation
 }: WebSocketManagerProps) => {
   const { toast } = useToast();
-  
+
   // Environment-based WebSocket URL configuration
   const getWebSocketUrl = () => {
     const envUrl = import.meta.env.VITE_WEBSOCKET_URL;
@@ -27,38 +27,32 @@ export const useWebSocketManager = ({
       console.log('🔧 WebSocketManager using URL from environment:', envUrl);
       return envUrl;
     }
-    
-    // Fallback logic for development vs production
-    const isDevelopment = import.meta.env.DEV || 
-                         window.location.hostname === 'localhost' || 
-                         window.location.hostname === '127.0.0.1';
-    
-    const url = isDevelopment 
-      ? 'ws://localhost:8080/ws'
-      : 'wss://websocket.avai.life/ws';
-      
-    console.log('🔧 WebSocketManager using fallback URL:', url, 'isDevelopment:', isDevelopment);
+
+    // Always use production WebSocket URL through Cloudflare tunnel
+    const url = 'wss://websocket.avai.life/ws';
+
+    console.log('🔧 WebSocketManager using production WebSocket URL:', url);
     return url;
   };
 
   const WEBSOCKET_URL = getWebSocketUrl();
-  
+
   const { isConnected, isReconnecting, sendMessage: wssSendMessage, subscribe, clientId } = useWebSocket(WEBSOCKET_URL);
 
   // Subscribe to WebSocket messages
   useEffect(() => {
     console.log('🔄 Setting up WebSocket subscription...');
     console.log('🆔 Client ID for this connection:', clientId);
-    
+
     subscribe((data) => {
       console.log('📨 WebSocket message received:', data.type);
-      
+
       switch (data.type) {
         case 'heartbeat':
           console.log('💓 Heartbeat received');
           onHeartbeat(new Date());
           break;
-          
+
         case 'chat_queued':
           console.log('📤 Message queued for processing');
           onTypingChange(true);
@@ -67,18 +61,18 @@ export const useWebSocketManager = ({
             description: "Your blockchain diagnosis is in progress!",
           });
           break;
-        
+
         case 'ai_response':
           console.log('🤖 AVAI Response received!');
-          
+
           // Check if this response is for this client
           if (data.client_id && data.client_id !== clientId) {
             console.log('⏭️ Response not for this client, ignoring');
             return;
           }
-          
+
           onTypingChange(false);
-          
+
           if (currentConversation) {
             const aiMessage: Message = {
               id: Date.now().toString(),
@@ -93,20 +87,20 @@ export const useWebSocketManager = ({
             };
 
             onConversationUpdate(updatedConversation);
-            
+
             // Update conversations list
             onConversationsUpdate((prev: Conversation[]) => {
               const exists = prev.find(conv => conv.id === updatedConversation.id);
               if (!exists) {
                 return [updatedConversation, ...prev];
               }
-              return prev.map(conv => 
+              return prev.map(conv =>
                 conv.id === updatedConversation.id ? updatedConversation : conv
               );
             });
           }
           break;
-          
+
         case 'error':
           console.log('❌ WebSocket error received:', data.message);
           onTypingChange(false);
@@ -116,7 +110,7 @@ export const useWebSocketManager = ({
             variant: "destructive"
           });
           break;
-          
+
         default:
           console.log('📋 Unknown message type:', data.type);
       }

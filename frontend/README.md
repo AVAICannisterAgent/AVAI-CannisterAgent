@@ -96,11 +96,13 @@ This frontend is designed to work with AVAI canisters deployed on the Internet C
 
 ## Configuration
 
-Environment variables can be configured in `.env` files:
+Environment variables are configured to use production Cloudflare tunnel endpoints:
 
-- `VITE_WEBSOCKET_URL` - WebSocket server URL
-- `VITE_API_URL` - Backend API URL
+- `VITE_WEBSOCKET_URL` - WebSocket server URL (wss://websocket.avai.life/ws)
+- `VITE_API_URL` - Backend API URL (https://avai.life/api)
 - `VITE_CANISTER_ID` - Internet Computer canister ID
+
+**Note**: All endpoints use Cloudflare tunnel for production reliability and security.
 
 ## Contributing
 

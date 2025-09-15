@@ -2,11 +2,11 @@
 // Optimized for production with connection pooling and intelligent reconnection
 
 interface WebSocketMessage {
-  type: 'chat_message' | 'ai_response' | 'chat_queued' | 'chat_ack' | 'ai_response_ack' | 
-       'heartbeat' | 'error' | 'connected' | 'welcome' | 'log_summary' | 'stored_logs' | 
-       'log_update' | 'message' | 'file' | 'typing' | 'ping' | 'pong' | 'queue_cleared' | 
-       'queue_status_update' | 'system_status' | 'audit_progress' | 'processing_status' |
-       'log_broadcast';
+  type: 'chat_message' | 'ai_response' | 'chat_queued' | 'chat_ack' | 'ai_response_ack' |
+  'heartbeat' | 'error' | 'connected' | 'welcome' | 'log_summary' | 'stored_logs' |
+  'log_update' | 'message' | 'file' | 'typing' | 'ping' | 'pong' | 'queue_cleared' |
+  'queue_status_update' | 'system_status' | 'audit_progress' | 'processing_status' |
+  'log_broadcast';
   payload?: any;
   message?: string;
   timestamp?: string;
@@ -55,28 +55,22 @@ class WebSocketService {
   private constructor() {
     // Singleton pattern - only one WebSocket connection per app
     this.clientId = this.generatePersistentClientId();
-    
-    // Environment-based WebSocket URL configuration
+
+    // Always use production WebSocket URL through Cloudflare tunnel
     const getWebSocketUrl = () => {
       const envUrl = import.meta.env.VITE_WEBSOCKET_URL;
       if (envUrl) {
         console.log('🔧 Using WebSocket URL from environment:', envUrl);
         return envUrl;
       }
-      
-      // Fallback logic for development vs production
-      const isDevelopment = import.meta.env.DEV || 
-                           window.location.hostname === 'localhost' || 
-                           window.location.hostname === '127.0.0.1';
-      
-      const url = isDevelopment 
-        ? 'ws://localhost:8080/ws'
-        : 'wss://websocket.avai.life/ws';
-        
-      console.log('🔧 Using fallback WebSocket URL:', url, 'isDevelopment:', isDevelopment);
+
+      // Always use production WebSocket URL (websocket.avai.life via Cloudflare tunnel)
+      const url = 'wss://websocket.avai.life/ws';
+
+      console.log('🔧 Using production WebSocket URL:', url);
       return url;
     };
-    
+
     this.config = {
       url: getWebSocketUrl(),
       clientType: 'dashboard',
@@ -85,7 +79,7 @@ class WebSocketService {
       heartbeatIntervalMs: 45000, // Increased to reduce server load
       connectionTimeoutMs: 15000 // Reasonable timeout
     };
-    
+
     console.log('🚀 WebSocketService initialized with config:', this.config);
   }
 
@@ -100,12 +94,12 @@ class WebSocketService {
     // Use sessionStorage to persist client ID across page refreshes but not browser sessions
     const storageKey = 'avai_websocket_client_id';
     let clientId = sessionStorage.getItem(storageKey);
-    
+
     if (!clientId) {
       clientId = `avai_frontend_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       sessionStorage.setItem(storageKey, clientId);
     }
-    
+
     return clientId;
   }
 
@@ -228,7 +222,7 @@ class WebSocketService {
       const delay = Math.min(backoffMs, maxBackoff);
 
       console.log(`🔄 Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.config.maxReconnectAttempts})`);
-      
+
       this.reconnectTimeout = setTimeout(() => {
         this.reconnectAttempts++;
         this.connect();
@@ -304,7 +298,7 @@ class WebSocketService {
     if (!this.isConnected || !this.ws) {
       console.warn('⚠️ WebSocket not connected, queueing message');
       this.messageQueue.push(message);
-      
+
       // Try to reconnect if not already attempting
       if (!this.isConnecting) {
         this.connect();
@@ -339,7 +333,7 @@ class WebSocketService {
 
   public subscribe(callback: (message: WebSocketMessage) => void, filter?: (message: WebSocketMessage) => boolean): string {
     const subscriptionId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     this.subscriptions.set(subscriptionId, {
       id: subscriptionId,
       callback,
@@ -421,3 +415,4 @@ class WebSocketService {
 
 export default WebSocketService;
 export type { WebSocketMessage };
+

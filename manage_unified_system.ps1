@@ -108,7 +108,7 @@ function Deploy-Unified {
     # Show access URLs
     Write-Host "`n🌐 Access URLs:" -ForegroundColor Green
     Write-Host "🔗 Motoko Replica: http://localhost:4943" -ForegroundColor White
-    Write-Host "🔗 WebSocket Server: ws://localhost:8080" -ForegroundColor White
+    Write-Host "🔗 WebSocket Server: wss://websocket.avai.life/ws (Cloudflare Tunnel)" -ForegroundColor White
     Write-Host "🔗 Redis: redis://localhost:6379" -ForegroundColor White
     Write-Host "🔗 Motoko Frontend: http://localhost:8100" -ForegroundColor White
     

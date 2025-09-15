@@ -223,9 +223,8 @@ function Show-OptimizationReport {
     
     Write-Host "🌐 ACCESS POINTS:" -ForegroundColor Yellow
     Write-Host "  • Frontend: https://avai.life" -ForegroundColor Cyan
-    Write-Host "  • WebSocket: wss://websocket.avai.life/ws" -ForegroundColor Cyan
-    Write-Host "  • Local WebSocket: http://localhost:8080" -ForegroundColor Cyan
-    Write-Host "  • Health Check: http://localhost:8080/health" -ForegroundColor Cyan
+    Write-Host "  • WebSocket: wss://websocket.avai.life/ws (Production via Cloudflare)" -ForegroundColor Cyan
+    Write-Host "  • Local Container: http://localhost:8080/health (Docker health check)" -ForegroundColor Cyan
     Write-Host ""
 }
 

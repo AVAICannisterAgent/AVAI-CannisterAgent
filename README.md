@@ -54,6 +54,12 @@ dfx canister call avai_project_backend greet '("System Status Check")' --network
 
 ## Architecture
 
+**Production Infrastructure (Cloudflare Tunnel):**
+- **Frontend**: https://avai.life (React app via Cloudflare)
+- **WebSocket**: wss://websocket.avai.life/ws (Real-time communication)
+- **API Gateway**: https://avai.life/api (RESTful endpoints)
+- **Docker Backend**: Containerized Python middleware and agents
+
 **Multi-AI Security Orchestration:**
 - **Web Research Agent**: Threat intelligence and vulnerability database analysis
 - **Code Analysis Agent**: Static/dynamic code analysis and pattern recognition
