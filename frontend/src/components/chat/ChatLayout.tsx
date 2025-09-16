@@ -279,75 +279,62 @@ export function ChatLayout() {
 
         case 'analysis_complete':
           console.log('✅ Analysis complete:', message);
+          console.log('📋 Result object:', message.result);
           setIsAnalyzing(false);
           setIsTyping(false);
           waitingStartRef.current = null;
           setWaitingTime(0);
 
-          // Use the complete dynamic analysis result from the WebSocket
+          // Handle the AI response from our optimized server
           if (message.result) {
             const result = message.result;
 
-            // Use the pre-formatted analysis content from the server
-            let responseContent = result.content || result.result || '';
+            // Get the AI response - check multiple possible fields
+            let aiResponse = result.ai_response || result.content || result.result || '';
 
-            // If no pre-formatted content, build it from components (fallback)
-            if (!responseContent) {
-              responseContent = `🎯 **Analysis Complete**\n\n`;
-              const typeDisplay = result.analysis_type ? result.analysis_type.replace('_', ' ').toUpperCase() : 'ANALYSIS';
-              const complexityDisplay = result.prompt_complexity || 'STANDARD';
-              const wordCountDisplay = result.word_count || '-';
+            console.log('🤖 Processing AI response:', aiResponse ? 'FOUND' : 'NOT FOUND');
+            console.log('📝 AI Response preview:', aiResponse.substring(0, 100) + '...');
 
-              responseContent += `**${typeDisplay}** | Complexity: ${complexityDisplay} | Words: ${wordCountDisplay}\n\n`;
+            if (aiResponse) {
+              const analysisMessage: Omit<Message, 'id'> = {
+                content: aiResponse,
+                role: 'assistant',
+                timestamp: new Date(),
+                files: []
+              };
 
-              if (result.insights && result.insights.length > 0) {
-                responseContent += `**Key Insights:**\n`;
-                result.insights.forEach((insight, index) => {
-                  responseContent += `• ${insight}\n`;
-                });
-              }
-
-              if (result.score !== undefined) {
-                responseContent += `\n**Security Score:** ${result.score}/100\n`;
-              }
-
-              if (result.status) {
-                responseContent += `\n**Status:** ${result.status}\n`;
-              }
-
-              if (result.recommendations && result.recommendations.length > 0) {
-                responseContent += `\n**Recommendations:**\n`;
-                result.recommendations.forEach((rec, index) => {
-                  responseContent += `${index + 1}. ${rec}\n`;
-                });
-              }
-
-              if (result.summary) {
-                responseContent += `\n**Summary:**\n${result.summary}\n`;
-              }
+              console.log('📤 Adding AI response to conversation');
+              addMessage(analysisMessage);
+            } else {
+              // Fallback - show available data
+              console.log('⚠️ No AI response found, showing available data');
+              const fallbackContent = `Analysis completed!\n\nResult: ${JSON.stringify(result, null, 2)}`;
+              const analysisMessage: Omit<Message, 'id'> = {
+                content: fallbackContent,
+                role: 'assistant',
+                timestamp: new Date(),
+                files: []
+              };
+              addMessage(analysisMessage);
             }
-
-            console.log('📋 Using analysis content:', responseContent.substring(0, 200) + '...');
-
-            const analysisMessage: Omit<Message, 'id'> = {
-              content: responseContent,
-              role: 'assistant',
-              timestamp: new Date(),
-              files: []
-            };
-
-            addMessage(analysisMessage);
           } else {
-            // Fallback if no result data - show the raw message
-            const analysisMessage: Omit<Message, 'id'> = {
-              content: `Analysis completed!\n\n${JSON.stringify(message, null, 2)}`,
+            console.log('⚠️ No result object found in analysis_complete message');
+            const fallbackMessage: Omit<Message, 'id'> = {
+              content: `Analysis completed!\n\nRaw message: ${JSON.stringify(message, null, 2)}`,
               role: 'assistant',
               timestamp: new Date(),
               files: []
             };
-
-            addMessage(analysisMessage);
+            addMessage(fallbackMessage);
           }
+
+          // Clear processing states
+          setProcessingStatus({
+            isProcessing: false,
+            currentStep: '',
+            progress: 0,
+            details: ''
+          });
 
           if (message.pdfUrl) {
             handlePdfGenerated(message.pdfUrl);
@@ -371,6 +358,15 @@ export function ChatLayout() {
 
         case 'connection':
           console.log('🔗 Connection status:', message.message);
+          // Handle connection established message
+          if (message.status === 'connected') {
+            console.log('✅ WebSocket connection confirmed by server');
+            setConnectionStatus({
+              isConnected: true,
+              isReconnecting: false,
+              lastHeartbeat: new Date()
+            });
+          }
           break;
 
         case 'queue_cleared':

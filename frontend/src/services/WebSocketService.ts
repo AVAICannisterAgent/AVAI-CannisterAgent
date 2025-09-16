@@ -323,9 +323,8 @@ class WebSocketService {
     return this.sendMessage({
       type: 'analysis_request',
       prompt: message.trim(),
-      source: 'react_frontend',
-      analysis_type: 'chat',
-      repo_context: 'User chat message - general AI assistance request'
+      client_id: this.clientId,
+      source: 'react_frontend'
     });
   }
 

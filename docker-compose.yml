@@ -12,7 +12,7 @@ services:
     networks:
       - avai-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 60s
       timeout: 5s
       retries: 2
@@ -45,7 +45,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -64,6 +64,7 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+      - "8765:8765"
     depends_on:
       redis:
         condition: service_healthy
@@ -75,7 +76,7 @@ services:
     networks:
       - avai-network
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8080/health" ]
       interval: 60s
       timeout: 5s
       retries: 2
@@ -162,7 +163,7 @@ services:
     networks:
       - avai-network
     healthcheck:
-      test: ["CMD", "python", "-c", "import redis; r=redis.Redis(host='redis', port=6379); r.ping()"]
+      test: [ "CMD", "python", "-c", "import redis; r=redis.Redis(host='redis', port=6379); r.ping()" ]
       interval: 60s
       timeout: 10s
       retries: 2
@@ -197,7 +198,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -239,7 +240,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "python", "-c", "import redis; r=redis.Redis(host='redis', port=6379); r.ping()"]
+      test: [ "CMD", "python", "-c", "import redis; r=redis.Redis(host='redis', port=6379); r.ping()" ]
       interval: 60s
       timeout: 10s
       retries: 3
