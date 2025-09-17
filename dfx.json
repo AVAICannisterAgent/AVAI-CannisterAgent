@@ -30,7 +30,7 @@
     },
     "avai_main_orchestrator": {
       "type": "motoko",
-      "main": "motoko_modules/orchestrator/main_orchestrator.mo",
+      "main": "motoko_modules/orchestrator/enhanced_orchestrator.mo",
       "metadata": [
         {
           "name": "candid:service"
@@ -49,6 +49,33 @@
     "avai_audit_engine": {
       "type": "motoko",
       "main": "src/avai_audit_engine/main.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "avai_reasoning_engine": {
+      "type": "motoko",
+      "main": "motoko_modules/ai_engines/reasoning_engine.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "avai_tool_calling_engine": {
+      "type": "motoko",
+      "main": "motoko_modules/ai_engines/tool_calling_engine.mo",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ]
+    },
+    "avai_vision_engine": {
+      "type": "motoko",
+      "main": "motoko_modules/ai_engines/vision_engine.mo",
       "metadata": [
         {
           "name": "candid:service"
