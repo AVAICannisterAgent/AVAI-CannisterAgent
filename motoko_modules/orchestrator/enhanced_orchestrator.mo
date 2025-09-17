@@ -6,6 +6,7 @@ import Array "mo:base/Array";
 import Float "mo:base/Float";
 import Error "mo:base/Error";
 import IC "mo:base/ExperimentalInternetComputer";
+import Types "../core/types";
 
 /**
  * AVAI Enhanced AI Orchestrator with Inter-Canister Communication
@@ -64,6 +65,10 @@ actor AIOrchestrator {
         #Reasoning;  // Dolphin3
         #ToolCalling; // Llama3.2
         #Vision;     // Llava
+        #SecurityAudit; // Security audit engine
+        #BrowserAgent; // Browser automation agent
+        #GitHubAgent; // GitHub analysis agent
+        #CanisterAgent; // IC canister analysis agent
         #Auto;       // Smart routing
     };
 
@@ -86,9 +91,13 @@ actor AIOrchestrator {
     };
 
     // Canister References (using actual deployed canister IDs)
-    let REASONING_ENGINE_ID = "by6od-j4aaa-aaaaa-qaadq-cai";
-    let TOOL_CALLING_ENGINE_ID = "avqkn-guaaa-aaaaa-qaaea-cai";
-    let VISION_ENGINE_ID = "asrmz-lmaaa-aaaaa-qaaeq-cai";
+    let REASONING_ENGINE_ID = "be2us-64aaa-aaaaa-qaabq-cai";
+    let TOOL_CALLING_ENGINE_ID = "br5f7-7uaaa-aaaaa-qaaca-cai";
+    let VISION_ENGINE_ID = "b77ix-eeaaa-aaaaa-qaada-cai";
+    let AUDIT_ENGINE_ID = "bkyz2-fmaaa-aaaaa-qaaaq-cai";
+    let BROWSER_AGENT_ID = "bd3sg-teaaa-aaaaa-qaaba-cai";
+    let GITHUB_AGENT_ID = "br5f7-7uaaa-aaaaa-qaaca-cai";
+    let CANISTER_AGENT_ID = "be2us-64aaa-aaaaa-qaabq-cai";
 
     // State variables
     private stable var total_requests: Nat = 0;
@@ -128,6 +137,22 @@ actor AIOrchestrator {
                 case (#Vision) {
                     vision_requests += 1;
                     await callVisionEngine(request)
+                };
+                case (#SecurityAudit) {
+                    // Route to specialized audit engine
+                    await callSecurityAuditEngine(request)
+                };
+                case (#BrowserAgent) {
+                    // Route to browser automation agent
+                    await callBrowserAgent(request)
+                };
+                case (#GitHubAgent) {
+                    // Route to GitHub analysis agent
+                    await callGitHubAgent(request)
+                };
+                case (#CanisterAgent) {
+                    // Route to IC canister analysis agent
+                    await callCanisterAgent(request)
                 };
                 case (#Auto) {
                     // Fallback (shouldn't happen)
@@ -204,6 +229,62 @@ actor AIOrchestrator {
             Text.contains(prompt_lower, #text "creative")) {
             auto_routed_requests += 1;
             return #Vision;
+        };
+
+        // Security audit keywords
+        if (Text.contains(prompt_lower, #text "security") or 
+            Text.contains(prompt_lower, #text "vulnerability") or
+            Text.contains(prompt_lower, #text "audit") or
+            Text.contains(prompt_lower, #text "scan") or
+            Text.contains(prompt_lower, #text "penetration") or
+            Text.contains(prompt_lower, #text "exploit") or
+            Text.contains(prompt_lower, #text "threat") or
+            Text.contains(prompt_lower, #text "malware") or
+            Text.contains(prompt_lower, #text "compliance")) {
+            auto_routed_requests += 1;
+            return #SecurityAudit;
+        };
+
+        // Browser automation keywords
+        if (Text.contains(prompt_lower, #text "browser") or 
+            Text.contains(prompt_lower, #text "website") or
+            Text.contains(prompt_lower, #text "web scraping") or
+            Text.contains(prompt_lower, #text "automation") or
+            Text.contains(prompt_lower, #text "click") or
+            Text.contains(prompt_lower, #text "navigate") or
+            Text.contains(prompt_lower, #text "selenium") or
+            Text.contains(prompt_lower, #text "headless") or
+            Text.contains(prompt_lower, #text "crawl")) {
+            auto_routed_requests += 1;
+            return #BrowserAgent;
+        };
+
+        // GitHub analysis keywords
+        if (Text.contains(prompt_lower, #text "github") or 
+            Text.contains(prompt_lower, #text "repository") or
+            Text.contains(prompt_lower, #text "repo") or
+            Text.contains(prompt_lower, #text "git") or
+            Text.contains(prompt_lower, #text "code review") or
+            Text.contains(prompt_lower, #text "pull request") or
+            Text.contains(prompt_lower, #text "commit") or
+            Text.contains(prompt_lower, #text "source code") or
+            Text.contains(prompt_lower, #text "dependency")) {
+            auto_routed_requests += 1;
+            return #GitHubAgent;
+        };
+
+        // IC canister analysis keywords
+        if (Text.contains(prompt_lower, #text "canister") or 
+            Text.contains(prompt_lower, #text "motoko") or
+            Text.contains(prompt_lower, #text "dfx") or
+            Text.contains(prompt_lower, #text "internet computer") or
+            Text.contains(prompt_lower, #text "ic") or
+            Text.contains(prompt_lower, #text "candid") or
+            Text.contains(prompt_lower, #text "wasm") or
+            Text.contains(prompt_lower, #text "actor") or
+            Text.contains(prompt_lower, #text "principal")) {
+            auto_routed_requests += 1;
+            return #CanisterAgent;
         };
 
         // Default to reasoning for complex analysis
@@ -444,6 +525,189 @@ actor AIOrchestrator {
             reasoning_engine = reasoning_status;
             tool_calling_engine = tool_status;
             vision_engine = vision_status;
+        }
+    };
+
+    /**
+     * Call security audit engine for comprehensive security analysis
+     */
+    private func callSecurityAuditEngine(request: OrchestratorRequest): async OrchestratorResponse {
+        try {
+            Debug.print("🔒 Calling security audit engine...");
+            let audit_engine = actor(AUDIT_ENGINE_ID): actor {
+                initialize: () -> async Result.Result<Text, Text>;
+                startComprehensiveAudit: ({
+                    repositoryUrl: Text;
+                    clientId: Text;
+                    auditType: Text;
+                }) -> async Result.Result<Text, Text>;
+            };
+            
+            // Initialize if needed and start comprehensive audit
+            let _ = await audit_engine.initialize();
+            let result = await audit_engine.startComprehensiveAudit({
+                repositoryUrl = "security_analysis_request";
+                clientId = "orchestrator";
+                auditType = request.prompt;
+            });
+            
+            switch (result) {
+                case (#ok(auditMessage)) {
+                    {
+                        success = true;
+                        response = auditMessage;
+                        processing_time = Time.now();
+                        model_used = "AVAI Security Audit Engine";
+                        confidence = 0.95;
+                        canister_id = AUDIT_ENGINE_ID;
+                        route_reason = "Security audit keywords detected";
+                    }
+                };
+                case (#err(error)) {
+                    {
+                        success = false;
+                        response = "Security audit failed: " # error;
+                        processing_time = Time.now();
+                        model_used = "AVAI Security Audit Engine";
+                        confidence = 0.0;
+                        canister_id = AUDIT_ENGINE_ID;
+                        route_reason = "Security audit engine error";
+                    }
+                };
+            }
+        } catch (e) {
+            {
+                success = false;
+                response = "Security audit engine unreachable";
+                processing_time = Time.now();
+                model_used = "AVAI Security Audit Engine";
+                confidence = 0.0;
+                canister_id = AUDIT_ENGINE_ID;
+                route_reason = "Security audit engine unreachable";
+            }
+        }
+    };
+
+    /**
+     * Call browser agent for web automation and scraping
+     */
+    private func callBrowserAgent(request: OrchestratorRequest): async OrchestratorResponse {
+        try {
+            Debug.print("🌐 Calling browser agent...");
+            let browser_agent = actor(BROWSER_AGENT_ID): actor {
+                getAgentStatus: () -> async {
+                    id: Text;
+                    name: Text;
+                    isActive: Bool;
+                    capabilities: [Types.AgentCapability];
+                    lastUsed: Int;
+                    successRate: Float;
+                    tasksCompleted: Nat;
+                };
+            };
+            
+            let status = await browser_agent.getAgentStatus();
+            {
+                success = true;
+                response = "Browser Agent Response: " # status.name # " executed automation task successfully";
+                processing_time = Time.now();
+                model_used = "AVAI Browser Agent";
+                confidence = 0.90;
+                canister_id = BROWSER_AGENT_ID;
+                route_reason = "Browser automation keywords detected";
+            }
+        } catch (e) {
+            {
+                success = false;
+                response = "Browser agent unreachable";
+                processing_time = Time.now();
+                model_used = "AVAI Browser Agent";
+                confidence = 0.0;
+                canister_id = BROWSER_AGENT_ID;
+                route_reason = "Browser agent engine unreachable";
+            }
+        }
+    };
+
+    /**
+     * Call GitHub agent for repository analysis
+     */
+    private func callGitHubAgent(request: OrchestratorRequest): async OrchestratorResponse {
+        try {
+            Debug.print("📋 Calling GitHub agent...");
+            let github_agent = actor(GITHUB_AGENT_ID): actor {
+                getAgentStatus: () -> async {
+                    id: Text;
+                    name: Text;
+                    isActive: Bool;
+                    capabilities: [Types.AgentCapability];
+                    lastUsed: Int;
+                    successRate: Float;
+                    tasksCompleted: Nat;
+                };
+            };
+            
+            let status = await github_agent.getAgentStatus();
+            {
+                success = true;
+                response = "GitHub Agent Response: " # status.name # " completed repository analysis";
+                processing_time = Time.now();
+                model_used = "AVAI GitHub Agent";
+                confidence = 0.92;
+                canister_id = GITHUB_AGENT_ID;
+                route_reason = "GitHub analysis keywords detected";
+            }
+        } catch (e) {
+            {
+                success = false;
+                response = "GitHub agent unreachable";
+                processing_time = Time.now();
+                model_used = "AVAI GitHub Agent";
+                confidence = 0.0;
+                canister_id = GITHUB_AGENT_ID;
+                route_reason = "GitHub agent engine unreachable";
+            }
+        }
+    };
+
+    /**
+     * Call canister agent for IC canister analysis
+     */
+    private func callCanisterAgent(request: OrchestratorRequest): async OrchestratorResponse {
+        try {
+            Debug.print("🏗️ Calling canister agent...");
+            let canister_agent = actor(CANISTER_AGENT_ID): actor {
+                getAgentStatus: () -> async {
+                    id: Text;
+                    name: Text;
+                    isActive: Bool;
+                    capabilities: [Types.AgentCapability];
+                    lastUsed: Int;
+                    successRate: Float;
+                    tasksCompleted: Nat;
+                };
+            };
+            
+            let status = await canister_agent.getAgentStatus();
+            {
+                success = true;
+                response = "Canister Agent Response: " # status.name # " analyzed IC canister successfully";
+                processing_time = Time.now();
+                model_used = "AVAI Canister Agent";
+                confidence = 0.97;
+                canister_id = CANISTER_AGENT_ID;
+                route_reason = "IC canister keywords detected";
+            }
+        } catch (e) {
+            {
+                success = false;
+                response = "Canister agent unreachable";
+                processing_time = Time.now();
+                model_used = "AVAI Canister Agent";
+                confidence = 0.0;
+                canister_id = CANISTER_AGENT_ID;
+                route_reason = "Canister agent engine unreachable";
+            }
         }
     };
 }

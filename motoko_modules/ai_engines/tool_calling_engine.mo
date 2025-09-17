@@ -35,9 +35,9 @@ actor ToolCallingEngine {
     private stable var request_count: Nat = 0;
     private stable var total_processing_time: Int = 0;
     
-    // Ollama connection settings with local/production fallback
-    private let OLLAMA_PRODUCTION_URL = "https://websocket.avai.life";
-    private let OLLAMA_LOCAL_URL = "http://host.docker.internal:11434";
+    // Python Bridge connection settings for real AI
+    private let PYTHON_BRIDGE_URL = "http://host.docker.internal:8080";
+    private let PYTHON_BRIDGE_AI_PATH = "/ai/tool_calling";
     private let MODEL_NAME = "llama3.2:3b";
     
     /**
@@ -237,10 +237,10 @@ actor ToolCallingEngine {
      * Real tool calling service with HTTP outcalls and Python fallback
      */
     private func call_real_tool_service(request: {model: Text; prompt: Text; tools: [Text]; options: {temperature: Float; num_predict: Nat; num_gpu: Int}}): async Text {
-        Debug.print("🔧 Making real HTTP outcall to tool calling service");
+        Debug.print("🔧 Making enhanced HTTP outcall to tool calling service");
         
         try {
-            // Try the custom HTTP client first
+            // Prepare Ollama API request payload
             let ollama_payload = "{"
                 # "\"model\": \"" # request.model # "\","
                 # "\"prompt\": \"" # request.prompt # " Available tools: " # debug_show(request.tools) # "\","
@@ -254,74 +254,83 @@ actor ToolCallingEngine {
             let body_blob = Text.encodeUtf8(ollama_payload);
             let body_bytes = Blob.toArray(body_blob);
             
-            Debug.print("🔗 Attempting HTTP call to local Ollama for tool calling");
-            let response = await Http.post(OLLAMA_LOCAL_URL # "/api/generate", body_bytes);
+            // Try production endpoint first with enhanced HTTP
+            Debug.print("� Attempting enhanced production tool calling");
+            let production_response = await Http.smartAICall(
+                OLLAMA_PRODUCTION_URL # "/api/generate",
+                body_bytes,
+                [
+                    ("Content-Type", "application/json"),
+                    ("Accept", "application/json"),
+                    ("X-Model-Type", "llama3.2"),
+                    ("X-Engine-Type", "tool-calling")
+                ]
+            );
             
-            switch (response) {
-                case (#ok(http_response)) {
-                    let response_blob = Blob.fromArray(http_response.body);
+            switch (production_response) {
+                case (#ok(response)) {
+                    Debug.print("✅ Production tool calling successful!");
+                    let response_blob = Blob.fromArray(response.body);
                     let response_text = switch (Text.decodeUtf8(response_blob)) {
                         case (?text) text;
                         case null "Unable to decode response";
                     };
                     
-                    Debug.print("✅ Tool calling HTTP outcall successful!");
-                    "🔧 **Real Tool Calling Service Response**\n\n" #
-                    "**Llama3.2 Tool Response:**\n" # response_text # "\n\n" #
-                    "**Tools Used:** " # debug_show(request.tools) # "\n" #
-                    "**Status:** ✅ Live HTTP outcalls working!"
-                };
-                case (#err(error_msg)) {
-                    Debug.print("⚠️ Tool calling HTTP outcall failed: " # error_msg);
-                    
-                    // Python fallback with intelligent calculation
-                    "🔧 **Python Tool Calling Fallback**\n\n" #
-                    "HTTP Error: " # error_msg # "\n\n" #
-                    "**Smart Tool Analysis for:** \"" # request.prompt # "\"\n\n" #
-                    (if (Text.contains(request.prompt, #text "square root") and Text.contains(request.prompt, #text "144")) {
-                        "🧮 **Mathematical Calculation:**\n" #
-                        "- Square root of 144 = 12\n" #
-                        "- 12 multiplied by 7 = 84\n" #
-                        "**Final Answer:** 84\n\n" #
-                        "**Calculation Steps:**\n" #
-                        "1. √144 = 12 (since 12² = 144)\n" #
-                        "2. 12 × 7 = 84"
-                    } else if (Text.contains(request.prompt, #text "calculate") or Text.contains(request.prompt, #text "math")) {
-                        "🧮 **Tool Calculation:** Python-based mathematical computation for '" # request.prompt # "'. This tool can handle arithmetic operations, conversions, and complex calculations."
-                    } else if (Text.contains(request.prompt, #text "convert")) {
-                        "🔄 **Conversion Tool:** Python-based conversion service for '" # request.prompt # "'. Supports unit conversions, currency exchange, and format transformations."
-                    } else {
-                        "🛠️ **General Tool Processing:** Python-based tool execution for '" # request.prompt # "'. Available tools include calculators, converters, and analysis utilities."
-                    }) # "\n\n" #
+                    "🔧 **LIVE TOOL CALLING RESPONSE**\n\n" #
+                    "**Real Llama3.2 Tool Response:**\n" # response_text # "\n\n" #
                     "**Tools Available:** " # debug_show(request.tools) # "\n" #
-                    "**Note:** This response is generated by Python tool fallback when HTTP outcalls to AI services are unavailable."
+                    "**Status:** ✅ Live production HTTP outcalls working!\n" #
+                    "**Provider:** Production Ollama instance\n" #
+                    "**Model:** " # request.model
+                };
+                case (#err(production_error)) {
+                    Debug.print("⚠️ Production failed, trying local tool calling: " # production_error);
+                    
+                    // Try local Ollama with AI-optimized call
+                    Debug.print("� Attempting local Ollama tool calling");
+                    let local_response = await Http.postForAI(
+                        OLLAMA_LOCAL_URL # "/api/generate", 
+                        body_bytes, 
+                        "ollama"
+                    );
+                    
+                    switch (local_response) {
+                        case (#ok(response)) {
+                            Debug.print("✅ Local tool calling successful!");
+                            let response_blob = Blob.fromArray(response.body);
+                            let response_text = switch (Text.decodeUtf8(response_blob)) {
+                                case (?text) text;
+                                case null "Unable to decode response";
+                            };
+                            
+                            "� **LIVE LOCAL TOOL RESPONSE**\n\n" #
+                            "**Real Ollama/Llama3.2 Response:**\n" # response_text # "\n\n" #
+                            "**Tools Available:** " # debug_show(request.tools) # "\n" #
+                            "**Status:** ✅ Local HTTP outcalls working!\n" #
+                            "**Provider:** Local Ollama instance\n" #
+                            "**Model:** " # request.model
+                        };
+                        case (#err(local_error)) {
+                            Debug.print("❌ Both production and local tool calling failed");
+                            "❌ **TOOL CALLING SERVICE UNAVAILABLE**\n\n" #
+                            "Production error: " # production_error # "\n" #
+                            "Local error: " # local_error # "\n\n" #
+                            "Both live tool calling endpoints are currently unavailable.\n" #
+                            "This indicates that neither the production nor local Ollama instances are accessible for tool calling.\n\n" #
+                            "**Troubleshooting:**\n" #
+                            "- Check if Ollama is running locally with Llama3.2 model\n" #
+                            "- Verify production endpoint at " # OLLAMA_PRODUCTION_URL # "\n" #
+                            "- Ensure network connectivity and firewall settings"
+                        };
+                    }
                 };
             }
         } catch (e) {
             Debug.print("❌ Error in tool calling service: " # Error.message(e));
-            
-            // Full Python tool fallback mode
-            "🔧 **Python Tool Fallback Mode**\n\n" #
-            "System Error: " # Error.message(e) # "\n\n" #
-            "**Smart Tool Execution for:** \"" # request.prompt # "\"\n\n" #
-            (if (Text.contains(request.prompt, #text "square root") and Text.contains(request.prompt, #text "144") and Text.contains(request.prompt, #text "7")) {
-                "🧮 **Calculator Tool Result:**\n" #
-                "Problem: Square root of 144 multiplied by 7\n" #
-                "Solution:\n" #
-                "• √144 = 12\n" #
-                "• 12 × 7 = 84\n" #
-                "**Answer: 84**"
-            } else if (Text.contains(request.prompt, #text "2") and Text.contains(request.prompt, #text "+") and Text.contains(request.prompt, #text "2")) {
-                "🧮 **Calculator Tool Result:**\n" #
-                "Problem: 2 + 2\n" #
-                "**Answer: 4**"
-            } else if (Text.contains(request.prompt, #text "calculate") or Text.contains(request.prompt, #text "math")) {
-                "🧮 **Mathematical Tool:** Processing calculation request '" # request.prompt # "' using Python-based computational tools."
-            } else {
-                "🛠️ **Tool Processing:** Executing '" # request.prompt # "' using available Python tools and utilities."
-            }) # "\n\n" #
-            "**Available Tools:** " # debug_show(request.tools) # "\n" #
-            "**Fallback Status:** Operating in Python tool mode due to HTTP outcall limitations."
+            "❌ **TOOL CALLING SYSTEM ERROR**\n\n" #
+            "Exception: " # Error.message(e) # "\n\n" #
+            "A system-level error occurred while attempting to call tool calling services.\n" #
+            "This indicates a deeper issue with the HTTP client or canister configuration for tool calling."
         }
     };
 }

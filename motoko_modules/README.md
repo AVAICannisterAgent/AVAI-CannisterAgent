@@ -1,73 +1,70 @@
 # AVAI Motoko Modules 🚀
 
-Complete Motoko implementation of AVAI functionality with Python fallback support.
+Inter-canister AI orchestration system with specialized security auditing engines.
 
 ## 📁 Directory Structure
 
 ```
 motoko_modules/
-├── core/                    # Core Motoko modules
-│   ├── types.mo            # Core type definitions
-│   ├── utils.mo            # Utility functions
-│   ├── memory.mo           # Memory management
-│   └── config.mo           # Configuration management
-├── orchestrator/            # Agent Orchestrator
-│   ├── main_orchestrator.mo # Main orchestration logic
-│   ├── prompt_analyzer.mo   # Smart prompt analysis
-│   ├── task_router.mo      # Task routing and delegation
-│   └── unified_manager.mo   # Unified LLM management
-├── agents/                  # All agent implementations
-│   ├── research_agent.mo    # Research and web search
-│   ├── code_agent.mo       # Code analysis and generation
-│   ├── security_agent.mo   # Security auditing
-│   ├── report_agent.mo     # Report generation
-│   └── browser_agent.mo    # Browser automation
-├── learning/                # Self-learning system
-│   ├── adaptive_learning.mo # Adaptive learning engine
-│   ├── pattern_detection.mo # Pattern recognition
-│   ├── feedback_loop.mo    # Feedback processing
-│   └── memory_system.mo    # Learning memory system
-├── analysis/                # Analysis engines
-│   ├── prompt_analyzer.mo   # Prompt analysis engine
-│   ├── code_analyzer.mo    # Code analysis engine
-│   ├── security_scanner.mo # Security scanning
-│   └── vulnerability_detector.mo # Vulnerability detection
-├── reports/                 # Report generation
-│   ├── report_generator.mo  # Main report generator
-│   ├── markdown_generator.mo # Markdown formatting
-│   ├── audit_reporter.mo   # Security audit reports
-│   └── analytics_reporter.mo # Analytics reporting
-└── integration/             # Integration modules
-    ├── python_bridge.mo     # Python fallback bridge
-    ├── redis_connector.mo   # Redis integration
-    ├── websocket_handler.mo # WebSocket handling
-    └── external_api.mo      # External API integration
+├── orchestrator/            # Main orchestration system
+│   ├── enhanced_orchestrator.mo # Smart routing orchestrator
+│   └── main_orchestrator.mo    # Basic orchestrator (legacy)
+├── ai_engines/              # Specialized AI processing engines
+│   ├── reasoning_engine.mo     # Dolphin3 for complex analysis
+│   ├── tool_calling_engine.mo  # Llama3.2 for calculations
+│   └── vision_engine.mo        # Llava for image processing
+├── audit/                   # Security auditing system
+│   ├── audit_engine.mo        # Main audit processor
+│   ├── vulnerability_scanner.mo # Vulnerability detection
+│   └── report_generator.mo     # Audit report generation
+└── integration/             # External service integration
+    ├── http_client/           # HTTP outcall management
+    │   └── lib.mo            # HTTP client library
+    └── python_bridge/        # Python fallback system
+        └── bridge.mo         # Python integration bridge
 ```
 
-## 🎯 Features
+## 🎯 Core Features
 
-### 🧠 Smart Prompt Analysis
-- **Intelligent Classification**: Automatically categorizes prompts (research, coding, security, etc.)
-- **Context Awareness**: Maintains conversation context and user preferences
-- **Priority Routing**: Routes tasks to appropriate specialized agents
+### 🧠 Smart Orchestration
+- **Auto-routing**: Intelligent task classification and engine selection
+- **Inter-canister**: Production-ready canister-to-canister communication
+- **Real HTTP**: Live AI service integration with Python fallback
+- **Context-aware**: Maintains conversation state and preferences
 
-### 🎭 Agent Orchestrator
-- **Unified Management**: Centralized control of all specialized agents
-- **Dynamic Task Allocation**: Intelligent task distribution based on complexity
-- **Resource Optimization**: Efficient resource management across agents
+### 🔒 Security Auditing
+- **Vulnerability Detection**: Automated smart contract security analysis
+- **Multi-language**: Native Motoko, Rust, and Candid support
+- **Real-time**: Continuous security monitoring and threat assessment
+- **Professional Reports**: Enterprise-grade audit documentation
 
-### 🤖 Specialized Agents
-- **Research Agent**: Web research, data gathering, fact verification
-- **Code Agent**: Code analysis, generation, debugging, optimization
-- **Security Agent**: Vulnerability scanning, security auditing, compliance
-- **Report Agent**: Comprehensive report generation and formatting
-- **Browser Agent**: Automated web interaction and data extraction
+### 🤖 AI Engine Specialization
+- **Reasoning Engine**: Complex analysis using Dolphin3 model
+- **Tool Calling Engine**: Fast calculations using Llama3.2 model  
+- **Vision Engine**: Image analysis using Llava model
+## 🚀 Quick Usage
 
-### 🧠 Self-Learning System
-- **Adaptive Learning**: Learns from user interactions and feedback
-- **Pattern Recognition**: Identifies recurring patterns and optimizes responses
-- **Performance Tracking**: Monitors and improves agent performance
-- **Memory Evolution**: Builds long-term memory for better assistance
+### Deploy System
+```bash
+# Deploy all canisters
+dfx deploy
+
+# Test orchestrator routing
+dfx canister call avai_main_orchestrator processRequest '(record {prompt="Analyze smart contract security"; model=variant{Auto}; priority=variant{High}; context=opt"audit"; tools=opt vec{}})'
+```
+
+### Canister Network
+- **avai_main_orchestrator** (`bw4dl-smaaa-aaaaa-qaacq-cai`) - Central routing
+- **avai_reasoning_engine** (`by6od-j4aaa-aaaaa-qaadq-cai`) - Complex analysis  
+- **avai_tool_calling_engine** (`avqkn-guaaa-aaaaa-qaaea-cai`) - Calculations
+- **avai_vision_engine** (`asrmz-lmaaa-aaaaa-qaaeq-cai`) - Image processing
+- **avai_audit_engine** (`bkyz2-fmaaa-aaaaa-qaaaq-cai`) - Security auditing
+
+### Integration Status
+✅ **Inter-canister communication working**  
+✅ **Smart routing operational**  
+✅ **Real HTTP outcalls with Python fallback**  
+✅ **Security auditing active**
 
 ### 📊 Advanced Analytics
 - **Real-time Monitoring**: Live performance metrics and health checks

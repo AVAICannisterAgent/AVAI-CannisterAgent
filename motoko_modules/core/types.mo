@@ -162,6 +162,17 @@ module Types {
         learningEnabled: Bool;
     };
     
+    /// Agent status for runtime monitoring
+    public type AgentStatus = {
+        id: Text;
+        name: Text;
+        isActive: Bool;
+        capabilities: [AgentCapability];
+        lastUsed: Int;
+        successRate: Float;
+        tasksCompleted: Nat;
+    };
+    
     // ================================
     // LEARNING SYSTEM TYPES
     // ================================

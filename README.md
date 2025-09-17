@@ -1,8 +1,8 @@
-# AVAI Canister Agent - Autonomous ICP Security Auditor
+# AVAI Agent for Hire - Multi-Engine AI Orchestrator
 
-**Production-ready autonomous security auditing for Internet Computer dApps**
+**Inter-canister AI orchestration system for specialized AI task routing on ICP**
 
-**Status**: Live on ICP | **Canister ID**: `bkyz2-fmaaa-aaaaa-qaaaq-cai` | **Success Rate**: 96.23%
+**Status**: Deployed | **Orchestrator**: `bw4dl-smaaa-aaaaa-qaacq-cai` | **Engines**: 3 Active
 
 ## Overview
 
@@ -18,38 +18,36 @@ AVAI is the first autonomous security auditing system built natively on the Inte
 ## Quick Start
 
 ### Prerequisites
+- **Docker**: Required for local IC replica
 - **dfx**: Internet Computer SDK
-- **Docker**: For local development
-- **Node.js**: For web interface components
 
-### Installation
+### Local Deployment
 
 ```bash
-# Clone the repository
-git clone https://github.com/AVAICannisterAgent/AVAI-CannisterAgent.git
-cd AVAI-CannisterAgent
+# Start DFX container
+docker run -d --name avai-dfx-robust -p 4943-4944:4943-4944 avai-agent-for-hire-dfx-replica
 
-# Start local IC replica
-dfx start --background --clean
+# Deploy AVAI audit system
+docker exec -it avai-dfx-robust dfx deploy
 
-# Deploy AVAI canister
-dfx deploy avai_project_backend --network local
-
-# Initialize the audit system  
-dfx canister call avai_project_backend initialize --network local
+# Initialize audit engine
+docker exec -it avai-dfx-robust dfx canister call avai_audit_engine initialize
 ```
 
-### Basic Usage
+### Security Audit Usage
 
 ```bash
-# Start security audit
-dfx canister call avai_project_backend start_agent_orchestrator --network local
+# Start comprehensive security audit
+dfx canister call avai_audit_engine start_security_audit '(record {target="canister_id_or_code_url"; audit_type=variant{Comprehensive}; priority=variant{High}})'
 
-# Process security analysis
-dfx canister call avai_project_backend process_dynamic_prompt '("analyze smart contract security for [contract_address]", null)' --network local
+# Analyze smart contract vulnerabilities
+dfx canister call avai_audit_engine analyze_contract '(record {code="motoko_or_rust_code"; language=variant{Motoko}; depth=variant{Deep}})'
 
-# Get audit status
-dfx canister call avai_project_backend greet '("System Status Check")' --network local
+# Generate professional audit report
+dfx canister call avai_audit_engine generate_report '(record {audit_id="audit_session_id"; format=variant{Professional}; include_recommendations=true})'
+
+# Get real-time security status
+dfx canister call avai_audit_engine get_security_status '(record {target="canister_id"})'
 ```
 
 ## Architecture

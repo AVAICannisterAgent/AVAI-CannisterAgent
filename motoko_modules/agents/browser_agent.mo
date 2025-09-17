@@ -145,14 +145,14 @@ actor BrowserAgent {
     };
     
     // Get browser capabilities
-    public query func getBrowserCapabilities() : async [Text] {
+    public query func getBrowserCapabilities() : async [Types.AgentCapability] {
         [
-            "page_navigation",
-            "element_interaction", 
-            "data_extraction",
-            "screenshot_capture",
-            "stealth_browsing",
-            "anti_detection"
+            #BrowserAutomation,
+            #WebSearch, 
+            #DataProcessing,
+            #ReportGeneration,
+            #SecurityScanning,
+            #NaturalLanguageProcessing
         ]
     };
     
@@ -168,13 +168,14 @@ actor BrowserAgent {
         true
     };
     
-    // Get agent status
-    public query func getAgentStatus() : async Types.AgentStatus {
+    // Get agent status with real capabilities
+    public func getAgentStatus() : async Types.AgentStatus {
+        let capabilities = await getBrowserCapabilities();
         {
             id = "browser-agent";
             name = "Browser Automation Agent";
             isActive = true;
-            capabilities = await getBrowserCapabilities();
+            capabilities = capabilities;
             lastUsed = Time.now();
             successRate = 0.95;
             tasksCompleted = 150;

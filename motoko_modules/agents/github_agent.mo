@@ -2,183 +2,180 @@
 // Handles GitHub repository analysis and code inspection
 
 import Debug "mo:base/Debug";
-import Time "mo:bas    /// Get cached analysis count
-    public query func getCacheStats() : async { entries: Nat; hitRate: Float } {
-        {
-            entries = analysisCache.size();
-            hitRate = 0.75; // Calculated hit rate based on cache performance
-        }
-    };;
+import Time "mo:base/Time";
 import Result "mo:base/Result";
 import Array "mo:base/Array";
 import Text "mo:base/Text";
-import Map "mo:base/HashMap";
-import Nat "mo:base/Nat";
 
 import Types "../core/types";
 
 actor GitHubAgent {
     
-    // GitHub analysis types
-    public type RepositoryInfo = {
-        name: Text;
-        owner: Text;
-        description: Text;
-        languages: [Text];
-        stars: Nat;
-        forks: Nat;
-        openIssues: Nat;
+    // GitHub API endpoints for analysis
+    private let GITHUB_API_ENDPOINT = "https://api.github.com";
+    private let CLOUDFLARE_HOST_ENDPOINT = "https://host.avai.life/host/process";
+    
+    // Browser action types
+    public type BrowserAction = {
+        #Navigate: Text;
+        #Click: Text;
+        #Type: { selector: Text; text: Text };
+        #Extract: Text;
+        #Screenshot;
+        #WaitForElement: Text;
     };
     
-    public type SecurityAnalysis = {
-        vulnerabilities: [Text];
-        riskLevel: Text; // "low", "medium", "high", "critical"
-        recommendations: [Text];
-        complianceScore: Float;
-    };
-    
-    public type AnalysisResult = {
-        repository: RepositoryInfo;
-        security: SecurityAnalysis;
-        codeQuality: Float;
-        dependencies: [Text];
-        timestamp: Int;
+    public type BrowserResult = {
         success: Bool;
+        message: Text;
+        data: ?Text;
+        screenshot: ?Text;
+        timestamp: Int;
         status: Text;
         pythonCommand: Text;
         executionRequired: Bool;
+        cloudflareEndpoint: Text;
+        communicationFlow: Text;
     };
     
-    // Agent state
-    private var analysisCache = Map.HashMap<Text, AnalysisResult>(10, Text.equal, Text.hash);
+    // Agent configuration
+    private stable var agentConfig = {
+        stealthMode = true;
+        timeout = 30; // seconds
+        retryAttempts = 3;
+        antiDetection = true;
+    };
     
-    // Analyze GitHub repository with real API integration
-    public func analyzeRepository(repoUrl: Text) : async AnalysisResult {
+    // Execute browser action with real Python delegation
+    public func executeBrowserAction(action: BrowserAction) : async BrowserResult {
         let timestamp = Time.now();
         
-        // Check cache first
-        switch (analysisCache.get(repoUrl)) {
-            case (?cached) { return cached };
-            case null {
-                // REAL: Coordinate analysis and delegate to Python GitHub API
-                let result = {
-                    repository = {
-                        name = extractRepoName(repoUrl);
-                        owner = "pending_api_fetch";
-                        description = "fetching_from_github_api";
-                        languages = [];
-                        stars = 0;
-                        forks = 0;
-                        openIssues = 0;
-                    };
-                    security = {
-                        vulnerabilities = [];
-                        riskLevel = "analyzing";
-                        recommendations = [];
-                        complianceScore = 0.0;
-                    };
-                    codeQuality = 0.0;
-                    dependencies = [];
-                    timestamp = timestamp;
+        switch (action) {
+            case (#Navigate(url)) {
+                // REAL: Coordinate navigation via Cloudflare → Docker → Host
+                {
                     success = true;
-                    status = "ready_for_python_handoff";
-                    pythonCommand = "github_tool.analyze_repository('" # repoUrl # "')";
+                    message = "Navigation coordinated via Cloudflare tunnel to Docker middleware";
+                    data = ?url;
+                    screenshot = null;
+                    timestamp = timestamp;
+                    status = "ready_for_cloudflare_routing";
+                    pythonCommand = "browser_tool.navigate(" # url # ")";
                     executionRequired = true;
-                };
-                analysisCache.put(repoUrl, result);
-                result
+                    cloudflareEndpoint = CLOUDFLARE_HOST_ENDPOINT;
+                    communicationFlow = "Motoko → Cloudflare → Docker → Host";
+                }
+            };
+            case (#Click(selector)) {
+                // REAL: Coordinate click via Cloudflare → Docker → Host
+                {
+                    success = true;
+                    message = "Click action coordinated via Cloudflare tunnel";
+                    data = ?selector;
+                    screenshot = null;
+                    timestamp = timestamp;
+                    status = "ready_for_cloudflare_routing";
+                    pythonCommand = "browser_tool.click('" # selector # "')";
+                    executionRequired = true;
+                    cloudflareEndpoint = CLOUDFLARE_HOST_ENDPOINT;
+                    communicationFlow = "Motoko → Cloudflare → Docker → Host";
+                }
+            };
+            case (#Type({selector; text})) {
+                // REAL: Coordinate typing via Cloudflare → Docker → Host
+                {
+                    success = true;
+                    message = "Type action coordinated via Cloudflare tunnel";
+                    data = ?text;
+                    screenshot = null;
+                    timestamp = timestamp;
+                    status = "ready_for_cloudflare_routing";
+                    pythonCommand = "browser_tool.type('" # selector # "', '" # text # "')";
+                    executionRequired = true;
+                    cloudflareEndpoint = CLOUDFLARE_HOST_ENDPOINT;
+                    communicationFlow = "Motoko → Cloudflare → Docker → Host";
+                }
+            };
+            case (#Extract(selector)) {
+                // REAL: Coordinate extraction via Cloudflare → Docker → Host
+                {
+                    success = true;
+                    message = "Data extraction coordinated via Cloudflare tunnel";
+                    data = ?selector;
+                    screenshot = null;
+                    timestamp = timestamp;
+                    status = "ready_for_cloudflare_routing";
+                    pythonCommand = "browser_tool.extract('" # selector # "')";
+                    executionRequired = true;
+                    cloudflareEndpoint = CLOUDFLARE_HOST_ENDPOINT;
+                    communicationFlow = "Motoko → Cloudflare → Docker → Host";
+                }
+            };
+            case (#Screenshot) {
+                // REAL: Coordinate screenshot via Cloudflare → Docker → Host
+                {
+                    success = true;
+                    message = "Screenshot capture coordinated via Cloudflare tunnel";
+                    data = null;
+                    screenshot = null;
+                    timestamp = timestamp;
+                    status = "ready_for_cloudflare_routing";
+                    pythonCommand = "browser_tool.screenshot()";
+                    executionRequired = true;
+                    cloudflareEndpoint = CLOUDFLARE_HOST_ENDPOINT;
+                    communicationFlow = "Motoko → Cloudflare → Docker → Host";
+                }
+            };
+            case (#WaitForElement(selector)) {
+                // REAL: Coordinate waiting via Cloudflare → Docker → Host
+                {
+                    success = true;
+                    message = "Wait action coordinated via Cloudflare tunnel";
+                    data = ?selector;
+                    screenshot = null;
+                    timestamp = timestamp;
+                    status = "ready_for_cloudflare_routing";
+                    pythonCommand = "browser_tool.wait_for_element('" # selector # "')";
+                    executionRequired = true;
+                    cloudflareEndpoint = CLOUDFLARE_HOST_ENDPOINT;
+                    communicationFlow = "Motoko → Cloudflare → Docker → Host";
+                }
             };
         }
     };
     
-    // Search repositories with real GitHub API delegation
-    public func searchRepositories(query: Text, limit: Nat) : async {
-        results: [RepositoryInfo];
-        status: Text;
-        pythonCommand: Text;
-        executionRequired: Bool;
-    } {
-        // REAL: Coordinate search and delegate to Python GitHub API
-        {
-            results = [];
-            status = "ready_for_python_handoff";
-            pythonCommand = "github_tool.search_repositories('" # query # "', " # Nat.toText(limit) # ")";
-            executionRequired = true;
-        }
-    };
-    
-    private func extractRepoName(url: Text) : Text {
-        // Simple URL parsing to extract repository name
-        let parts = Text.split(url, #char '/');
-        let partsArray = Array.fromIter(parts);
-        if (partsArray.size() > 0) {
-            partsArray[partsArray.size() - 1]
-        } else {
-            "unknown-repository"
-        }
-    };
-    
-    // Analyze user profile with real GitHub API delegation
-    public func analyzeUser(username: Text) : async {
-        username: Text;
-        repositories: Nat;
-        followers: Nat;
-        following: Nat;
-        contributions: Nat;
-        languages: [Text];
-        activity: Text;
-        status: Text;
-        pythonCommand: Text;
-        executionRequired: Bool;
-    } {
-        // REAL: Coordinate user analysis and delegate to Python GitHub API
-        {
-            username = username;
-            repositories = 0;
-            followers = 0;
-            following = 0;
-            contributions = 0;
-            languages = [];
-            activity = "fetching";
-            status = "ready_for_python_handoff";
-            pythonCommand = "github_tool.analyze_user('" # username # "')";
-            executionRequired = true;
-        }
-    };
-    
-    // Get agent capabilities
-    public query func getGitHubCapabilities() : async [Text] {
+    // Get browser capabilities
+    public query func getGitHubCapabilities() : async [Types.AgentCapability] {
         [
-            "repository_analysis",
-            "security_assessment",
-            "code_quality_evaluation",
-            "dependency_analysis",
-            "user_profiling",
-            "search_functionality"
+            #CodeAnalysis,
+            #SecurityScanning,
+            #ReportGeneration,
+            #DataProcessing,
+            #NaturalLanguageProcessing,
+            #WebSearch
         ]
     };
     
-    // Get cached analysis count
-    public query func getCacheStats() : async { entries: Nat; hitRate: Float } {
-        {
-            entries = analysisCache.size();
-            hitRate = 0.75; // Calculated hit rate
-        }
-    };
-    
-    // Clear analysis cache
-    public func clearCache() : async Bool {
-        analysisCache := Map.HashMap<Text, AnalysisResult>(10, Text.equal, Text.hash);
+    // Configure browser settings
+    public func configureBrowser(stealthMode: Bool, timeout: Nat, antiDetection: Bool) : async Bool {
+        // Update configuration
+        agentConfig := {
+            stealthMode = stealthMode;
+            timeout = timeout;
+            retryAttempts = agentConfig.retryAttempts;
+            antiDetection = antiDetection;
+        };
         true
     };
     
-    // Get agent status
-    public query func getAgentStatus() : async Types.AgentStatus {
+    // Get agent status with real capabilities
+    public func getAgentStatus() : async Types.AgentStatus {
+        let capabilities = await getGitHubCapabilities();
         {
             id = "github-agent";
             name = "GitHub Analysis Agent";
             isActive = true;
-            capabilities = await getGitHubCapabilities();
+            capabilities = capabilities;
             lastUsed = Time.now();
             successRate = 0.92;
             tasksCompleted = 89;

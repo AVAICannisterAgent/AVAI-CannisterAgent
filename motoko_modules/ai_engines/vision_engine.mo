@@ -133,11 +133,17 @@ actor VisionEngine {
             let body_blob = Text.encodeUtf8(ollama_payload);
             let body_bytes = Blob.toArray(body_blob);
             
-            // Try production HTTPS first, then local HTTP fallback
-            Debug.print("🔐 Attempting production HTTPS endpoint: " # OLLAMA_PRODUCTION_URL);
-            let production_response = await Http.post(
+            // Try production endpoint first with enhanced HTTP
+            Debug.print("� Attempting enhanced production vision call");
+            let production_response = await Http.smartAICall(
                 OLLAMA_PRODUCTION_URL # "/api/generate",
-                body_bytes
+                body_bytes,
+                [
+                    ("Content-Type", "application/json"),
+                    ("Accept", "application/json"),
+                    ("X-Model-Type", "llava"),
+                    ("X-Engine-Type", "vision")
+                ]
             );
             
             switch (production_response) {
@@ -161,11 +167,12 @@ actor VisionEngine {
                 case (#err(production_error)) {
                     Debug.print("⚠️ Production HTTPS failed, trying local HTTP for vision: " # production_error);
                     
-                    // Fallback to local HTTP endpoint
-                    Debug.print("🏠 Attempting local HTTP endpoint: " # OLLAMA_LOCAL_URL);
-                    let local_response = await Http.post(
-                        OLLAMA_LOCAL_URL # "/api/generate",
-                        body_bytes
+                    // Try local Ollama with vision-optimized call
+                    Debug.print("👁️ Attempting local Ollama vision call");
+                    let local_response = await Http.postForAI(
+                        OLLAMA_LOCAL_URL # "/api/generate", 
+                        body_bytes, 
+                        "ollama"
                     );
                     
                     switch (local_response) {
