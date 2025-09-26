@@ -1,4 +1,3 @@
-````markdown
 # AVAI Agent for Hire - Multi-Engine AI Orchestrator
 
 **Autonomous AI-driven security auditing system with inter-canister orchestration on ICP**
