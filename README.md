@@ -166,5 +166,3 @@ dfx canister call avai_project_backend process_dynamic_prompt '("check Motoko co
 ---
 
 **AVAI Agent** – *Autonomous multi-engine AI auditor securing the decentralized web*
-
-```
